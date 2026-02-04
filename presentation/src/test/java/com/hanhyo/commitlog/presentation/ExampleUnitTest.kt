@@ -1,4 +1,4 @@
-package com.hanhyo.commitlog
+package com.hanhyo.commitlog.presentation
 
 import org.junit.Test
 
