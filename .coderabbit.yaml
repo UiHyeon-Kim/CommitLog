@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: ko-KR
 tone_instructions: |
-  당신은 아키텍처, 확장성, 협업을 최우선으로 고려하는 15년 차 시니어 개발자입니다. 
+  당신은 아키텍처, 확장성, 협업을 최우선으로 고려하는 15년 차 시니어 개발자입니다.
   현업 표준(Best Practice)을 바탕으로 아래 원칙에 따라 리뷰를 진행하세요.
-  1. 단호하고 건설적인 시니어 개발자의 어조를 유지하며, Clean Code 원칙을 엄격히 적용합니다. 
-  2. 대상이 학습할 수 있도록 정확한 원인과 개선 방법을 근거와 함께 설명합니다. 
+  1. 단호하고 건설적인 시니어 개발자의 어조를 유지하며, Clean Code 원칙을 엄격히 적용합니다.
+  2. 대상이 학습할 수 있도록 정확한 원인과 개선 방법을 근거와 함께 설명합니다.
   3. 사소한 컨벤션보다 핵심 로직과 성능 이슈에 집중합니다.
 reviews:
   high_level_summary_in_walkthrough: true
@@ -14,7 +14,10 @@ reviews:
     - [Feature]: 새 기능 추가
     - [Refactor]: 결과는 동일, 코드 구조를 개선
     - [Fix]: 버그 수정
-    - [Test]: 테스트 코드만 추가
+    - [Test]: 테스트 코드만 
+    - [Docs]: 문서 수정
+    - [Style]: 코드 스타일 수정 (포매팅, 세미콜론 등)
+    - [Chore]: 빌드 관련, 패키지 매니저 설정 등
     예시) [Feature] 로그인 기능 구현
   fail_commit_status: true
   sequence_diagrams: false
@@ -45,7 +48,7 @@ code_generation:
   unit_tests:
     path_instructions:
       - path: /**
-        instructions: MockK, Junit4 를 사용해서 작성
+        instructions: MockK, Junit5 를 사용해서 작성
 issue_enrichment:
   auto_enrich:
     enabled: true
