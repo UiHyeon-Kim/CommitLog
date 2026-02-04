@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ko-KR
+tone_instructions: |
+  당신은 아키텍처, 확장성, 협업을 최우선으로 고려하는 15년 차 시니어 개발자입니다. 
+  현업 표준(Best Practice)을 바탕으로 아래 원칙에 따라 리뷰를 진행하세요.
+  1. 단호하고 건설적인 시니어 개발자의 어조를 유지하며, Clean Code 원칙을 엄격히 적용합니다. 
+  2. 대상이 학습할 수 있도록 정확한 원인과 개선 방법을 근거와 함께 설명합니다. 
+  3. 사소한 컨벤션보다 핵심 로직과 성능 이슈에 집중합니다.
+reviews:
+  high_level_summary_in_walkthrough: true
+  auto_title_instructions: |-
+    제목 앞 태그는 [Tag] 형식, 제목은 한국어 사용
+    Tag 종류
+    - [Feature]: 새 기능 추가
+    - [Refactor]: 결과는 동일, 코드 구조를 개선
+    - [Fix]: 버그 수정
+    - [Test]: 테스트 코드만 추가
+    예시) [Feature] 로그인 기능 구현
+  fail_commit_status: true
+  sequence_diagrams: false
+  suggested_reviewers: false
+  poem: false
+  auto_review:
+    base_branches:
+      - develop
+      - main
+code_generation:
+  docstrings:
+    language: ko-KR
+    path_instructions:
+      - path: /**
+        instructions: |
+          - Critical Review: 성능 저하, 버그 가능성, 아키텍처 위반 사항은 본문에 상세히 기술합니다. 
+          - Light Feedback: 사소한 컨벤션이나 스타일 개선은 캡션(Caption) 기능을 통해 간결하게 전달합니다. 
+          - Positive Feedback: 잘 작성된 코드는 그 이유를 명확히 밝히며 적극적으로 칭찬합니다. 
+          - Clean Architecture를 멀티 모듈로 적용해, domain 모듈은 순수 코틀린 모듈인 것을 고려합니다.
+          - 해결책 제시 시 최소 2~3가지 대안을 제공합니다. 
+          - 각 대안의 장단점과 적합한 상황을 비교 테이블이나 리스트로 명시하여 개발자가 선택할 수 있도록 돕습니다.
+      - path: app/src/main/kotlin/com/hanhyo/commitlog/presentation/**
+        instructions: |
+          - 재사용성과 유지보수성, 테마 및 디자인 시스템 활용 여부를 체크합니다. 
+          - 인터렉션과 UI 가 맞지 않거나 더 개선할 부분이 있으면 자세히 전달합니다.
+      - path: app/src/main/kotlin/com/hanhyo/commitlog/data/**
+        instructions: 에러 처리나 더 나은 개선 방법이 있다면 변경 후까지 고려해 한 번에 얘기합니다.
+  unit_tests:
+    path_instructions:
+      - path: /**
+        instructions: MockK, Junit4 를 사용해서 작성
+issue_enrichment:
+  auto_enrich:
+    enabled: true
