@@ -1,0 +1,8 @@
+reviews:
+  minimum_severity: MEDIUM
+  style: CONCISE
+  ignore_patterns:
+    - "**/build/**"
+    - "**/.gradle/**"
+    - "**/generated/**"
+    - "**/libs.versions.toml"
