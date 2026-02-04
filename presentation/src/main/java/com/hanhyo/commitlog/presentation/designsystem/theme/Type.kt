@@ -1,4 +1,4 @@
-package com.hanhyo.commitlog.ui.theme
+package com.hanhyo.commitlog.presentation.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
