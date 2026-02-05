@@ -33,6 +33,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -45,11 +46,13 @@ kotlin {
 dependencies {
 
     implementation(project(":presentation"))
-    implementation(project(":data"))
 
     implementation(libs.bundles.androidx.core)
     implementation(libs.bundles.compose)
     implementation(platform(libs.androidx.compose.bom))
+
+    // Utils
+    implementation(libs.timber)
 
     // Hilt
     implementation(libs.hilt.android)

@@ -64,6 +64,9 @@ dependencies {
     implementation(libs.bundles.coroutines)
     implementation(libs.kotlinx.serialization.json)
 
+    // Utils
+    implementation(libs.timber)
+
     testImplementation(libs.bundles.test.unit)
 
     androidTestImplementation(libs.bundles.test.android)

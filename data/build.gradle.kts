@@ -50,6 +50,7 @@ dependencies {
 
     // Networking
     implementation(libs.bundles.networking)
+    implementation(platform(libs.okhttp.bom))
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

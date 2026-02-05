@@ -14,7 +14,7 @@ kotlin {
 
 dependencies {
     implementation(libs.javax.inject)
-    implementation(libs.bundles.coroutines)
+    implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.mockk)
 }
