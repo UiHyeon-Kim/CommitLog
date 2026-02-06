@@ -6,7 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 
 @Composable
-fun WriteScreen(onBack: () -> Boolean) {
+fun WriteScreen(onBack: () -> Unit) {
     WriteContent()
 }
 
@@ -19,6 +19,6 @@ fun WriteContent(modifier: Modifier = Modifier) {
 @Composable
 private fun WritePreview() {
     CommitLogTheme {
-        WriteScreen()
+        WriteScreen(onBack = {})
     }
 }
