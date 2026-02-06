@@ -6,9 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 
 @Composable
-fun WriteScreen(
-
-) {
+fun WriteScreen(onBack: () -> Boolean) {
     WriteContent()
 }
 
