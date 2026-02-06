@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="bottom_nav_home">홈</string>
+    <string name="bottom_nav_stats">통계</string>
+    <string name="bottom_nav_review">리뷰</string>
+</resources>
