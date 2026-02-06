@@ -1,6 +1,5 @@
 package com.hanhyo.commitlog.presentation.designsystem.theme.typography
 
-import Pretendard
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.TextStyle

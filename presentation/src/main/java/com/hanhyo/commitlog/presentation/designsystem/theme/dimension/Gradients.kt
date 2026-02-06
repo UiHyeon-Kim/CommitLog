@@ -7,7 +7,7 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.color.LocalCommitLog
 object Gradients {
     val primaryGradient: Brush
         @Composable
-        get() = Brush.Companion.horizontalGradient(
+        get() = Brush.horizontalGradient(
             colors = listOf(
                 LocalCommitLogColors.current.primaryVariant,
                 LocalCommitLogColors.current.primary
@@ -16,7 +16,7 @@ object Gradients {
 
     val primaryVerticalGradient: Brush
         @Composable
-        get() = Brush.Companion.verticalGradient(
+        get() = Brush.verticalGradient(
             colors = listOf(
                 LocalCommitLogColors.current.primaryVariant,
                 LocalCommitLogColors.current.primary
@@ -25,7 +25,7 @@ object Gradients {
 
     val moodGradient: Brush
         @Composable
-        get() = Brush.Companion.linearGradient(
+        get() = Brush.linearGradient(
             colors = listOf(
                 LocalCommitLogColors.current.primary,
                 LocalCommitLogColors.current.accentPurple,
@@ -35,7 +35,7 @@ object Gradients {
 
     val cardGradient: Brush
         @Composable
-        get() = Brush.Companion.horizontalGradient(
+        get() = Brush.horizontalGradient(
             colors = listOf(
                 LocalCommitLogColors.current.primaryVariant.copy(alpha = 0.3f),
                 LocalCommitLogColors.current.primary.copy(alpha = 0.1f)

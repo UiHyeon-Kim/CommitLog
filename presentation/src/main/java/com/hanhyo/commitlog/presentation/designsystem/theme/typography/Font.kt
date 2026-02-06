@@ -1,3 +1,5 @@
+package com.hanhyo.commitlog.presentation.designsystem.theme.typography
+
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
