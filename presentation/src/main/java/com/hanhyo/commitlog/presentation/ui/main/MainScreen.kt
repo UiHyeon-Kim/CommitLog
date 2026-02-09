@@ -50,7 +50,7 @@ fun MainScreen(
                 }
 
                 currentDestination?.hasRoute(ReviewRoute::class) == true -> {
-                    CommitLogTopAppBar(title = "월간 통계")
+                    CommitLogTopAppBar(title = "월간 회고")
                 }
             }
         },
