@@ -14,15 +14,14 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 
 @Composable
 fun SplashScreen(
-    modifier: Modifier = Modifier,
     viewModel: SplashViewModel = hiltViewModel(),
-    onNavigateToHome: () -> Unit,
+    onFinished: () -> Unit,
 ) {
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                SplashEffect.NavigateToHome -> onNavigateToHome()
+                SplashEffect.NavigateToHome -> onFinished()
             }
         }
     }

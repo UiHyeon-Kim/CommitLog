@@ -1,50 +1,47 @@
 package com.hanhyo.commitlog.presentation
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogBottomNavBar
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogHomeAppBar
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
-import com.hanhyo.commitlog.presentation.navigation.CommitLogNavHost
-import com.hanhyo.commitlog.presentation.navigation.HomeRoute
+import com.hanhyo.commitlog.presentation.navigation.DetailRoute
+import com.hanhyo.commitlog.presentation.navigation.MainRoute
+import com.hanhyo.commitlog.presentation.navigation.SplashRoute
+import com.hanhyo.commitlog.presentation.navigation.WriteRoute
+import com.hanhyo.commitlog.presentation.ui.detail.DetailScreen
+import com.hanhyo.commitlog.presentation.ui.main.MainScreen
+import com.hanhyo.commitlog.presentation.ui.splash.SplashScreen
+import com.hanhyo.commitlog.presentation.ui.write.WriteScreen
 
 @Composable
 fun CommitLogApp(
     navController: NavHostController = rememberNavController()
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    val showBottomBar = BottomNavItem.entries.any { item ->
-        currentDestination?.hasRoute(item.tabRouteClass) == true
-    }
-
-    Scaffold(
-        topBar = {
-            if (currentDestination == HomeRoute) {
-                CommitLogHomeAppBar()
-            }
-        },
-        bottomBar = {
-            if (showBottomBar) {
-                CommitLogBottomNavBar(
-                    navController = navController,
-                    currentDestination = currentDestination
+    Surface {
+        NavHost(
+            navController = navController,
+            startDestination = SplashRoute
+        ) {
+            composable<SplashRoute> {
+                SplashScreen(
+                    onFinished = {
+                        navController.navigate(MainRoute) {
+                            popUpTo(SplashRoute) { inclusive = true }
+                        }
+                    }
                 )
             }
-        },
-        floatingActionButton = {},
-    ) { innerPadding ->
-        CommitLogNavHost(
-            navController = navController,
-            modifier = Modifier.padding(innerPadding)
-        )
+
+            composable<MainRoute> {
+                MainScreen()
+            }
+
+            composable<WriteRoute> { WriteScreen(onBack = { }) }
+            composable<DetailRoute> { DetailScreen(onBack = { }) }
+        }
     }
 }

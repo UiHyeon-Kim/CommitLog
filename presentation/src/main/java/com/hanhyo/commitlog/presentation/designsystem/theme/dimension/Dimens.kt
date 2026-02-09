@@ -1,7 +1,6 @@
 package com.hanhyo.commitlog.presentation.designsystem.theme.dimension
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -25,4 +24,5 @@ object Dimensions {
 
     val fabSize: Dp = 56.dp
 
+    val appBarHeight: Dp = 56.dp
 }

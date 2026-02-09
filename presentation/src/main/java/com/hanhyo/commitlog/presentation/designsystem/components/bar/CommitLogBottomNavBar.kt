@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,7 +30,6 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
 @Composable
 fun CommitLogBottomNavBar(

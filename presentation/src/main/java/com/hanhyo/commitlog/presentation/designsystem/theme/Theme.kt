@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.presentation.designsystem.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -8,7 +9,11 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.CommitLogColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.DarkColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.LightColors
@@ -80,6 +85,18 @@ fun CommitLogTheme(
     val colors = if (darkTheme) DarkColors else LightColors
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val typography = DefaultTypography
+
+    val view = LocalView.current
+
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            // 1. 상태바 배경을 투명하게 만들어 앱의 TopAppBar가 보이도록 합니다.
+            window.statusBarColor = Color.Transparent.toArgb()
+            // 2. 현재 테마(light/dark)에 맞춰 상태바 아이콘 색을 결정합니다.
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
+    }
 
     CompositionLocalProvider(
         LocalCommitLogColors provides colors,

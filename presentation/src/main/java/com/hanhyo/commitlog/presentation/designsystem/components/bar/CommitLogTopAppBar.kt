@@ -1,18 +1,23 @@
 package com.hanhyo.commitlog.presentation.designsystem.components.bar
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
@@ -48,7 +53,9 @@ fun CommitLogTopAppBar(
             )
         },
         actions = actions,
-        modifier = modifier.height(Dimensions.buttonHeightLarge)
+        modifier = modifier
+            .statusBarsPadding()
+            .height(Dimensions.appBarHeight)
     )
 }
 
@@ -58,17 +65,25 @@ fun CommitLogHomeAppBar(
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "CommitLog",
-                style = CommitLogTheme.typography.headlineMedium,
-                color = CommitLogTheme.colors.textPrimary
+    Column {
+        TopAppBar(
+            title = {
+                Text(
+                    text = "CommitLog",
+                    style = CommitLogTheme.typography.headlineMedium,
+                    color = CommitLogTheme.colors.textPrimary
+                )
+            },
+            actions = actions,
+            modifier = modifier
+                .statusBarsPadding()
+                .height(Dimensions.appBarHeight),
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = CommitLogTheme.colors.background
             )
-        },
-        actions = actions,
-        modifier = modifier.height(Dimensions.buttonHeightLarge)
-    )
+        )
+        HorizontalDivider(thickness = 0.3.dp, color = CommitLogTheme.colors.border)
+    }
 }
 
 @Preview
