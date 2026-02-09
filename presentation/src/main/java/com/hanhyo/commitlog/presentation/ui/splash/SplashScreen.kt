@@ -26,6 +26,10 @@ fun SplashScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.initialCommitLog()
+    }
+
     ScreenContent()
 }
 

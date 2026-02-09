@@ -1,10 +1,12 @@
 package com.hanhyo.commitlog.presentation.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -16,14 +18,16 @@ class HomeViewModel @Inject constructor(
 
 
     fun navigateToWrite() {
-        _effect.tryEmit(HomeEffect.NavigateToWrite)
+        viewModelScope.launch {
+            _effect.emit(HomeEffect.NavigateToWrite)
+        }
     }
 
     fun navigateToDetail() {
-        _effect.tryEmit(HomeEffect.NavigateToDetail)
+        viewModelScope.launch {
+            _effect.emit(HomeEffect.NavigateToDetail)
+        }
     }
-
-
 }
 
 sealed interface HomeEffect {

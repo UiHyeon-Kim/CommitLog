@@ -38,8 +38,8 @@ fun HomeScreen(
     }
 
     HomeContent(
-        onWriteClick = onNavigateToWrite,
-        onDetailClick = onNavigateToDetail
+        onWriteClick = viewModel::navigateToWrite,
+        onDetailClick = viewModel::navigateToDetail,
     )
 }
 

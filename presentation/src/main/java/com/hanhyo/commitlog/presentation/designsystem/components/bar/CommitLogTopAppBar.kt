@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.presentation.R
+import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarConfig
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
@@ -27,36 +28,37 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 @Composable
 fun CommitLogTopAppBar(
     modifier: Modifier = Modifier,
-    title: String = "",
-    navItem: AppBarNavItem = AppBarNavItem.None,
-    actions: @Composable RowScope.() -> Unit = {},
+    config: AppBarConfig,
 ) {
-    CenterAlignedTopAppBar(
-        navigationIcon = {
-            if (navItem is AppBarNavItem.Back) {
-                IconButton(
-                    onClick = navItem.onClick,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_left_arrow),
-                        contentDescription = "뒤로가기",
-                        tint = CommitLogTheme.colors.textPrimary
-                    )
+    Column {
+        CenterAlignedTopAppBar(
+            navigationIcon = {
+                if (config.navItem is AppBarNavItem.Back) {
+                    IconButton(
+                        onClick = config.navItem.onClick,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_left_arrow),
+                            contentDescription = "뒤로가기",
+                            tint = CommitLogTheme.colors.textPrimary
+                        )
+                    }
                 }
-            }
-        },
-        title = {
-            Text(
-                text = title,
-                style = CommitLogTheme.typography.headlineSmall,
-                color = CommitLogTheme.colors.textPrimary
-            )
-        },
-        actions = actions,
-        modifier = modifier
-            .statusBarsPadding()
-            .height(Dimensions.appBarHeight)
-    )
+            },
+            title = {
+                Text(
+                    text = config.title,
+                    style = CommitLogTheme.typography.headlineSmall,
+                    color = CommitLogTheme.colors.textPrimary
+                )
+            },
+            actions = config.actions,
+            modifier = modifier
+                .statusBarsPadding()
+                .height(Dimensions.appBarHeight)
+        )
+        HorizontalDivider(thickness = 0.3.dp, color = CommitLogTheme.colors.border)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,16 +93,10 @@ fun CommitLogHomeAppBar(
 private fun CommitLogTopAppBarPreview() {
     CommitLogTheme {
         CommitLogTopAppBar(
-            title = "안녕",
-            navItem = AppBarNavItem.Back(onClick = {}),
-            actions = {
-                IconButton(onClick = {}) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_review),
-                        contentDescription = null
-                    )
-                }
-            }
+            config = AppBarConfig.Detail(
+                title = "2026년 2월 09일",
+                onBack = {}
+            )
         )
     }
 }

@@ -3,13 +3,14 @@ package com.hanhyo.commitlog.presentation.designsystem.components.bar.model
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.hanhyo.commitlog.presentation.R
+import com.hanhyo.commitlog.presentation.navigation.BottomRoute
 import com.hanhyo.commitlog.presentation.navigation.HomeRoute
 import com.hanhyo.commitlog.presentation.navigation.ReviewRoute
 import com.hanhyo.commitlog.presentation.navigation.StatisticsRoute
 import kotlin.reflect.KClass
 
 enum class BottomNavItem(
-    val tabRoute: Any,
+    val tabRoute: BottomRoute,
     val tabRouteClass: KClass<*>,
     @get:StringRes val labelResId: Int,
     @get:DrawableRes val iconResId: Int,

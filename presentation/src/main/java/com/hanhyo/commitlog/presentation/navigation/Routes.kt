@@ -2,6 +2,8 @@ package com.hanhyo.commitlog.presentation.navigation
 
 import kotlinx.serialization.Serializable
 
+sealed interface BottomRoute
+
 @Serializable
 data object SplashRoute
 
@@ -9,16 +11,16 @@ data object SplashRoute
 data object MainRoute
 
 @Serializable
-data object HomeRoute
+data object HomeRoute : BottomRoute
+
+@Serializable
+data object StatisticsRoute : BottomRoute
+
+@Serializable
+data object ReviewRoute : BottomRoute
 
 @Serializable
 data object WriteRoute
 
 @Serializable
 data object DetailRoute
-
-@Serializable
-data object StatisticsRoute
-
-@Serializable
-data object ReviewRoute

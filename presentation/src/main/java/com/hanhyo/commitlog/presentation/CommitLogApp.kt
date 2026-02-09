@@ -12,6 +12,7 @@ import com.hanhyo.commitlog.presentation.navigation.DetailRoute
 import com.hanhyo.commitlog.presentation.navigation.MainRoute
 import com.hanhyo.commitlog.presentation.navigation.SplashRoute
 import com.hanhyo.commitlog.presentation.navigation.WriteRoute
+import com.hanhyo.commitlog.presentation.navigation.homeDestination
 import com.hanhyo.commitlog.presentation.ui.detail.DetailScreen
 import com.hanhyo.commitlog.presentation.ui.main.MainScreen
 import com.hanhyo.commitlog.presentation.ui.splash.SplashScreen
@@ -37,11 +38,10 @@ fun CommitLogApp(
             }
 
             composable<MainRoute> {
-                MainScreen()
+                MainScreen(navController)
             }
 
-            composable<WriteRoute> { WriteScreen(onBack = { }) }
-            composable<DetailRoute> { DetailScreen(onBack = { }) }
+            homeDestination(navController)
         }
     }
 }
