@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.presentation.designsystem.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -8,14 +9,15 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.CommitLogColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.DarkColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.LightColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.LocalCommitLogColors
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.DefaultDimensions
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.LocalCommitLogDimens
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Shapes
 import com.hanhyo.commitlog.presentation.designsystem.theme.typography.CommitLogTypography
 import com.hanhyo.commitlog.presentation.designsystem.theme.typography.DefaultTypography
@@ -83,12 +85,10 @@ fun CommitLogTheme(
     val colors = if (darkTheme) DarkColors else LightColors
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val typography = DefaultTypography
-    val dimens = DefaultDimensions
 
     CompositionLocalProvider(
         LocalCommitLogColors provides colors,
         LocalCommitLogTypography provides typography,
-        LocalCommitLogDimens provides dimens,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -111,8 +111,6 @@ private fun materialTypography(commitLogTypography: CommitLogTypography): Typogr
         bodyLarge = commitLogTypography.bodyLarge,
         bodyMedium = commitLogTypography.bodyMedium,
         bodySmall = commitLogTypography.bodySmall,
-        labelLarge = commitLogTypography.labelLarge,
-        labelMedium = commitLogTypography.labelMedium,
         labelSmall = commitLogTypography.labelSmall
     )
 }
@@ -127,9 +125,4 @@ object CommitLogTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalCommitLogTypography.current
-
-    val dimens: Dimensions
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalCommitLogDimens.current
 }

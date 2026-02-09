@@ -68,18 +68,6 @@ data class CommitLogTypography(
         fontSize = 12.sp,
         lineHeight = 16.sp
     ),
-    val labelLarge: TextStyle = TextStyle(
-        fontFamily = Pretendard,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
-    ),
-    val labelMedium: TextStyle = TextStyle(
-        fontFamily = Pretendard,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp
-    ),
     val labelSmall: TextStyle = TextStyle(
         fontFamily = Pretendard,
         fontWeight = FontWeight.Medium,
