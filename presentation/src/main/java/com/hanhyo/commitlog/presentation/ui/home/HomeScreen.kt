@@ -45,7 +45,6 @@ fun HomeScreen(
 
 @Composable
 private fun HomeContent(
-    modifier: Modifier = Modifier,
     onWriteClick: () -> Unit,
     onDetailClick: () -> Unit
 ) {

@@ -86,18 +86,6 @@ fun CommitLogTheme(
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val typography = DefaultTypography
 
-    val view = LocalView.current
-
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            // 1. 상태바 배경을 투명하게 만들어 앱의 TopAppBar가 보이도록 합니다.
-            window.statusBarColor = Color.Transparent.toArgb()
-            // 2. 현재 테마(light/dark)에 맞춰 상태바 아이콘 색을 결정합니다.
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-        }
-    }
-
     CompositionLocalProvider(
         LocalCommitLogColors provides colors,
         LocalCommitLogTypography provides typography,

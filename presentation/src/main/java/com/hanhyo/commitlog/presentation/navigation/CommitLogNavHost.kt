@@ -1,60 +1,38 @@
 package com.hanhyo.commitlog.presentation.navigation
 
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.hanhyo.commitlog.presentation.ui.detail.DetailScreen
-import com.hanhyo.commitlog.presentation.ui.home.HomeScreen
-import com.hanhyo.commitlog.presentation.ui.review.ReviewScreen
+import androidx.navigation.compose.rememberNavController
+import com.hanhyo.commitlog.presentation.ui.main.MainScreen
 import com.hanhyo.commitlog.presentation.ui.splash.SplashScreen
-import com.hanhyo.commitlog.presentation.ui.stats.StatisticsScreen
-import com.hanhyo.commitlog.presentation.ui.write.WriteScreen
 
 @Composable
 fun CommitLogNavHost(
-    navController: NavHostController,
-    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = HomeRoute,
-        modifier = modifier
-    ) {
-        composable<HomeRoute> {
-            HomeScreen(
-                onNavigateToWrite = {
-                    navController.navigate(WriteRoute)
-                },
-                onNavigateToDetail = {
-                    navController.navigate(DetailRoute)
-                },
-            )
-        }
+    Surface {
+        NavHost(
+            navController = navController,
+            startDestination = SplashRoute
+        ) {
+            composable<SplashRoute> {
+                SplashScreen(
+                    onFinished = {
+                        navController.navigate(MainRoute) {
+                            popUpTo(SplashRoute) { inclusive = true }
+                        }
+                    }
+                )
+            }
 
-        composable<WriteRoute> {
-            WriteScreen(
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
+            composable<MainRoute> {
+                MainScreen(navController)
+            }
 
-        composable<DetailRoute> {
-            DetailScreen(
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable<StatisticsRoute> {
-            StatisticsScreen()
-        }
-
-        composable<ReviewRoute> {
-            ReviewScreen()
+            homeDestination(navController)
         }
     }
 }

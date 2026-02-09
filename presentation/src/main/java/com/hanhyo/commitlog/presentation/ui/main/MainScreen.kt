@@ -14,6 +14,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogBottomNavBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogHomeAppBar
+import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
 import com.hanhyo.commitlog.presentation.navigation.HomeRoute
@@ -39,8 +40,18 @@ fun MainScreen(
 
     Scaffold(
         topBar = {
-            if (currentDestination?.hasRoute(HomeRoute::class) == true) {
-                CommitLogHomeAppBar()
+            when {
+                currentDestination?.hasRoute(HomeRoute::class) == true -> {
+                    CommitLogHomeAppBar()
+                }
+
+                currentDestination?.hasRoute(StatisticsRoute::class) == true -> {
+                    CommitLogTopAppBar(title = "통계")
+                }
+
+                currentDestination?.hasRoute(ReviewRoute::class) == true -> {
+                    CommitLogTopAppBar(title = "월간 통계")
+                }
             }
         },
         bottomBar = {

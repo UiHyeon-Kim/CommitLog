@@ -19,7 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.presentation.R
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarConfig
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
@@ -28,14 +27,18 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 @Composable
 fun CommitLogTopAppBar(
     modifier: Modifier = Modifier,
-    config: AppBarConfig,
+    title: String = "",
+    navItem: AppBarNavItem = AppBarNavItem.None,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         CenterAlignedTopAppBar(
             navigationIcon = {
-                if (config.navItem is AppBarNavItem.Back) {
+                if (navItem is AppBarNavItem.Back) {
                     IconButton(
-                        onClick = config.navItem.onClick,
+                        onClick = navItem.onClick,
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_left_arrow),
@@ -47,15 +50,18 @@ fun CommitLogTopAppBar(
             },
             title = {
                 Text(
-                    text = config.title,
+                    text = title,
                     style = CommitLogTheme.typography.headlineSmall,
                     color = CommitLogTheme.colors.textPrimary
                 )
             },
-            actions = config.actions,
-            modifier = modifier
+            actions = actions,
+            modifier = Modifier
                 .statusBarsPadding()
-                .height(Dimensions.appBarHeight)
+                .height(Dimensions.appBarHeight),
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = CommitLogTheme.colors.background
+            )
         )
         HorizontalDivider(thickness = 0.3.dp, color = CommitLogTheme.colors.border)
     }
@@ -67,7 +73,9 @@ fun CommitLogHomeAppBar(
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    Column {
+    Column(
+        modifier = modifier
+    ) {
         TopAppBar(
             title = {
                 Text(
@@ -77,7 +85,7 @@ fun CommitLogHomeAppBar(
                 )
             },
             actions = actions,
-            modifier = modifier
+            modifier = Modifier
                 .statusBarsPadding()
                 .height(Dimensions.appBarHeight),
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -93,10 +101,7 @@ fun CommitLogHomeAppBar(
 private fun CommitLogTopAppBarPreview() {
     CommitLogTheme {
         CommitLogTopAppBar(
-            config = AppBarConfig.Detail(
-                title = "2026년 2월 09일",
-                onBack = {}
-            )
+            title = "2026년 2월 09일",
         )
     }
 }
