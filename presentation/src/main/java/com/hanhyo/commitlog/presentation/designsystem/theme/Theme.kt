@@ -13,9 +13,6 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.color.CommitLogColor
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.DarkColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.LightColors
 import com.hanhyo.commitlog.presentation.designsystem.theme.color.LocalCommitLogColors
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.DefaultDimensions
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
-import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.LocalCommitLogDimens
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Shapes
 import com.hanhyo.commitlog.presentation.designsystem.theme.typography.CommitLogTypography
 import com.hanhyo.commitlog.presentation.designsystem.theme.typography.DefaultTypography
@@ -83,12 +80,10 @@ fun CommitLogTheme(
     val colors = if (darkTheme) DarkColors else LightColors
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val typography = DefaultTypography
-    val dimens = DefaultDimensions
 
     CompositionLocalProvider(
         LocalCommitLogColors provides colors,
         LocalCommitLogTypography provides typography,
-        LocalCommitLogDimens provides dimens,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -111,8 +106,6 @@ private fun materialTypography(commitLogTypography: CommitLogTypography): Typogr
         bodyLarge = commitLogTypography.bodyLarge,
         bodyMedium = commitLogTypography.bodyMedium,
         bodySmall = commitLogTypography.bodySmall,
-        labelLarge = commitLogTypography.labelLarge,
-        labelMedium = commitLogTypography.labelMedium,
         labelSmall = commitLogTypography.labelSmall
     )
 }
@@ -127,9 +120,4 @@ object CommitLogTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalCommitLogTypography.current
-
-    val dimens: Dimensions
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalCommitLogDimens.current
 }

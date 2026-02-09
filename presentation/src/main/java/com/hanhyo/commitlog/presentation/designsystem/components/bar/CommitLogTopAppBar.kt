@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
+import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +48,7 @@ fun CommitLogTopAppBar(
             )
         },
         actions = actions,
-        modifier = modifier.height(CommitLogTheme.dimens.buttonHeightLarge)
+        modifier = modifier.height(Dimensions.buttonHeightLarge)
     )
 }
 
@@ -66,7 +67,7 @@ fun CommitLogHomeAppBar(
             )
         },
         actions = actions,
-        modifier = modifier.height(CommitLogTheme.dimens.buttonHeightLarge)
+        modifier = modifier.height(Dimensions.buttonHeightLarge)
     )
 }
 

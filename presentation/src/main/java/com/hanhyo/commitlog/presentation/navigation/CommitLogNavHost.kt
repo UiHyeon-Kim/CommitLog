@@ -25,7 +25,9 @@ fun CommitLogNavHost(
         composable<SplashRoute> {
             SplashScreen(
                 onNavigateToHome = {
-                    navController.navigate(HomeRoute)
+                    navController.navigate(HomeRoute) {
+                        popUpTo(SplashRoute) { inclusive = true }
+                    }
                 }
             )
         }

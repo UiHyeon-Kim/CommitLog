@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -27,15 +28,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
+import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
 @Composable
 fun CommitLogBottomNavBar(
-    modifier: Modifier = Modifier,
+    navController: NavHostController,
     currentDestination: NavDestination?,
-    onNavigate: (Any) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column {
         HorizontalDivider(thickness = 1.dp, color = CommitLogTheme.colors.border)
@@ -44,20 +46,25 @@ fun CommitLogBottomNavBar(
             modifier = modifier
                 .selectableGroup()
                 .fillMaxWidth()
-                .height(CommitLogTheme.dimens.bottomNavHeight)
                 .background(CommitLogTheme.colors.surface)
                 .navigationBarsPadding(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomNavItem.entries.forEach { item ->
-                val isSelected = currentDestination?.hierarchy?.any {
-                    it.hasRoute(item.tabRouteClass)
-                } == true
+                val isSelected = currentDestination?.hasRoute(item.tabRouteClass) ?: false
 
                 CommitLogNavBarContent(
-                    isSelected = isSelected,
-                    onClick = { onNavigate(item.tabRoute) },
+                    selected = isSelected,
                     bottomNavItem = item,
+                    onClick = {
+                        navController.navigate(item.tabRoute) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
             }
         }
@@ -66,21 +73,21 @@ fun CommitLogBottomNavBar(
 
 @Composable
 private fun RowScope.CommitLogNavBarContent(
-    isSelected: Boolean,
+    selected: Boolean,
     onClick: () -> Unit,
     bottomNavItem: BottomNavItem,
     modifier: Modifier = Modifier
 ) {
-    val contentColor = if (isSelected) CommitLogTheme.colors.primary
+    val contentColor = if (selected) CommitLogTheme.colors.primary
     else CommitLogTheme.colors.textDisabled
 
     Column(
         modifier = modifier
             .weight(1f)
             .selectable(
-                selected = isSelected,
+                selected = selected,
                 role = Role.Tab,
-                onClick = { if (!isSelected) onClick() },
+                onClick = { if (!selected) onClick() },
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
             )
@@ -97,7 +104,7 @@ private fun RowScope.CommitLogNavBarContent(
 
         Text(
             text = stringResource(bottomNavItem.labelResId),
-            style = CommitLogTheme.typography.labelMedium,
+            style = CommitLogTheme.typography.titleSmall,
             color = contentColor,
         )
     }
@@ -108,8 +115,8 @@ private fun RowScope.CommitLogNavBarContent(
 private fun CommitLogBottomNavBarPreview() {
     CommitLogTheme {
         CommitLogBottomNavBar(
+            navController = NavHostController(LocalContext.current),
             currentDestination = null,
-            onNavigate = {},
         )
     }
 }
