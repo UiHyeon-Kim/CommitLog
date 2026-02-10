@@ -3,7 +3,6 @@ package com.hanhyo.commitlog.data.source.local.database.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
@@ -25,7 +24,7 @@ interface CommitDao {
     fun observeAllDrafts(): Flow<List<CommitEntity>>
 
     /** Commit 삽입 */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert
     suspend fun insertCommit(commit: CommitEntity): Long
 
     /** Commit 업데이트 */

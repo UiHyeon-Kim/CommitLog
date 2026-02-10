@@ -8,7 +8,7 @@ import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
 @Database(
     entities = [CommitEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class CommitDatabase : RoomDatabase() {
 

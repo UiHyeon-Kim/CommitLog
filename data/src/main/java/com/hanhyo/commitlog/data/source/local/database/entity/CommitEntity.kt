@@ -3,10 +3,14 @@ package com.hanhyo.commitlog.data.source.local.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.time.LocalDate
 
 @Entity(
     tableName = "commits",
-    indices = [Index(value = ["date"], unique = true)]
+    indices = [
+        Index(value = ["date"]),
+        Index(value = ["createdAt"])
+    ]
 )
 data class CommitEntity(
     @PrimaryKey(autoGenerate = true)
