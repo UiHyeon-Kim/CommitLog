@@ -9,6 +9,15 @@ android {
     namespace = "com.hanhyo.commitlog.data"
     compileSdk = 36
 
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        // 원래 Entity나 Dao 하나만 수정해도 Room 관련 코드 전체 재생성
+        // ture 시 변경된 파일만 처리하고 나머지 캐시 재사용 -> 빌드 속도 개선
+        arg("room.incremental", "true")
+        // 컴파일 시점에 (SELECT *) 의 칼럼을 미리 펼침 (상세 노션 확인)
+        arg("room.expandProjection", "true")
+    }
+
     defaultConfig {
         minSdk = 30
 
