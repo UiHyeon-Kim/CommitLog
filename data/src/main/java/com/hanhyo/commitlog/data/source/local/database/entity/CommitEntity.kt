@@ -16,7 +16,7 @@ data class CommitEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    val date: String,   // yyyy-MM-dd 형식의 날짜
+    val date: LocalDate,   // yyyy-MM-dd 형식의 날짜
     val title: String,
     val learnedToday: String?,  // 오늘 배운점
     val difficulties: String?,  // 어려웠던 점
