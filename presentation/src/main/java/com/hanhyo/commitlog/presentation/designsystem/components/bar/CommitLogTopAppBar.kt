@@ -58,7 +58,7 @@ fun CommitLogTopAppBar(
             actions = actions,
             modifier = Modifier
                 .statusBarsPadding()
-                .height(Dimensions.appBarHeight),
+                .height(Dimensions.TopAppBarHeight),
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = CommitLogTheme.colors.background
             )
@@ -87,7 +87,7 @@ fun CommitLogHomeAppBar(
             actions = actions,
             modifier = Modifier
                 .statusBarsPadding()
-                .height(Dimensions.appBarHeight),
+                .height(Dimensions.TopAppBarHeight),
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = CommitLogTheme.colors.background
             )
