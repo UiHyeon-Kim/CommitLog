@@ -77,7 +77,7 @@ data class Commit(
     val createdAt: Long,
     val updatedAt: Long?
 ) {
-    /** Ai 분석 결과 추가 */
+    /** AI 분석 결과 추가 */
     fun withAnalysis(analysis: CommitAnalysis, tags: Set<LearningTag>): Commit {
         return copy(
             analysis = analysis,
