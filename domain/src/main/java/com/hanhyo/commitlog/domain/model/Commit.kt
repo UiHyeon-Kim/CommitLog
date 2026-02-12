@@ -6,6 +6,8 @@ import java.time.LocalDate
 @JvmInline
 value class CommitId(val value: Long) {
 
+    fun isValid(): Boolean = value > 0
+
     companion object {
         val NONE = CommitId(0L)
     }
