@@ -245,7 +245,7 @@ enum class AIMood(
 
         // DB 저장용
         fun fromName(name: String?): AIMood {
-            return entries.find { it.displayNameKo == name } ?: NORMAL
+            return entries.find { it.name == name } ?: NORMAL
         }
 
         // UI 표시용

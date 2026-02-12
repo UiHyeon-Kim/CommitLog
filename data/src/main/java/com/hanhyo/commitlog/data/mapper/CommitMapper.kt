@@ -9,6 +9,7 @@ import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.DifficultyLevel
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 private val json = Json { ignoreUnknownKeys = true }
@@ -78,7 +79,7 @@ private fun parseTags(tagsString: String): Set<LearningTag> {
                 LearningTag.fromString(tagValue.trim())
             }
             .toSet()
-    } catch (_: Exception) {
+    } catch (_: SerializationException) {
         emptySet()
     }
 }

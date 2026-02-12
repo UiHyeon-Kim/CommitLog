@@ -3,6 +3,8 @@ package com.hanhyo.commitlog.data.mapper
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import java.time.LocalDate
+import java.time.temporal.WeekFields
+import java.util.Locale
 
 object MonthlyReviewMapper {
 
@@ -14,23 +16,19 @@ object MonthlyReviewMapper {
         aiSummary: String
     ): MonthlyReview {
 
-        val filtered = commits.filter {
-            it.date.year == year && it.date.monthValue == month
-        }
-
         // 주차별 커밋 수 계산
-        val weeklyCommitCount = filtered.groupBy { commit ->
+        val weeklyCommitCount = commits.groupBy { commit ->
             getWeekOfMonth(commit.date)
         }.mapValues { it.value.size }
 
         // Mood 분포 계산
-        val moodDistribution = filtered
+        val moodDistribution = commits
             .mapNotNull { it.analysis?.mood }
             .groupingBy { it }
             .eachCount()
 
         // 태그 분포 계산
-        val tagDistribution = filtered
+        val tagDistribution = commits
             .flatMap { it.tags }
             .groupingBy { it }
             .eachCount()
@@ -38,7 +36,7 @@ object MonthlyReviewMapper {
         return MonthlyReview(
             year = year,
             month = month,
-            totalCommitCount = filtered.size,
+            totalCommitCount = commits.size,
             weeklyCommitCount = weeklyCommitCount,
             moodDistribution = moodDistribution,
             tagDistribution = tagDistribution,
@@ -47,5 +45,8 @@ object MonthlyReviewMapper {
     }
 
     /** 날짜에서 월의 주차 계산 (1-5) */
-    private fun getWeekOfMonth(date: LocalDate): Int = ((date.dayOfMonth - 1) / 7) + 1
+    private fun getWeekOfMonth(date: LocalDate): Int {
+        val weekFields = WeekFields.of(Locale.KOREA)
+        return date.get(weekFields.weekOfMonth())
+    }
 }
