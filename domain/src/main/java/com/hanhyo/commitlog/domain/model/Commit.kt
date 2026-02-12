@@ -243,12 +243,14 @@ enum class AIMood(
 
     companion object {
 
-        fun fromDisplayNameKo(name: String): AIMood? {
-            return entries.find { it.displayNameKo == name }
+        // DB 저장용
+        fun fromName(name: String?): AIMood {
+            return entries.find { it.name == name } ?: NORMAL
         }
 
-        fun fromDisplayNameEn(name: String): AIMood? {
-            return entries.find { it.displayNameEn == name }
+        // UI 표시용
+        fun fromDisplayNameKo(displayName: String?): AIMood {
+            return entries.find { it.displayNameKo == displayName } ?: NORMAL
         }
     }
 }

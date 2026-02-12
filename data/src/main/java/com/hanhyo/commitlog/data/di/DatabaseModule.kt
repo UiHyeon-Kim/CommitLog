@@ -2,6 +2,7 @@ package com.hanhyo.commitlog.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.hanhyo.commitlog.data.BuildConfig
 import com.hanhyo.commitlog.data.source.local.database.CommitDatabase
 import com.hanhyo.commitlog.data.source.local.database.dao.CommitDao
 import dagger.Module
@@ -24,7 +25,11 @@ object DatabaseModule {
             context,
             CommitDatabase::class.java,
             CommitDatabase.DATABASE_NAME
-        ).build()
+        )
+            .apply {
+                if (BuildConfig.DEBUG) fallbackToDestructiveMigration(true)
+            }
+            .build()
     }
 
     @Provides

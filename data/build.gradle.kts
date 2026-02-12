@@ -36,6 +36,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+    buildFeatures {
+        buildConfig = true
+    }
 }
 kotlin {
     compilerOptions {
@@ -69,6 +72,7 @@ dependencies {
 
     // Utils
     implementation(libs.timber)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.bundles.test.unit)
 }
