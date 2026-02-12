@@ -17,8 +17,8 @@ fun CommitEntity.toDomain(): Commit {
     return Commit(
         id = CommitId(id),
         date = date,
-        title = CommitTitle(title),
-        learnedToday = LearnedContent(learnedToday),
+        title = CommitTitle(title.ifBlank { "제목 없음" }),
+        learnedToday = LearnedContent(learnedToday.ifBlank { "내용 없음" }),
         difficulties = difficulties,
         tomorrowPlan = tomorrowPlan,
         tags = parseTags(tags),
