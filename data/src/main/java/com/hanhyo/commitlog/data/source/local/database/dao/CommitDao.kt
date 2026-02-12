@@ -17,7 +17,7 @@ interface CommitDao {
     fun observeAllCommits(): Flow<List<CommitEntity>>
 
     /** Draft만 조회 */
-    @Query("SELECT * FROM commits WHERE isDraft = 1 ORDER BY updatedAt DESC, createdAt DESC")
+    @Query("SELECT * FROM commits WHERE isDraft = 1 ORDER BY (updatedAt IS NULL) DESC, updatedAt DESC, createdAt DESC")
     fun observeAllDrafts(): Flow<List<CommitEntity>>
 
     /** 특정 Commit 조회 */
@@ -27,10 +27,6 @@ interface CommitDao {
     /** 날짜 범위로 커밋 조회 */
     @Query("SELECT * FROM commits WHERE date BETWEEN :startDate AND :endDate AND isDraft = 0 ORDER BY date DESC, createdAt DESC")
     suspend fun getCommitsByDateRange(startDate: LocalDate, endDate: LocalDate): List<CommitEntity>
-
-    /** 특정 월 커밋 조회 */
-    @Query("SELECT * FROM commits WHERE date LIKE :yearMonth || '%' AND isDraft = 0 ORDER BY date ASC, createdAt DESC")
-    suspend fun getCommitsForMonth(yearMonth: String): List<CommitEntity>
 
     /**
      * 키워드로 커밋 검색

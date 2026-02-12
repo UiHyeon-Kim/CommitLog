@@ -9,8 +9,10 @@ import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.DifficultyLevel
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
+import kotlinx.serialization.json.Json
 
 object CommitMapper {
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun CommitEntity.toDomain(): Commit {
         return Commit(
@@ -37,9 +39,9 @@ object CommitMapper {
             difficulties = difficulties,
             tomorrowPlan = tomorrowPlan,
             tags = serializeTags(tags),
-            aiMood = analysis?.mood?.displayNameKo,
+            aiMood = analysis?.mood?.name,
             moodScore = analysis?.moodScore,
-            difficultyLevel = analysis?.difficultyLevel?.displayName,
+            difficultyLevel = analysis?.difficultyLevel?.name,
             aiComment = analysis?.comment,
             isDraft = isDraft,
             createdAt = createdAt,
@@ -54,32 +56,31 @@ object CommitMapper {
     private fun CommitEntity.toAnalysis(): CommitAnalysis? {
         if (aiMood == null || moodScore == null || difficultyLevel == null || aiComment == null) return null
 
-        val mood = AIMood.fromDisplayNameKo(aiMood) ?: return null
+        val mood = AIMood.entries.find { it.name == aiMood } ?: AIMood.NORMAL
+        val difficulty = DifficultyLevel.entries.find { it.name == difficultyLevel } ?: DifficultyLevel.NORMAL
 
-        val difficulty = DifficultyLevel.fromDisplayName(difficultyLevel) ?: return null
-
-        return try {
-            CommitAnalysis(
-                mood = mood,
-                moodScore = moodScore,
-                difficultyLevel = difficulty,
-                comment = aiComment
-            )
-        } catch (e: Exception) {
-            null
-        }
+        return CommitAnalysis(
+            mood = mood,
+            moodScore = moodScore,
+            difficultyLevel = difficulty,
+            comment = aiComment
+        )
     }
 
     private fun serializeTags(tags: Set<LearningTag>): String =
-        tags.joinToString(",") { it.value }
+        json.encodeToString(tags.map { it.value })
 
     private fun parseTags(tagsString: String): Set<LearningTag> {
         if (tagsString.isBlank()) return emptySet()
 
-        return tagsString.split(",")
-            .mapNotNull { tagValue ->
-                LearningTag.fromString(tagValue.trim())
-            }
-            .toSet()
+        return try {
+            json.decodeFromString<List<String>>(tagsString)
+                .mapNotNull { tagValue ->
+                    LearningTag.fromString(tagValue.trim())
+                }
+                .toSet()
+        } catch (_: Exception) {
+            emptySet()
+        }
     }
 }

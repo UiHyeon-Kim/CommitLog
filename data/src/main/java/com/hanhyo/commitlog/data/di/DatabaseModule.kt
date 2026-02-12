@@ -24,7 +24,9 @@ object DatabaseModule {
             context,
             CommitDatabase::class.java,
             CommitDatabase.DATABASE_NAME
-        ).build()
+        )
+            .fallbackToDestructiveMigration(true) // TODO: 개발 완료 후 삭제
+            .build()
     }
 
     @Provides

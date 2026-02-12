@@ -21,7 +21,7 @@ data class CommitEntity(
     val learnedToday: String,   // 오늘 배운점
     val difficulties: String?,  // 어려웠던 점
     val tomorrowPlan: String?,  // 내일 계획
-    val tags: String,
+    val tags: String = "",
 
     val aiMood: String?,    // 이 커밋에서 느껴지는 감정
     val moodScore: Int?,    // 긍정 부정에 따른 감정 점수
