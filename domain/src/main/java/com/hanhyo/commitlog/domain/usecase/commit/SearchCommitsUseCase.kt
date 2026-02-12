@@ -13,8 +13,8 @@ class SearchCommitsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(query: SearchQuery): Result<List<Commit>> {
         return try {
-            val count = commitRepository.searchCommits(query)
-            Result.success(count)
+            val result = commitRepository.searchCommits(query)
+            Result.success(result)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

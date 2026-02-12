@@ -4,6 +4,7 @@ import com.hanhyo.commitlog.domain.common.DomainError
 import com.hanhyo.commitlog.domain.common.Result
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.repository.CommitRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class DeleteCommitUseCase @Inject constructor(
@@ -13,6 +14,8 @@ class DeleteCommitUseCase @Inject constructor(
         return try {
             commitRepository.deleteCommit(commit)
             Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.error(DomainError.DatabaseError("커밋 삭제 실패", e))
         }

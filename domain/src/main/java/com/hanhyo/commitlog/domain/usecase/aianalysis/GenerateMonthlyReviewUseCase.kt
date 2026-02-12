@@ -5,6 +5,7 @@ import com.hanhyo.commitlog.domain.common.Result
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.domain.repository.CommitRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class GenerateMonthlyReviewUseCase @Inject constructor(
@@ -32,8 +33,10 @@ class GenerateMonthlyReviewUseCase @Inject constructor(
             // AI 회고 생성
             val review = aiRepository.generateMonthlyReview(commits, year, month)
             Result.success(review)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Result.error(DomainError.AiAnalysisError("회고 생성 실패: ${e.message}"))
+            Result.error(DomainError.AiAnalysisError("회고 생성 실패: ${e.message}", e))
         }
     }
 }

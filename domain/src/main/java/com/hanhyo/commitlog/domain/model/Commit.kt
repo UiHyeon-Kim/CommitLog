@@ -31,10 +31,13 @@ value class LearnedContent(val value: String) {
 
 @JvmInline
 value class LearningTag(val value: String) {
+    init {
+        require(value.isNotBlank()) { "태그는 비어있을 수 없습니다" }
+        require(value.length <= 20) { "태그는 20자를 초과할 수 없습니다" }
+    }
 
     companion object {
 
-        // 문자열을 LearningTag로 변환
         fun fromString(value: String): LearningTag? {
             return try {
                 LearningTag(value.lowercase().trim())
@@ -43,7 +46,6 @@ value class LearningTag(val value: String) {
             }
         }
 
-        // 문자열 리스트를 LearningTag Set으로 변환
         fun fromStringList(values: List<String>): Set<LearningTag> {
             return values.mapNotNull { fromString(it) }.toSet()
         }
@@ -268,7 +270,7 @@ enum class DifficultyLevel(
 
     companion object {
 
-        fun fromDisPlayName(name: String): DifficultyLevel? {
+        fun fromDisplayName(name: String): DifficultyLevel? {
             return entries.find { it.displayName == name }
         }
 
@@ -308,15 +310,17 @@ data class MonthlyReview(
     }
 
     fun getMoodPercentage(mood: AIMood): Double {
-        if (totalCommitCount == 0) return 0.0
+        val total = moodDistribution.values.sum()
+        if (total == 0) return 0.0
         val count = moodDistribution[mood] ?: 0
-        return count.toDouble() / totalCommitCount * 100
+        return count.toDouble() / total * 100
     }
 
     fun getTagPercentage(tag: LearningTag): Double {
-        if (totalCommitCount == 0) return 0.0
+        val total = tagDistribution.values.sum()
+        if (total == 0) return 0.0
         val count = tagDistribution[tag] ?: 0
-        return count.toDouble() / totalCommitCount * 100
+        return count.toDouble() / total * 100
     }
 }
 

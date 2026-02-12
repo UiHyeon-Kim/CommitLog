@@ -29,19 +29,20 @@ class AnalyzeAndSaveCommitUseCase @Inject constructor(
                 tags = analysisResult.tags
             )
 
-            val id = commitRepository.saveCommit(analyzedCommit)
-            Result.success(analyzedCommit.copy(id = CommitId(id)))
-        } catch (e: Exception) {
-            when (e) {
-                is CancellationException ->
-                    throw e
-
-                is IllegalArgumentException ->
-                    Result.error(DomainError.ValidationError(e.message ?: "유효하지 않은 입력"))
-
-                else ->
-                    Result.error(DomainError.AiAnalysisError("AI 분석 실패: ${e.message}"))
+            try {
+                val id = commitRepository.saveCommit(analyzedCommit)
+                Result.success(analyzedCommit.copy(id = CommitId(id)))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Result.error(DomainError.DatabaseError("분석된 커밋 저장 실패", e))
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IllegalArgumentException) {
+            Result.error(DomainError.ValidationError(e.message ?: "유효하지 않은 입력"))
+        } catch (e: Exception) {
+            Result.error(DomainError.AiAnalysisError("AI 분석 실패: ${e.message}", e))
         }
     }
 }
