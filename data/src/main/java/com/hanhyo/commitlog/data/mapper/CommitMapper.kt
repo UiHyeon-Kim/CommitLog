@@ -49,8 +49,8 @@ fun Commit.toEntity(): CommitEntity {
     )
 }
 
-fun toDomainList(entities: List<CommitEntity>): List<Commit> =
-    entities.map { it.toDomain() }
+fun List<CommitEntity>.toDomainList(): List<Commit> =
+    this.map { it.toDomain() }
 
 /** Entity AI 분석 결과 -> CommitAnalysis */
 private fun CommitEntity.toAnalysis(): CommitAnalysis? {
