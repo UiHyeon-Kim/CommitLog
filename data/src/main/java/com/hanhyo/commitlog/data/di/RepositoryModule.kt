@@ -2,30 +2,27 @@ package com.hanhyo.commitlog.data.di
 
 import com.hanhyo.commitlog.data.repository.AiAnalysisRepositoryImpl
 import com.hanhyo.commitlog.data.repository.CommitRepositoryImpl
-import com.hanhyo.commitlog.data.source.local.database.dao.CommitDao
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.domain.repository.CommitRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
-    
-    @Provides
+abstract class RepositoryModule {
+
+    @Binds
     @Singleton
-    fun provideCommitRepository(
-        commitDao: CommitDao
-    ): CommitRepository {
-        return CommitRepositoryImpl(commitDao)
-    }
-    
-    @Provides
+    abstract fun bindCommitRepository(
+        repository: CommitRepositoryImpl
+    ): CommitRepository
+
+    @Binds
     @Singleton
-    fun provideAiAnalysisRepository(): AiAnalysisRepository {
-        return AiAnalysisRepositoryImpl()
-    }
+    abstract fun bindAiAnalysisRepository(
+        repository: AiAnalysisRepositoryImpl
+    ): AiAnalysisRepository
 }

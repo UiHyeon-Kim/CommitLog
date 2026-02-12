@@ -10,6 +10,7 @@ import com.hanhyo.commitlog.domain.model.SearchQuery
 import com.hanhyo.commitlog.domain.model.Streak
 import com.hanhyo.commitlog.domain.repository.CommitRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.YearMonth
@@ -46,20 +47,20 @@ class CommitRepositoryImpl @Inject constructor(
         val yearMonth = YearMonth.of(year, month)
         val startDate = yearMonth.atDay(1)
         val endDate = yearMonth.atEndOfMonth()
-        return commitDao.getCommitsByDateRange(startDate, endDate).map { it.toDomain() }
+        return commitDao.getCommitsByDateRange(startDate, endDate).toDomainList()
     }
 
     override suspend fun searchCommits(query: SearchQuery): List<Commit> {
         val entities = if (query.keyword.isNotBlank()) {
             commitDao.searchByKeyword(query.keyword)
         } else {
-            emptyList()
+            // 키워드 없을 때 필터링 처리할 수 있도록
+            commitDao.observeAllCommits().first()
         }
 
-        val commits = entities.toDomainList()
-
-        // 추가 필터링 (태그, Mood, 날짜 범위)
-        return commits.filter { commit -> query.matches(commit) }
+        return entities.toDomainList()
+            .filter { commit -> query.matches(commit) }
+            .sortedByDescending { it.date }
     }
 
     override suspend fun getTotalCommitCount(): Int {
@@ -96,17 +97,22 @@ class CommitRepositoryImpl @Inject constructor(
         // 현재 Streak 계산
         val today = LocalDate.now()
         var currentStreak = 0
-        var checkDate = today
 
-        for (date in dates) {
-            val daysBetween = ChronoUnit.DAYS.between(date, checkDate)
+        if (dates.isNotEmpty()) {
+            val firstDate = dates.first()
 
-            // 연속된 날짜인 경우 (오늘 또는 하루 차이)
-            if (daysBetween == 0L || daysBetween == 1L) {
-                currentStreak++
-                checkDate = date.minusDays(1)
-            } else {
-                break
+            // 스트릭이 깨지지 않았는지 먼저 확인 (오늘 혹은 어제 기록이 있어야 함)
+            if (firstDate == today || firstDate == today.minusDays(1)) {
+                currentStreak = 1
+
+                // zipWithNext로 (현재, 다음) 쌍을 바로 비교
+                for ((current, next) in dates.zipWithNext()) {
+                    if (ChronoUnit.DAYS.between(next, current) == 1L) {
+                        currentStreak++
+                    } else {
+                        break
+                    }
+                }
             }
         }
 
