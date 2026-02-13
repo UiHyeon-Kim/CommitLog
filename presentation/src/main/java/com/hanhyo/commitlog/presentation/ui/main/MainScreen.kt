@@ -13,8 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogBottomNavBar
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogHomeAppBar
-import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
 import com.hanhyo.commitlog.presentation.navigation.HomeRoute
@@ -39,21 +37,6 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = {
-            when {
-                currentDestination?.hasRoute(HomeRoute::class) == true -> {
-                    CommitLogHomeAppBar()
-                }
-
-                currentDestination?.hasRoute(StatisticsRoute::class) == true -> {
-                    CommitLogTopAppBar(title = "통계")
-                }
-
-                currentDestination?.hasRoute(ReviewRoute::class) == true -> {
-                    CommitLogTopAppBar(title = "월간 회고")
-                }
-            }
-        },
         bottomBar = {
             if (showBottomBar) {
                 CommitLogBottomNavBar(
@@ -66,7 +49,7 @@ fun MainScreen(
         NavHost(
             navController = bottomNavController,
             startDestination = HomeRoute,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             composable<HomeRoute> {
                 HomeScreen(
