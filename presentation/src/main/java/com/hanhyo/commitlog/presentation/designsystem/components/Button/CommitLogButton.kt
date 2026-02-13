@@ -97,3 +97,15 @@ private fun CommitLogButtonLoadingPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun CommitLogButtonLoadingDarkPreview() {
+    CommitLogTheme(darkTheme = true) {
+        CommitLogButton(
+            text = "CommitLogButton",
+            onClick = {},
+            loading = true
+        )
+    }
+}

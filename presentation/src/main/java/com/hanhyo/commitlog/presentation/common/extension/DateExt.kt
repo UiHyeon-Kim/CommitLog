@@ -2,23 +2,16 @@ package com.hanhyo.commitlog.presentation.common.extension
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 /** LocalDate를 한국어 날짜 형식으로 변환 */
 fun LocalDate.toKoreanFormat(): String = "${year}년 ${monthValue}월 ${dayOfMonth}일"
 
 /** LocalDate를 요일 포함 날짜 형식으로 변환 */
 fun LocalDate.toKoreanFormatWithDayOfWeek(): String {
-    val dayOfWeek = when (dayOfWeek.value) {
-        1 -> "월요일"
-        2 -> "화요일"
-        3 -> "수요일"
-        4 -> "목요일"
-        5 -> "금요일"
-        6 -> "토요일"
-        7 -> "일요일"
-        else -> ""
-    }
+    val dayOfWeek = dayOfWeek.getDisplayName(TextStyle.FULL, Locale.KOREAN)
 
     return "${year}년 ${monthValue}월 ${dayOfMonth}일 $dayOfWeek"
 }

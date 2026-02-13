@@ -2,11 +2,7 @@ package com.hanhyo.commitlog.presentation.common.extension
 
 /** 문자열이 비어있지 않으면 변환 */
 fun String?.ifNotBlankOrNull(transform: (String) -> String): String? {
-    return if (this.isNullOrBlank()) {
-        null
-    } else {
-        transform(this)
-    }
+    return this?.takeIf { it.isNotBlank() }?.let(transform)
 }
 
 /** 텍스트 길이 제한 */

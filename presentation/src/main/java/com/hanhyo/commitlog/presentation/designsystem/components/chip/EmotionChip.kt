@@ -43,7 +43,7 @@ fun EmotionChip(
         onClick = onClick ?: {},
         modifier = modifier.height(Dimensions.EmotionChipHeight),
         enabled = onClick != null,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(Dimensions.CardRadius),
         color = containerColor
     ) {
         Row(
@@ -53,7 +53,7 @@ fun EmotionChip(
         ) {
             Text(
                 text = mood.emoji,
-                fontSize = Dimensions.EmotionChipIconSize.value.sp
+                fontSize = Dimensions.EmotionChipIconSize
             )
 
             Text(

@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
+import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
 @Composable
 fun EmptyState(
@@ -34,7 +35,7 @@ fun EmptyState(
         ) {
             Text(
                 text = emoji,
-                fontSize = 72.sp
+                fontSize = Dimensions.EmptyStateEmojiSize
             )
             
             Text(

@@ -34,7 +34,6 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 
-@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun CommitCard(
     commit: Commit,
@@ -62,7 +61,7 @@ fun CommitCard(
             // AI Mood 이모지
             Text(
                 text = commit.analysis?.mood?.emoji ?: "📝",
-                fontSize = 32.sp,
+                fontSize = Dimensions.IconXLarge.value.sp,
                 modifier = Modifier.padding(top = 4.dp)
             )
 
@@ -122,16 +121,14 @@ fun CommitCard(
 /**
  * 시간 포맷 (오전 10:45)
  */
-@RequiresApi(Build.VERSION_CODES.S)
 private fun formatTime(timestamp: Long): String {
     val instant = Instant.ofEpochMilli(timestamp)
-    val time = LocalTime.ofInstant(instant, ZoneId.systemDefault())
+    val time = instant.atZone(ZoneId.systemDefault()).toLocalTime()
     val hour = if (time.hour == 0) 12 else if (time.hour > 12) time.hour - 12 else time.hour
     val amPm = if (time.hour < 12) "오전" else "오후"
     return "$amPm ${hour}:${time.minute.toString().padStart(2, '0')}"
 }
 
-@RequiresApi(Build.VERSION_CODES.S)
 @Preview(name = "CommitCard - Light")
 @Composable
 private fun CommitCardLightPreview() {
@@ -164,7 +161,6 @@ private fun CommitCardLightPreview() {
         )
     }
 }
-@RequiresApi(Build.VERSION_CODES.S)
 @Preview(name = "CommitCard - Dark")
 @Composable
 private fun CommitCardDarkPreview() {
