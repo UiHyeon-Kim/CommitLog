@@ -2,7 +2,9 @@ package com.hanhyo.commitlog.presentation.designsystem.theme.dimension
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Immutable
 object Dimensions {
@@ -52,7 +54,7 @@ object Dimensions {
 
     // Emotion Chip
     val EmotionChipHeight: Dp = 32.dp
-    val EmotionChipIconSize: Dp = 20.dp
+    val EmotionChipIconSize: TextUnit = 16.sp
 
     // Chart
     val ChartHeight: Dp = 200.dp
@@ -71,4 +73,6 @@ object Dimensions {
     // Min Touch Target
     val MinTouchTarget: Dp = 48.dp
 
+    // EmptyState
+    val EmptyStateEmojiSize: TextUnit = 72.sp
 }
