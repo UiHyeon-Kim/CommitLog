@@ -46,6 +46,7 @@ kotlin {
 dependencies {
 
     implementation(project(":presentation"))
+    implementation(project(":data"))
 
     implementation(libs.bundles.androidx.core)
     implementation(libs.bundles.compose)
