@@ -52,7 +52,7 @@ object Dimensions {
 
     // Emotion Chip
     val EmotionChipHeight: Dp = 32.dp
-    val EmotionChipIconSize: Dp = 20.dp
+    val EmotionChipIconSize: Dp = 16.dp
 
     // Chart
     val ChartHeight: Dp = 200.dp
