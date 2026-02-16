@@ -54,10 +54,10 @@ fun MainScreen(
             composable<HomeRoute> {
                 HomeScreen(
                     onNavigateToWrite = {
-                        rootNavController.navigate(WriteRoute)
+                        rootNavController.navigate(WriteRoute())
                     },
-                    onNavigateToDetail = {
-                        rootNavController.navigate(DetailRoute)
+                    onNavigateToDetail = { commitId ->
+                        rootNavController.navigate(DetailRoute(commitId))
                     }
                 )
             }

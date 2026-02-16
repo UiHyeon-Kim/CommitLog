@@ -8,6 +8,7 @@ import com.hanhyo.commitlog.domain.model.Streak
 import com.hanhyo.commitlog.domain.usecase.commit.DeleteCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetStreakUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
+import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,7 @@ class HomeViewModel @Inject constructor(
     observeAllCommitsUseCase: ObserveAllCommitsUseCase,
     private val deleteCommitUseCase: DeleteCommitUseCase,
     private val getStreakUseCase: GetStreakUseCase,
+    private val saveCommitUseCase: SaveCommitUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -33,6 +35,8 @@ class HomeViewModel @Inject constructor(
 
     private val _effect = MutableSharedFlow<HomeEffect>(replay = 0)
     val effect: SharedFlow<HomeEffect> = _effect.asSharedFlow()
+
+    private var recentlyDeletedCommit: Commit? = null
 
     val commits: StateFlow<List<Commit>> = observeAllCommitsUseCase()
         .stateIn(
@@ -75,6 +79,16 @@ class HomeViewModel @Inject constructor(
     fun deleteCommit(commit: Commit) {
         viewModelScope.launch {
             deleteCommitUseCase(commit)
+            recentlyDeletedCommit = commit
+            _effect.emit(HomeEffect.ShowSnackbar("커밋이 삭제되었습니다.", "실행 취소"))
+        }
+    }
+
+    fun undoDelete() {
+        val commitToRestore = recentlyDeletedCommit ?: return
+        viewModelScope.launch {
+            saveCommitUseCase(commitToRestore)
+            recentlyDeletedCommit = null
         }
     }
 }
@@ -88,4 +102,5 @@ data class HomeUiState(
 sealed interface HomeEffect {
     data object NavigateToWrite : HomeEffect
     data class NavigateToCommit(val commitId: Long) : HomeEffect
+    data class ShowSnackbar(val message: String, val actionLabel: String? = null) : HomeEffect
 }
