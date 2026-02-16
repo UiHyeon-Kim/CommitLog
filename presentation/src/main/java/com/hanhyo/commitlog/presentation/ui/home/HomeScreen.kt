@@ -43,6 +43,18 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.home.components.CommitLogFloatingActionButton
 import com.hanhyo.commitlog.presentation.ui.home.components.SwipeToDeleteCard
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.time.LocalDate
 
 @Composable
@@ -50,6 +62,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToWrite: () -> Unit,
     onNavigateToDetail: (Long) -> Unit,
+    onNavigateToSearch: () -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val commits by viewModel.commits.collectAsState()
@@ -77,7 +90,19 @@ fun HomeScreen(
     }
 
     Scaffold(
-        topBar = { CommitLogHomeAppBar() },
+        topBar = {
+            CommitLogHomeAppBar(
+                actions = {
+                    IconButton(onClick = onNavigateToSearch) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "검색",
+                            tint = CommitLogTheme.colors.textTertiary
+                        )
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             CommitLogFloatingActionButton(
                 onClick = viewModel::navigateToWrite
@@ -109,6 +134,7 @@ fun HomeScreen(
                 HomeContent(
                     modifier = Modifier.padding(paddingValues),
                     commits = commits,
+                    totalCommitCount = uiState.totalCommitCount,
                     onCommitClick = viewModel::navigateToCommit,
                     onDelete = viewModel::deleteCommit
                 )
@@ -120,6 +146,7 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     commits: List<Commit>,
+    totalCommitCount: Int,
     onCommitClick: (Long) -> Unit,
     onDelete: (Commit) -> Unit,
     modifier: Modifier = Modifier,
@@ -137,7 +164,10 @@ private fun HomeContent(
     ) {
         groupedCommits.forEach { (date, dateCommits) ->
             item(key = "header_$date") {
-                DateHeader(date = date)
+                DateHeader(
+                    date = date,
+                    totalCommitCount = if (date.isEqual(LocalDate.now())) totalCommitCount else null
+                )
             }
 
             items(
@@ -165,16 +195,77 @@ private fun HomeContent(
 }
 
 @Composable
-private fun DateHeader(date: LocalDate) {
-    Text(
-        text = date.toRelativeString(),
-        style = CommitLogTheme.typography.titleSmall,
-        color = CommitLogTheme.colors.textTertiary,
+private fun DateHeader(
+    date: LocalDate,
+    totalCommitCount: Int? = null
+) {
+    val today = LocalDate.now()
+    val isToday = date.isEqual(today)
+    val isYesterday = date.isEqual(today.minusDays(1))
+
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE", Locale.KOREAN)
+    val dateString = date.format(dateFormatter)
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = Dimensions.SpacingSmall)
             .background(CommitLogTheme.colors.background)
-    )
+            .padding(vertical = Dimensions.SpacingSmall)
+    ) {
+        if (isToday) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "오늘의 기록",
+                    style = CommitLogTheme.typography.headlineMedium,
+                    color = CommitLogTheme.colors.textPrimary
+                )
+
+                if (totalCommitCount != null) {
+                    Text(
+                        text = "총 ${totalCommitCount}개",
+                        style = CommitLogTheme.typography.bodyMedium,
+                        color = CommitLogTheme.colors.textTertiary,
+                        modifier = Modifier
+                            .background(
+                                color = CommitLogTheme.colors.surface,
+                                shape = androidx.compose.material3.MaterialTheme.shapes.small
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        } else if (isYesterday) {
+            Text(
+                text = "어제 기록",
+                style = CommitLogTheme.typography.headlineMedium, // Big Text
+                color = CommitLogTheme.colors.textPrimary
+            )
+             Spacer(modifier = Modifier.height(4.dp))
+        }
+
+        // Common Date Text (Small)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isToday || isYesterday) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange, // Or generic calendar icon
+                    contentDescription = null,
+                    tint = CommitLogTheme.colors.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+             Text(
+                text = dateString,
+                style = CommitLogTheme.typography.bodyMedium, // Relatively small
+                color = if (isToday || isYesterday) CommitLogTheme.colors.primary else CommitLogTheme.colors.textTertiary
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
@@ -224,6 +315,7 @@ private fun HomeContentPreview() {
     CommitLogTheme {
         HomeContent(
             commits = sampleCommits,
+            totalCommitCount = 10,
             onCommitClick = {},
             onDelete = {}
         )
