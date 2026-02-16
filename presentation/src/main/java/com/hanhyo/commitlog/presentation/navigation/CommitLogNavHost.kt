@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hanhyo.commitlog.presentation.ui.main.MainScreen
 import com.hanhyo.commitlog.presentation.ui.splash.SplashScreen
+import com.hanhyo.commitlog.presentation.ui.search.SearchScreen
 
 @Composable
 fun CommitLogNavHost(
@@ -33,6 +34,17 @@ fun CommitLogNavHost(
             }
 
             homeDestination(navController)
+
+            composable<SearchRoute> {
+                SearchScreen(
+                    onNavigateToDetail = { commitId ->
+                        navController.navigate(DetailRoute(commitId))
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
 }
