@@ -20,6 +20,9 @@ fun NavGraphBuilder.homeDestination(navController: NavHostController) {
         DetailScreen(
             onBack = {
                 navController.popBackStack()
+            },
+            onNavigateToEdit = { commitId ->
+                navController.navigate(WriteRoute(commitId))
             }
         )
     }

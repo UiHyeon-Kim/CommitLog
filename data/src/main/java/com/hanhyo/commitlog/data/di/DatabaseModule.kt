@@ -18,7 +18,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(
+    fun provideCommitDatabase(
         @ApplicationContext context: Context
     ): CommitDatabase {
         return Room.databaseBuilder(
