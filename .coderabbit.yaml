@@ -7,7 +7,6 @@ tone_instructions: |
   2. 대상이 학습할 수 있도록 정확한 원인과 개선 방법을 근거와 함께 설명합니다.
   3. 사소한 컨벤션보다 핵심 로직과 성능 이슈에 집중합니다.
 reviews:
-  high_level_summary_in_walkthrough: true
   auto_title_instructions: |-
     제목 앞 태그는 [Tag] 형식, 제목은 한국어 사용
     Tag 종류
