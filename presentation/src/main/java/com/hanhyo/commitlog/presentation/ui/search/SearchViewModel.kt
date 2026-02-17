@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.SearchQuery
-import com.hanhyo.commitlog.domain.repository.CommitRepository
+import com.hanhyo.commitlog.domain.usecase.commit.SearchCommitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val commitRepository: CommitRepository
+    private val searchCommitsUseCase: SearchCommitsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -35,7 +35,7 @@ class SearchViewModel @Inject constructor(
     @OptIn(FlowPreview::class)
     private fun observeQuery() {
         _query
-            .debounce(300L) // 300ms debounce
+            .debounce(300L)
             .distinctUntilChanged()
             .onEach { keyword ->
                 if (keyword.isBlank()) {
@@ -54,16 +54,20 @@ class SearchViewModel @Inject constructor(
     private fun searchCommits(keyword: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val results = commitRepository.searchCommits(SearchQuery(keyword = keyword))
-                _uiState.value = _uiState.value.copy(
-                    searchResults = results,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                // Error handling could be improved
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
-            }
+
+            searchCommitsUseCase(SearchQuery(keyword = keyword))
+                .onSuccess { results ->
+                    _uiState.value = _uiState.value.copy(
+                        searchResults = results,
+                        isLoading = false
+                    )
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message
+                    )
+                }
         }
     }
 }

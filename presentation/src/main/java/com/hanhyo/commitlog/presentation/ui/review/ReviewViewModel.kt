@@ -2,9 +2,6 @@ package com.hanhyo.commitlog.presentation.ui.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hanhyo.commitlog.domain.common.Result
-import com.hanhyo.commitlog.domain.model.AIMood
-import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.usecase.aianalysis.GenerateMonthlyReviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,9 +44,8 @@ class ReviewViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            when (val result = generateMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)) {
-                is Result.Success -> {
-                    val review = result.data
+            generateMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
+                .onSuccess { review ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -58,19 +54,15 @@ class ReviewViewModel @Inject constructor(
                         )
                     }
                 }
-
-                is Result.Error -> {
+                .onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = result.error.message,
+                            errorMessage = error.message,
                         )
                     }
-                    _effect.emit(ReviewEffect.ShowError(result.error.message))
+                    _effect.emit(ReviewEffect.ShowError(error.message ?: "회고 생성 실패"))
                 }
-
-                is Result.Loading -> {}
-            }
         }
     }
 

@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.hanhyo.commitlog.domain.common.Result
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.usecase.commit.DeleteCommitUseCase
@@ -44,25 +43,23 @@ class DetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            when (val result = getCommitByIdUseCase(CommitId(commitId))) {
-                is Result.Success -> {
+            getCommitByIdUseCase(CommitId(commitId))
+                .onSuccess { commit ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            commit = result.data
+                            commit = commit
                         )
                     }
                 }
-                is Result.Error -> {
+                .onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = result.error.message
+                            error = error.message
                         )
                     }
                 }
-                is Result.Loading -> {}
-            }
         }
     }
 
@@ -77,15 +74,13 @@ class DetailViewModel @Inject constructor(
     fun deleteCommit() {
         viewModelScope.launch {
             _uiState.value.commit?.let { commit ->
-                when (deleteCommitUseCase(commit)) {
-                    is Result.Success -> {
+                deleteCommitUseCase(commit)
+                    .onSuccess {
                         _effect.emit(DetailEffect.NavigateBack)
                     }
-                    is Result.Error -> {
+                    .onFailure {
                         _uiState.update { it.copy(error = "삭제 실패") }
                     }
-                    is Result.Loading -> {}
-                }
             }
         }
     }

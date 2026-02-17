@@ -97,16 +97,7 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "AI 응답 파싱 실패: $responseText")
-            // 파싱 실패 시 기본값 반환
-            return AiAnalysisResult(
-                analysis = CommitAnalysis(
-                    mood = AIMood.NORMAL,
-                    moodScore = 50,
-                    difficultyLevel = DifficultyLevel.NORMAL,
-                    comment = "분석 결과를 처리하지 못했습니다.",
-                ),
-                tags = emptySet()
-            )
+            throw IllegalStateException("AI 응답 파싱 실패", e)
         }
     }
 
