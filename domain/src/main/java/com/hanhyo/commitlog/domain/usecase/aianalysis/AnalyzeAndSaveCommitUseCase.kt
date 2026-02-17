@@ -14,35 +14,31 @@ class AnalyzeAndSaveCommitUseCase @Inject constructor(
     private val commitRepository: CommitRepository
 ) {
     suspend operator fun invoke(commit: Commit): Result<Commit> {
-        return try {
-            // AI 분석
-            val analysisResult = aiRepository.analyzeCommit(
+        // AI 분석 시도
+        val analyzedCommit = try {
+             val analysisResult = aiRepository.analyzeCommit(
                 title = commit.title,
                 learnedToday = commit.learnedToday,
                 difficulties = commit.difficulties,
                 tomorrowPlan = commit.tomorrowPlan,
             )
-
-            // 분석 결과 삽입
-            val analyzedCommit = commit.withAnalysis(
+            commit.withAnalysis(
                 analysis = analysisResult.analysis,
                 tags = analysisResult.tags
             )
+        } catch (e: Exception) {
+            // AI 분석 실패 시 로그 남기거나 무시하고 원본 커밋 사용
+            // 실제 프로덕션에서는 Logger 사용 권장
+            commit
+        }
 
-            try {
-                val id = commitRepository.saveCommit(analyzedCommit)
-                Result.success(analyzedCommit.copy(id = CommitId(id)))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Result.error(DomainError.DatabaseError("분석된 커밋 저장 실패", e))
-            }
+        return try {
+            val id = commitRepository.saveCommit(analyzedCommit)
+            Result.success(analyzedCommit.copy(id = CommitId(id)))
         } catch (e: CancellationException) {
             throw e
-        } catch (e: IllegalArgumentException) {
-            Result.error(DomainError.ValidationError(e.message ?: "유효하지 않은 입력"))
         } catch (e: Exception) {
-            Result.error(DomainError.AiAnalysisError("AI 분석 실패: ${e.message}", e))
+            Result.error(DomainError.DatabaseError("커밋 저장 실패", e))
         }
     }
 }
