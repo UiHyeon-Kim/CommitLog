@@ -263,12 +263,13 @@ enum class AIMood(
 enum class DifficultyLevel(
     val displayName: String,
     val score: Int,
+    val emoji: String,
 ) {
-    VERY_EASY("매우 쉬움", 1),
-    EASY("쉬움", 2),
-    NORMAL("보통", 3),
-    HARD("어려움", 4),
-    VERY_HARD("매우 어려움", 5);
+    VERY_EASY("매우 쉬움", 1, "😆"),
+    EASY("쉬움", 2, "🙂"),
+    NORMAL("보통", 3, "😐"),
+    HARD("어려움", 4, "😫"),
+    VERY_HARD("매우 어려움", 5, "🤯");
 
     companion object {
 
