@@ -7,97 +7,49 @@ import androidx.navigation.toRoute
 import com.hanhyo.commitlog.domain.common.Result
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
-import com.hanhyo.commitlog.domain.usecase.commit.DeleteCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetCommitByIdUseCase
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
+import com.hanhyo.commitlog.presentation.ui.detail.DetailUiState.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getCommitByIdUseCase: GetCommitByIdUseCase,
-    private val deleteCommitUseCase: DeleteCommitUseCase,
+    private val getCommitByIdUseCase: GetCommitByIdUseCase
 ) : ViewModel() {
 
-    private val detailRoute: DetailRoute = savedStateHandle.toRoute()
-
-    private val _effect = MutableSharedFlow<DetailEffect>(replay = 0)
-    val effect: SharedFlow<DetailEffect> = _effect.asSharedFlow()
-
-    private val _uiState = MutableStateFlow(DetailUiState())
+    private val _uiState = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
     val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
 
     init {
-        loadCommit(detailRoute.commitId)
+        val commitId = savedStateHandle.toRoute<DetailRoute>().commitId
+        loadCommit(commitId)
     }
 
-    private fun loadCommit(commitId: Long) {
+    private fun loadCommit(id: Long) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            when (val result = getCommitByIdUseCase(CommitId(commitId))) {
+            _uiState.value = DetailUiState.Loading
+            when (val result = getCommitByIdUseCase(CommitId(id))) {
                 is Result.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            commit = result.data
-                        )
-                    }
+                    _uiState.value = Success(result.data)
                 }
                 is Result.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.error.message
-                        )
-                    }
+                    _uiState.value = Error(result.error.message)
                 }
-                is Result.Loading -> {}
-            }
-        }
-    }
 
-    fun editCommit() {
-        viewModelScope.launch {
-            _uiState.value.commit?.let { commit ->
-                _effect.emit(DetailEffect.NavigateToEdit(commit.id.value))
-            }
-        }
-    }
-
-    fun deleteCommit() {
-        viewModelScope.launch {
-            _uiState.value.commit?.let { commit ->
-                when (deleteCommitUseCase(commit)) {
-                    is Result.Success -> {
-                        _effect.emit(DetailEffect.NavigateBack)
-                    }
-                    is Result.Error -> {
-                        _uiState.update { it.copy(error = "삭제 실패") }
-                    }
-                    is Result.Loading -> {}
-                }
+                Result.Loading -> Unit
             }
         }
     }
 }
 
-data class DetailUiState(
-    val isLoading: Boolean = false,
-    val commit: Commit? = null,
-    val error: String? = null,
-)
-
-sealed interface DetailEffect {
-    data object NavigateBack : DetailEffect
-    data class NavigateToEdit(val commitId: Long) : DetailEffect
+sealed interface DetailUiState {
+    data object Loading : DetailUiState
+    data class Success(val commit: Commit) : DetailUiState
+    data class Error(val message: String) : DetailUiState
 }
