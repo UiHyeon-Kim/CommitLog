@@ -20,7 +20,10 @@ data object StatisticsRoute : BottomRoute
 data object ReviewRoute : BottomRoute
 
 @Serializable
-data object WriteRoute
+data class WriteRoute(val commitId: Long? = null)
 
 @Serializable
-data object DetailRoute
+data class DetailRoute(val commitId: Long)
+
+@Serializable
+data object SearchRoute

@@ -28,6 +28,7 @@ class HomeViewModel @Inject constructor(
     private val deleteCommitUseCase: DeleteCommitUseCase,
     private val getStreakUseCase: GetStreakUseCase,
     private val saveCommitUseCase: SaveCommitUseCase,
+    private val commitRepository: com.hanhyo.commitlog.domain.repository.CommitRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -48,6 +49,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadStreak()
+        loadTotalCommitCount()
     }
 
     private fun loadStreak() {
@@ -61,6 +63,15 @@ class HomeViewModel @Inject constructor(
 
                 is Result.Loading -> {}
             }
+        }
+    }
+
+    private fun loadTotalCommitCount() {
+        viewModelScope.launch {
+            commitRepository.observeTotalCommitCount()
+                .collect { count ->
+                    _uiState.update { it.copy(totalCommitCount = count) }
+                }
         }
     }
 
@@ -96,6 +107,7 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     val isLoading: Boolean = false,
     val streak: Streak? = null,
+    val totalCommitCount: Int = 0,
     val error: String? = null,
 )
 

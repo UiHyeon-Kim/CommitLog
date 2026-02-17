@@ -28,6 +28,8 @@ interface CommitRepository {
     suspend fun searchCommits(query: SearchQuery): List<Commit>
 
     /** 총 커밋 수 - 통계 화면 */
+    fun observeTotalCommitCount(): Flow<Int>
+
     suspend fun getTotalCommitCount(): Int
 
     /** Streak 계산 */

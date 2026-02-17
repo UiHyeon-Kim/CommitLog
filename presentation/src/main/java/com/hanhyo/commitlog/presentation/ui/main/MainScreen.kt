@@ -19,6 +19,7 @@ import com.hanhyo.commitlog.presentation.navigation.HomeRoute
 import com.hanhyo.commitlog.presentation.navigation.ReviewRoute
 import com.hanhyo.commitlog.presentation.navigation.StatisticsRoute
 import com.hanhyo.commitlog.presentation.navigation.WriteRoute
+import com.hanhyo.commitlog.presentation.navigation.SearchRoute
 import com.hanhyo.commitlog.presentation.ui.home.HomeScreen
 import com.hanhyo.commitlog.presentation.ui.review.ReviewScreen
 import com.hanhyo.commitlog.presentation.ui.stats.StatisticsScreen
@@ -58,6 +59,9 @@ fun MainScreen(
                     },
                     onNavigateToDetail = { commitId ->
                         rootNavController.navigate(DetailRoute(commitId))
+                    },
+                    onNavigateToSearch = {
+                        rootNavController.navigate(SearchRoute)
                     }
                 )
             }

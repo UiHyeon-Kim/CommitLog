@@ -49,6 +49,9 @@ interface CommitDao {
 
     /** 총 Commit 개수 */
     @Query("SELECT COUNT(*) FROM commits WHERE isDraft = 0")
+    fun observeTotalCommitCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM commits WHERE isDraft = 0")
     suspend fun getTotalCommitCount(): Int
 
     /** Streak 계산용 최근 Commit */

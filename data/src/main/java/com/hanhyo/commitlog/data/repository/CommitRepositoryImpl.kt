@@ -67,6 +67,10 @@ class CommitRepositoryImpl @Inject constructor(
         return commitDao.getTotalCommitCount()
     }
 
+    override fun observeTotalCommitCount(): Flow<Int> {
+        return commitDao.observeTotalCommitCount()
+    }
+
     override suspend fun saveCommit(commit: Commit): Long {
         val entity = commit.toEntity()
         return commitDao.insertCommit(entity)
