@@ -28,24 +28,24 @@ data class CommitLogColors(
 )
 
 val DarkColors = CommitLogColors(
-    primary = Color(0xFF4169E1),
-    primaryVariant = Color(0xFF1E3A8A),
-    primaryLight = Color(0xFF6B8EF5),
-    background = Color(0xFF0A0E1A),
-    surface = Color(0xFF141824),
-    surfaceVariant = Color(0xFF1A1F2E),
-    accentOrange = Color(0xFFFFA500),
-    accentPurple = Color(0xFF9333EA),
-    accentPink = Color(0xFFEC4899),
-    textPrimary = Color(0xFFFFFFFF),
-    textSecondary = Color(0xFFD1D5DB),
-    textTertiary = Color(0xFF9CA3AF),
-    textDisabled = Color(0xFF6B7280),
-    border = Color(0xFF374151),
-    borderVariant = Color(0xFF1F2937),
-    success = Color(0xFF10B981),
-    error = Color(0xFFEF4444),
-    warning = Color(0xFFF59E0B),
+    primary = Color(0xFF5C7CFA), // More vibrant blue
+    primaryVariant = Color(0xFF364FC7),
+    primaryLight = Color(0xFF748FFC),
+    background = Color(0xFF0F1116), // Deep charcoal/black
+    surface = Color(0xFF1A1D23), // Slightly lighter for cards
+    surfaceVariant = Color(0xFF252932), // Lighter for embedded cards
+    accentOrange = Color(0xFFFF922B),
+    accentPurple = Color(0xFF9775FA), // Soft neon purple
+    accentPink = Color(0xFFFAA2C1), // Soft neon pink
+    textPrimary = Color(0xFFF8F9FA), // Almost white
+    textSecondary = Color(0xFFCED4DA), // Light gray
+    textTertiary = Color(0xFF868E96), // Muted gray
+    textDisabled = Color(0xFF495057),
+    border = Color(0xFF2C2E33), // Subtle border
+    borderVariant = Color(0xFF343A40),
+    success = Color(0xFF51CF66),
+    error = Color(0xFFFF6B6B),
+    warning = Color(0xFFFCC419),
     isLight = false
 )
 
