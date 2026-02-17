@@ -1,327 +1,188 @@
 package com.hanhyo.commitlog.presentation.ui.write
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import com.hanhyo.commitlog.presentation.common.extension.toKoreanFormat
-import com.hanhyo.commitlog.presentation.designsystem.components.Button.CommitLogButton
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.hanhyo.commitlog.presentation.common.extension.toRelativeString
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
-import com.hanhyo.commitlog.presentation.designsystem.components.indicator.InlineLoading
-import com.hanhyo.commitlog.presentation.designsystem.components.textfield.CommitLogMultiLineTextField
-import com.hanhyo.commitlog.presentation.designsystem.components.textfield.CommitLogTextField
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
-import java.time.LocalDate
 
 @Composable
 fun WriteScreen(
-    viewModel: WriteViewModel = hiltViewModel(),
     onBack: () -> Unit,
+    viewModel: WriteViewModel = hiltViewModel()
 ) {
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val uiState by viewModel.uiState.collectAsState()
-    var showExitDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // 뒤로가기 핸들링
-    androidx.activity.compose.BackHandler {
-        if (!uiState.isEditMode && (uiState.title.isNotBlank() || uiState.learnedToday.isNotBlank())) {
-            showExitDialog = true
-        } else {
-            onBack()
+    LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            when (event) {
+                is WriteEvent.SaveSuccess -> {
+                    Toast.makeText(context, "커밋이 저장되었습니다.", Toast.LENGTH_SHORT).show()
+                    onBack()
+                }
+                is WriteEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-    }
-
-    if (showExitDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showExitDialog = false },
-            title = { Text(text = "작성 중인 내용이 있습니다", style = CommitLogTheme.typography.titleMedium) },
-            text = { Text(text = "임시 저장하고 나가시겠습니까?", style = CommitLogTheme.typography.bodyMedium) },
-            confirmButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        showExitDialog = false
-                        viewModel.saveDraft()
-                    }
-                ) {
-                    Text("임시 저장", color = CommitLogTheme.colors.primary)
-                }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(
-                    onClick = {
-                        showExitDialog = false
-                        onBack()
-                    }
-                ) {
-                    Text("나가기", color = CommitLogTheme.colors.textSecondary)
-                }
-            },
-            containerColor = CommitLogTheme.colors.surface,
-            titleContentColor = CommitLogTheme.colors.textPrimary,
-            textContentColor = CommitLogTheme.colors.textSecondary
-        )
     }
 
     Scaffold(
         topBar = {
             CommitLogTopAppBar(
-                title = if (uiState.isEditMode) "커밋 수정" else "기록하기",
-                navItem = AppBarNavItem.Back(onClick = {
-                    if (!uiState.isEditMode && (uiState.title.isNotBlank() || uiState.learnedToday.isNotBlank())) {
-                        showExitDialog = true
-                    } else {
-                        onBack()
+                title = uiState.date.toRelativeString(),
+                navItem = AppBarNavItem.Back(onClick = onBack),
+                actions = {
+                    TextButton(
+                        onClick = viewModel::saveCommit,
+                        enabled = !uiState.isLoading && !uiState.isSaving
+                    ) {
+                        Text(
+                            text = "저장",
+                            color = if (!uiState.isLoading && !uiState.isSaving) 
+                                    CommitLogTheme.colors.primary 
+                                else 
+                                    CommitLogTheme.colors.textTertiary
+                        )
                     }
-                })
+                }
             )
         },
-        snackbarHost = { SnackbarHost(SnackbarHostState()) },
-        containerColor = CommitLogTheme.colors.background,
-        modifier = Modifier.imePadding() // 키보드 올라왔을 때 스크롤 가능하도록 패딩 추가
-    ) { padding ->
-        WriteContent(
-            date = uiState.date,
-            title = uiState.title,
-            learnedToday = uiState.learnedToday,
-            difficulties = uiState.difficulties,
-            tomorrowPlan = uiState.tomorrowPlan,
-            isLoading = uiState.isLoading,
-            isEditMode = uiState.isEditMode,
-            canSave = uiState.canSave,
-            onTitleChange = viewModel::updateTitle,
-            onLearnedTodayChange = viewModel::updateLearnedToday,
-            onDifficultiesChange = viewModel::updateDifficulties,
-            onTomorrowPlanChange = viewModel::updateTomorrowPlan,
-            onSave = viewModel::saveCommit,
-            onSaveDraft = viewModel::saveDraft,
-            modifier = Modifier.padding(padding)
-        )
+        containerColor = CommitLogTheme.colors.background
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = CommitLogTheme.colors.primary
+                )
+            } else {
+                WriteContent(
+                    uiState = uiState,
+                    onTitleChange = viewModel::onTitleChange,
+                    onContentChange = viewModel::onContentChange,
+                    onTagsChange = viewModel::onTagsChange,
+                    onDifficultiesChange = viewModel::onDifficultiesChange,
+                    onTomorrowPlanChange = viewModel::onTomorrowPlanChange
+                )
+            }
+            
+            if (uiState.isSaving) {
+                 // Overlay loader
+                 Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(CommitLogTheme.colors.background.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = CommitLogTheme.colors.primary)
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun WriteContent(
-    date: LocalDate,
-    title: String,
-    learnedToday: String,
-    difficulties: String,
-    tomorrowPlan: String,
-    isLoading: Boolean,
-    isEditMode: Boolean,
-    canSave: Boolean,
+fun WriteContent(
+    uiState: WriteUiState,
     onTitleChange: (String) -> Unit,
-    onLearnedTodayChange: (String) -> Unit,
+    onContentChange: (String) -> Unit,
+    onTagsChange: (String) -> Unit,
     onDifficultiesChange: (String) -> Unit,
     onTomorrowPlanChange: (String) -> Unit,
-    onSave: () -> Unit,
-    onSaveDraft: () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
+        verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
     ) {
-        // AI 분석 헤더
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = CommitLogTheme.colors.surfaceVariant.copy(alpha = 0.5f),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.padding(Dimensions.SpacingMedium),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
-            ) {
-                // AI Icon placeholder (using a simple Box with Icon for now or custom drawable if available)
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = CommitLogTheme.colors.primary.copy(alpha = 0.2f),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .width(40.dp)
-                ) {
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = CommitLogTheme.colors.primary,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = "AI 감정 분석",
-                        style = CommitLogTheme.typography.titleSmall,
-                        color = CommitLogTheme.colors.textPrimary
-                    )
-                    Text(
-                        text = "AI가 당신의 기록에서 감정을 분석합니다",
-                        style = CommitLogTheme.typography.bodySmall,
-                        color = CommitLogTheme.colors.textSecondary
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(Dimensions.SpacingSmall))
-
-        // 날짜 표시
-        Text(
-            text = date.toKoreanFormat(), // e.g., 2024년 5월 22일 확인 필요. toKoreanFormat이 포맷을 지원하는지 확인.
-            style = CommitLogTheme.typography.bodyLarge,
-            color = CommitLogTheme.colors.textSecondary
+        // Title
+        OutlinedTextField(
+            value = uiState.title,
+            onValueChange = onTitleChange,
+            label = { Text("제목") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
         )
 
-        // 제목
-        InputSection(title = "제목", required = true) {
-            CommitLogTextField(
-                value = title,
-                onValueChange = onTitleChange,
-                placeholder = "제목을 입력하세요",
-                enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next)
-            )
-        }
+        // Tags
+        OutlinedTextField(
+            value = uiState.tags,
+            onValueChange = onTagsChange,
+            label = { Text("태그 (쉼표로 구분)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
+        )
 
-        // 오늘 배운 점
-        InputSection(title = "오늘 배운 점", required = true) {
-            CommitLogMultiLineTextField(
-                value = learnedToday,
-                onValueChange = onLearnedTodayChange,
-                placeholder = "오늘 새롭게 알게 된 사실은 무엇인가요?",
-                enabled = !isLoading,
-                minLines = 6,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next)
-            )
-        }
+        // Learned Content
+        OutlinedTextField(
+            value = uiState.content,
+            onValueChange = onContentChange,
+            label = { Text("오늘 배운 점") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp),
+            minLines = 3
+        )
 
-        // 어려웠던 점
-        InputSection(title = "어려운 점", required = false) {
-            CommitLogMultiLineTextField(
-                value = difficulties,
-                onValueChange = onDifficultiesChange,
-                placeholder = "진행 중 마주친 장애물이나 고민이 있나요?",
-                enabled = !isLoading,
-                minLines = 4,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Next)
-            )
-        }
+        // Difficulties
+        OutlinedTextField(
+            value = uiState.difficulties,
+            onValueChange = onDifficultiesChange,
+            label = { Text("어려웠던 점") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            minLines = 2
+        )
 
-        // 내일 할 일
-        InputSection(title = "내일 할 일", required = false) {
-            CommitLogMultiLineTextField(
-                value = tomorrowPlan,
-                onValueChange = onTomorrowPlanChange,
-                placeholder = "내일은 어떤 작은 목표를 이룰까요?",
-                enabled = !isLoading,
-                minLines = 4,
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onSave() })
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Dimensions.SpacingMedium))
-
-        // 버튼 (Loading indicator logic maintained)
-        if (isLoading) {
-            InlineLoading(
-                message = "AI가 당신의 기록에서 감정을 분석합니다",
-                modifier = Modifier.fillMaxWidth()
-            )
-        } else {
-            CommitLogButton(
-                text = if (isEditMode) "수정하기" else "저장하기",
-                onClick = onSave,
-                enabled = canSave,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Dimensions.SpacingLarge))
-    }
-}
-
-@Composable
-private fun InputSection(
-    title: String,
-    required: Boolean,
-    content: @Composable () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingSmall)) {
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            Text(
-                text = title,
-                style = CommitLogTheme.typography.bodyMedium,
-                color = CommitLogTheme.colors.textSecondary
-            )
-        }
-        content()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun WriteContentPreview() {
-    CommitLogTheme {
-        var title by remember { mutableStateOf("") }
-        var learnedToday by remember { mutableStateOf("") }
-        var difficulties by remember { mutableStateOf("") }
-        var tomorrowPlan by remember { mutableStateOf("") }
-
-        WriteContent(
-            date = LocalDate.now(),
-            title = title,
-            learnedToday = learnedToday,
-            difficulties = difficulties,
-            tomorrowPlan = tomorrowPlan,
-            isLoading = false,
-            isEditMode = false,
-            canSave = true,
-            onTitleChange = { title = it },
-            onLearnedTodayChange = { learnedToday = it },
-            onDifficultiesChange = { difficulties = it },
-            onTomorrowPlanChange = { tomorrowPlan = it },
-            onSave = {},
-            onSaveDraft = {}
+        // Tomorrow Plan
+        OutlinedTextField(
+            value = uiState.tomorrowPlan,
+            onValueChange = onTomorrowPlanChange,
+            label = { Text("내일의 계획") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
+            minLines = 2
         )
     }
 }

@@ -9,10 +9,9 @@ import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
+import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.usecase.aianalysis.AnalyzeAndSaveCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetCommitByIdUseCase
-import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
-import com.hanhyo.commitlog.domain.usecase.commit.UpdateCommitUseCase
 import com.hanhyo.commitlog.presentation.navigation.WriteRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,177 +28,132 @@ import javax.inject.Inject
 @HiltViewModel
 class WriteViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val analyzeAndSaveCommitUseCase: AnalyzeAndSaveCommitUseCase,
     private val getCommitByIdUseCase: GetCommitByIdUseCase,
-    private val saveCommitUseCase: SaveCommitUseCase,
-    private val updateCommitUseCase: UpdateCommitUseCase,
+    private val analyzeAndSaveCommitUseCase: AnalyzeAndSaveCommitUseCase
 ) : ViewModel() {
-
-    private val writeRoute: WriteRoute = savedStateHandle.toRoute()
-
-    private val _effect = MutableSharedFlow<WriteEffect>(replay = 0)
-    val effect: SharedFlow<WriteEffect> = _effect.asSharedFlow()
 
     private val _uiState = MutableStateFlow(WriteUiState())
     val uiState: StateFlow<WriteUiState> = _uiState.asStateFlow()
 
+    private val _event = MutableSharedFlow<WriteEvent>()
+    val event: SharedFlow<WriteEvent> = _event.asSharedFlow()
+
+    private var currentCommitId: CommitId? = null
+
     init {
-        val commitId = writeRoute.commitId
+        val commitId = savedStateHandle.toRoute<WriteRoute>().commitId
         if (commitId != null) {
             loadCommit(commitId)
         }
     }
 
-    private fun loadCommit(commitId: Long) {
+    private fun loadCommit(id: Long) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            when (val result = getCommitByIdUseCase(CommitId(commitId))) {
+            val result = getCommitByIdUseCase(CommitId(id))
+            when (result) {
                 is Result.Success -> {
                     val commit = result.data
+                    currentCommitId = commit.id
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            isEditMode = true,
                             date = commit.date,
-                            // 제목이 없으면 빈 문자열 (방어 코드)
                             title = commit.title.value,
-                            learnedToday = commit.learnedToday.value,
+                            content = commit.learnedToday.value,
+                            tags = commit.tags.joinToString(", ") { tag -> tag.value },
                             difficulties = commit.difficulties ?: "",
-                            tomorrowPlan = commit.tomorrowPlan ?: "",
-                            canSave = true // 불러온 데이터는 기본적으로 저장 가능 상태
+                            tomorrowPlan = commit.tomorrowPlan ?: ""
                         )
                     }
                 }
 
                 is Result.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(WriteEffect.ShowError("커밋을 불러오지 못했습니다."))
-                    _effect.emit(WriteEffect.NavigateBack)
+                    _event.emit(WriteEvent.ShowError("커밋을 불러오는데 실패했습니다."))
                 }
 
-                is Result.Loading -> {}
+                Result.Loading -> Unit
             }
         }
     }
 
-    fun updateTitle(title: String) {
-        _uiState.update { it.copy(title = title, canSave = validateInput(title, it.learnedToday)) }
+    fun onTitleChange(newTitle: String) {
+        _uiState.update { it.copy(title = newTitle) }
     }
 
-    fun updateLearnedToday(learnedToday: String) {
-        _uiState.update { it.copy(learnedToday = learnedToday, canSave = validateInput(it.title, learnedToday)) }
+    fun onContentChange(newContent: String) {
+        _uiState.update { it.copy(content = newContent) }
     }
 
-    fun updateDifficulties(difficulties: String) {
-        _uiState.update { it.copy(difficulties = difficulties) }
+    fun onTagsChange(newTags: String) {
+        _uiState.update { it.copy(tags = newTags) }
     }
 
-    fun updateTomorrowPlan(tomorrowPlan: String) {
-        _uiState.update { it.copy(tomorrowPlan = tomorrowPlan) }
+    fun onDifficultiesChange(newDifficulties: String) {
+        _uiState.update { it.copy(difficulties = newDifficulties) }
+    }
+
+    fun onTomorrowPlanChange(newPlan: String) {
+        _uiState.update { it.copy(tomorrowPlan = newPlan) }
     }
 
     fun saveCommit() {
-        val state = _uiState.value
-        if (!state.canSave || state.isLoading) return
+        if (_uiState.value.title.isBlank() || _uiState.value.content.isBlank()) {
+            viewModelScope.launch { _event.emit(WriteEvent.ShowError("제목과 내용을 입력해주세요.")) }
+            return
+        }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isSaving = true) }
 
-            try {
-                val commit = Commit.create(
-                    date = state.date,
-                    title = CommitTitle(state.title),
-                    learnedToday = LearnedContent(state.learnedToday),
-                    difficulties = state.difficulties.ifBlank { null },
-                    tomorrowPlan = state.tomorrowPlan.ifBlank { null },
-                    isDraft = false
-                )
+            val commit = Commit(
+                id = currentCommitId ?: CommitId(0), // 0 implies new commit usually, or handled by usecase
+                date = _uiState.value.date,
+                title = CommitTitle(_uiState.value.title),
+                learnedToday = LearnedContent(_uiState.value.content),
+                tags = _uiState.value.tags.split(",").map { LearningTag(it.trim()) }.filter { it.value.isNotEmpty() }
+                    .toSet(),
+                difficulties = _uiState.value.difficulties.ifBlank { null },
+                tomorrowPlan = _uiState.value.tomorrowPlan.ifBlank { null },
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                isDraft = false, // Assuming immediate publish for now
+                analysis = null // Analysis will be handled by usecase
+            )
 
-                // 사용자가 빠른 저장을 원함 -> 분석 없이 저장 후 종료
-                // 추후 Worker 등을 통해 백그라운드 분석 적용 가능
-                val result = if (state.isEditMode) {
-                    updateCommitUseCase(commit)
-                } else {
-                    // analyzeAndSaveCommitUseCase(commit) -> 너무 오래 걸림
-                    try {
-                        saveCommitUseCase(commit)
-                        Result.Success(commit)
-                    } catch (e: Exception) {
-                        Result.Error(com.hanhyo.commitlog.domain.common.DomainError.DatabaseError(e.message ?: "저장 실패", e))
-                    }
+
+            val result = analyzeAndSaveCommitUseCase(commit)
+
+            _uiState.update { it.copy(isSaving = false) }
+
+            when (result) {
+                is Result.Success -> {
+                    _event.emit(WriteEvent.SaveSuccess)
                 }
 
-                when (result) {
-                    is Result.Success -> {
-                        _effect.emit(WriteEffect.ShowSuccess("커밋이 저장되었습니다"))
-                        _effect.emit(WriteEffect.NavigateBack)
-                    }
-                    is Result.Error -> {
-                        _uiState.update { it.copy(isLoading = false) }
-                        _effect.emit(WriteEffect.ShowError(result.error.message))
-                    }
-                    is Result.Loading -> {}
+                is Result.Error -> {
+                    _event.emit(WriteEvent.ShowError(result.error.message))
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
-                _effect.emit(WriteEffect.ShowError(e.message ?: "유효하지 않은 입력"))
+
+                is Result.Loading -> Unit
             }
         }
-    }
-
-    fun saveDraft() {
-        val state = _uiState.value
-        if (state.title.isBlank() || state.isLoading) return
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-
-            try {
-                val draft = Commit.create(
-                    date = state.date,
-                    title = CommitTitle(state.title),
-                    learnedToday = LearnedContent(state.learnedToday.ifBlank { "내용 없음" }),
-                    difficulties = state.difficulties.ifBlank { null },
-                    tomorrowPlan = state.tomorrowPlan.ifBlank { null },
-                    isDraft = true
-                )
-
-                when (saveCommitUseCase(draft)) {
-                    is Result.Success -> {
-                        _effect.emit(WriteEffect.ShowSuccess("임시저장 되었습니다"))
-                        _effect.emit(WriteEffect.NavigateBack)
-                    }
-                    is Result.Error -> {
-                        _uiState.update { it.copy(isLoading = false) }
-                        _effect.emit(WriteEffect.ShowError("임시저장 실패"))
-                    }
-                    is Result.Loading -> {}
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
-                _effect.emit(WriteEffect.ShowError(e.message ?: "임시저장 실패"))
-            }
-        }
-    }
-
-    private fun validateInput(title: String, learnedToday: String): Boolean {
-        return title.isNotBlank() && learnedToday.isNotBlank()
     }
 }
 
 data class WriteUiState(
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
     val date: LocalDate = LocalDate.now(),
     val title: String = "",
-    val learnedToday: String = "",
+    val content: String = "",
+    val tags: String = "",
     val difficulties: String = "",
-    val tomorrowPlan: String = "",
-    val isLoading: Boolean = false,
-    val isEditMode: Boolean = false,
-    val canSave: Boolean = false,
+    val tomorrowPlan: String = ""
 )
 
-sealed interface WriteEffect {
-    data object NavigateBack : WriteEffect
-    data class ShowError(val message: String) : WriteEffect
-    data class ShowSuccess(val message: String) : WriteEffect
+sealed interface WriteEvent {
+    data object SaveSuccess : WriteEvent
+    data class ShowError(val message: String) : WriteEvent
 }
