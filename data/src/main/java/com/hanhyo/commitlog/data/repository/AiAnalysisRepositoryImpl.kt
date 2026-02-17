@@ -11,12 +11,15 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
+import com.hanhyo.commitlog.data.source.remote.AiService
+import org.json.JSONObject
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AiAnalysisRepositoryImpl @Inject constructor(
-    // TODO: OpenAIApi
+    private val aiService: AiService,
 ) : AiAnalysisRepository {
 
     override suspend fun analyzeCommit(
@@ -25,21 +28,14 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         difficulties: String?,
         tomorrowPlan: String?
     ): AiAnalysisResult {
-        // TODO: 실제 OpenAI API 호출
-
-        // Mock 구현
-        val mockTags = extractMockTags(title.value, learnedToday.value)
-        val mockMood = determineMockMood(title.value, learnedToday.value)
-
-        return AiAnalysisResult(
-            analysis = CommitAnalysis(
-                mood = mockMood,
-                moodScore = 75,
-                difficultyLevel = DifficultyLevel.NORMAL,
-                comment = "꾸준한 학습이 인상적입니다! 계속 이어가세요."
-            ),
-            tags = mockTags
+        val responseText = aiService.analyzeCommit(
+            title = title.value,
+            learned = learnedToday.value,
+            difficulty = difficulties,
+            tomorrow = tomorrowPlan,
         )
+
+        return parseAnalysisResponse(responseText)
     }
 
     override suspend fun generateMonthlyReview(
@@ -47,9 +43,8 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         year: Int,
         month: Int
     ): MonthlyReview {
-        // TODO: 실제 OpenAI API 호출
-
-        val aiSummary = generateMockSummary(commits, year, month)
+        val prompt = buildMonthlyReviewPrompt(commits, year, month)
+        val aiSummary = aiService.generateMonthlyReview(prompt)
 
         return MonthlyReviewMapper.create(
             commits = commits,
@@ -60,128 +55,146 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Mock 태그 추출
-     * 실제로는 AI가 추출
+     * AI 응답 JSON을 AiAnalysisResult로 파싱
      */
-    private fun extractMockTags(title: String, learnedToday: String): Set<LearningTag> {
-        val text = "$title $learnedToday".lowercase()
-        val extractedTags = mutableSetOf<String>()
+    private fun parseAnalysisResponse(responseText: String): AiAnalysisResult {
+        try {
+            // AI 응답에서 JSON 추출 (```json ... ``` 감싸기 제거)
+            val jsonString = responseText
+                .replace("```json", "")
+                .replace("```", "")
+                .trim()
 
-        val keywords = mapOf(
-            "kotlin" to "kotlin",
-            "코틀린" to "kotlin",
-            "android" to "android",
-            "안드로이드" to "android",
-            "compose" to "compose",
-            "컴포즈" to "compose",
-            "java" to "java",
-            "sql" to "sql",
-            "database" to "database",
-            "알고리즘" to "algorithm",
-            "algorithm" to "algorithm",
-            "api" to "api",
-            "coroutine" to "coroutine",
-            "코루틴" to "coroutine",
-            "room" to "room",
-            "retrofit" to "retrofit",
-            "hilt" to "hilt",
-            "mvvm" to "mvvm"
-        )
+            val json = JSONObject(jsonString)
 
-        keywords.forEach { (key, tag) ->
-            if (text.contains(key) && extractedTags.size < 5) {
-                extractedTags.add(tag)
+            val mood = AIMood.fromName(json.optString("mood", "NORMAL"))
+            val moodScore = json.optInt("moodScore", 50)
+            val difficultyLevel = DifficultyLevel.fromDisplayName(
+                json.optString("difficultyLevel", "보통")
+            ) ?: DifficultyLevel.NORMAL
+            val comment = json.optString("comment", "꾸준한 학습을 이어가세요!")
+
+            // tags 파싱
+            val tagsArray = json.optJSONArray("tags")
+            val tags = if (tagsArray != null) {
+                val tagList = mutableListOf<String>()
+                for (i in 0 until tagsArray.length()) {
+                    tagList.add(tagsArray.getString(i))
+                }
+                LearningTag.fromStringList(tagList)
+            } else {
+                emptySet()
             }
-        }
 
-        return LearningTag.fromStringList(extractedTags.toList())
-    }
-
-    /**
-     * Mock Mood 결정: 실제로는 AI가 분석
-     */
-    private fun determineMockMood(title: String, learnedToday: String): AIMood {
-        val text = "$title $learnedToday".lowercase()
-
-        return when {
-            text.contains("완성") || text.contains("성공") || text.contains("해결") ->
-                AIMood.PRODUCTIVE
-
-            text.contains("배웠다") || text.contains("이해") || text.contains("공부") ->
-                AIMood.CURIOUS
-
-            text.contains("집중") || text.contains("몰입") ->
-                AIMood.FOCUSED
-
-            text.contains("어렵") || text.contains("힘들") ->
-                AIMood.CONFUSED
-
-            text.contains("피곤") || text.contains("지침") ->
-                AIMood.TIRED
-
-            text.contains("아이디어") || text.contains("영감") ->
-                AIMood.INSPIRED
-
-            text.contains("극복") ->
-                AIMood.RELIEVED
-
-            else ->
-                AIMood.NORMAL
+            return AiAnalysisResult(
+                analysis = CommitAnalysis(
+                    mood = mood,
+                    moodScore = moodScore,
+                    difficultyLevel = difficultyLevel,
+                    comment = comment,
+                ),
+                tags = tags
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "AI 응답 파싱 실패: $responseText")
+            // 파싱 실패 시 기본값 반환
+            return AiAnalysisResult(
+                analysis = CommitAnalysis(
+                    mood = AIMood.NORMAL,
+                    moodScore = 50,
+                    difficultyLevel = DifficultyLevel.NORMAL,
+                    comment = "분석 결과를 처리하지 못했습니다.",
+                ),
+                tags = emptySet()
+            )
         }
     }
 
     /**
-     * Mock 회고 요약 생성: 실제로는 AI가 생성
+     * 월간 회고 프롬프트 생성
+     * 사용자가 지정한 프롬프트 구조를 사용
      */
-    private fun generateMockSummary(
+    private fun buildMonthlyReviewPrompt(
         commits: List<Commit>,
         year: Int,
-        month: Int
+        month: Int,
     ): String {
-        val totalCount = commits.size
-        val analyzedCommits = commits.filter { it.isAnalyzed() }
+        val totalCommitCount = commits.size
 
-        val moodCounts = analyzedCommits
+        // Mood 분포
+        val moodDistribution = commits
             .mapNotNull { it.analysis?.mood }
-            .groupingBy { it }
+            .groupingBy { it.displayNameKo }
             .eachCount()
+            .entries
+            .joinToString(", ") { "${it.key}: ${it.value}건" }
+            .ifEmpty { "데이터 없음" }
 
-        val mostFrequentMood = moodCounts.maxByOrNull { it.value }?.key
-
-        val avgScore = analyzedCommits
-            .mapNotNull { it.analysis?.moodScore }
-            .average()
-            .takeIf { !it.isNaN() } ?: 0.0
-
-        val tagCounts = commits
-            .flatMap { it.tags }
-            .groupingBy { it }
-            .eachCount()
-
-        val topTags = tagCounts.entries
-            .sortedByDescending { it.value }
-            .take(3)
-            .map { it.key.value }
-
-        return buildString {
-            appendLine("[한 달 요약]")
-            appendLine("${year}년 ${month}월에는 총 ${totalCount}개의 커밋을 작성하셨습니다.")
-            appendLine("평균 학습 점수는 ${avgScore.toInt()}/100으로 꾸준한 학습 흐름을 보여주셨습니다.")
-            mostFrequentMood?.let {
-                appendLine("가장 많이 나타난 학습 상태는 '${it.displayNameKo}'입니다.")
+        // 주차별 커밋 수
+        val weeklyCommitCount = commits
+            .groupBy { commit ->
+                val weekOfMonth = (commit.date.dayOfMonth - 1) / 7 + 1
+                "${weekOfMonth}주차"
             }
+            .entries
+            .sortedBy { it.key }
+            .joinToString(", ") { "${it.key}: ${it.value.size}건" }
 
-            appendLine()
-            appendLine("[학습 패턴 분석]")
+        // 특이사항 분석
+        val notablePatterns = buildList {
+            val analyzedCommits = commits.filter { it.isAnalyzed() }
+            if (analyzedCommits.isNotEmpty()) {
+                val avgScore = analyzedCommits.mapNotNull { it.analysis?.moodScore }.average()
+                add("평균 학습 점수: ${avgScore.toInt()}/100")
+            }
+            val topTags = commits.flatMap { it.tags }
+                .groupingBy { it.value }
+                .eachCount()
+                .entries
+                .sortedByDescending { it.value }
+                .take(3)
             if (topTags.isNotEmpty()) {
-                appendLine("이번 달에는 ${topTags.joinToString(", ")} 분야에 집중하셨습니다.")
+                add("주요 학습 태그: ${topTags.joinToString(", ") { "${it.key}(${it.value}회)" }}")
             }
-            appendLine("주차별로 고르게 학습하는 패턴을 보였습니다.")
+            val confusedCount = commits.count { it.analysis?.mood == AIMood.CONFUSED }
+            if (confusedCount > 0) {
+                add("혼란스러움 상태가 ${confusedCount}회 감지됨")
+            }
+        }.joinToString("; ").ifEmpty { "없음" }
 
-            appendLine()
-            appendLine("[다음 달을 위한 제안]")
-            appendLine("현재의 학습 페이스를 유지하면서, 새로운 분야로도 확장해보세요.")
-            appendLine("어려웠던 부분들을 복습하는 시간을 가져보시는 것을 추천드립니다.")
-        }
+        return """
+당신은 개발자의 학습 기록을 바탕으로
+월간 회고를 도와주는 AI 코치입니다.
+
+아래에 주어진 학습 통계 데이터를 바탕으로
+한국어로 월간 학습 회고를 작성해주세요.
+
+다음 규칙을 반드시 지켜주세요.
+
+1. 감정적인 위로보다는 학습 흐름과 패턴 분석에 집중합니다.
+2. 결과를 과장하지 않고, 데이터에 근거해 설명합니다.
+3. 회고는 아래의 3개 섹션으로 나누어 작성합니다.
+
+[섹션 구성]
+
+1. 한 달 요약
+2. 학습 패턴 분석
+3. 다음 달을 위한 제안
+
+[작성 스타일]
+
+- 객관적이고 차분한 톤
+- 일기체가 아닌 회고 보고서 스타일
+- 각 섹션은 3~5문장 이내
+- 전체 분량은 너무 길지 않게 유지
+
+[학습 통계 데이터]
+
+- 기간: ${year}년 ${month}월
+- 총 커밋 수: ${totalCommitCount}
+- AI Mood 분포: $moodDistribution
+- 주차별 커밋 수: $weeklyCommitCount
+- 특이사항: $notablePatterns
+""".trimIndent()
     }
 }
