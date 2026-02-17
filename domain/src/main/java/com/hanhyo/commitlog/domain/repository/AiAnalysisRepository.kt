@@ -26,6 +26,8 @@ interface AiAnalysisRepository {
         tomorrowPlan: String?,
     ): AiAnalysisResult
 
+    suspend fun scheduleAnalysis(commitId: Long)
+
     suspend fun generateMonthlyReview(
         commits: List<Commit>,
         year: Int,

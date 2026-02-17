@@ -55,6 +55,7 @@ data class Commit(
     val tomorrowPlan: String?,
     val tags: Set<LearningTag>,
     val analysis: CommitAnalysis?,
+    val analysisStatus: AnalysisStatus,
     val isDraft: Boolean,
     val createdAt: Long,
     val updatedAt: Long?
@@ -63,7 +64,24 @@ data class Commit(
     fun withAnalysis(analysis: CommitAnalysis, tags: Set<LearningTag>): Commit {
         return copy(
             analysis = analysis,
+            analysisStatus = AnalysisStatus.COMPLETED,
             tags = tags,
+            updatedAt = System.currentTimeMillis()
+        )
+    }
+
+    /** AI 분석 실패 처리 */
+    fun withAnalysisFailed(): Commit {
+        return copy(
+            analysisStatus = AnalysisStatus.FAILED,
+            updatedAt = System.currentTimeMillis()
+        )
+    }
+
+    /** AI 분석 시작 */
+    fun withAnalysisPending(): Commit {
+        return copy(
+            analysisStatus = AnalysisStatus.PENDING,
             updatedAt = System.currentTimeMillis()
         )
     }
@@ -77,7 +95,7 @@ data class Commit(
     }
 
     /** AI 분석 완료 여부 */
-    fun isAnalyzed(): Boolean = analysis != null
+    fun isAnalyzed(): Boolean = analysis != null || analysisStatus == AnalysisStatus.COMPLETED
 
     /** 오늘 작성한 Commit인지 확인 */
     fun isToday(): Boolean = date.isEqual(LocalDate.now())
@@ -102,6 +120,7 @@ data class Commit(
 
     companion object {
 
+
         /** 새 Commit 생성 */
         fun create(
             date: LocalDate = LocalDate.now(),
@@ -109,7 +128,8 @@ data class Commit(
             learnedToday: LearnedContent,
             difficulties: String? = null,
             tomorrowPlan: String? = null,
-            isDraft: Boolean = false
+            isDraft: Boolean = false,
+            analysisStatus: AnalysisStatus = AnalysisStatus.NONE
         ) = Commit(
             id = CommitId.NONE,
             date = date,
@@ -119,6 +139,7 @@ data class Commit(
             tomorrowPlan = tomorrowPlan,
             tags = emptySet(),
             analysis = null,
+            analysisStatus = analysisStatus,
             isDraft = isDraft,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
@@ -138,6 +159,7 @@ data class Commit(
             tomorrowPlan = null,
             tags = emptySet(),
             analysis = null,
+            analysisStatus = AnalysisStatus.NONE,
             isDraft = true,
             createdAt = System.currentTimeMillis(),
             updatedAt = null

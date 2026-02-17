@@ -147,6 +147,7 @@ private fun CommitCardLightPreview() {
                 difficultyLevel = DifficultyLevel.NORMAL,
                 comment = "집중해서 학습하셨네요!"
             ),
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
@@ -179,6 +180,7 @@ private fun CommitCardDarkPreview() {
                 difficultyLevel = DifficultyLevel.NORMAL,
                 comment = "집중해서 학습하셨네요!"
             ),
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null

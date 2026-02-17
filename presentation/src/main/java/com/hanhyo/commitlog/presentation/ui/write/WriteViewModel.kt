@@ -8,7 +8,7 @@ import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
-import com.hanhyo.commitlog.domain.usecase.aianalysis.AnalyzeAndSaveCommitUseCase
+import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleAnalysisUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetCommitByIdUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.UpdateCommitUseCase
@@ -28,10 +28,10 @@ import javax.inject.Inject
 @HiltViewModel
 class WriteViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val analyzeAndSaveCommitUseCase: AnalyzeAndSaveCommitUseCase,
     private val getCommitByIdUseCase: GetCommitByIdUseCase,
     private val saveCommitUseCase: SaveCommitUseCase,
     private val updateCommitUseCase: UpdateCommitUseCase,
+    private val scheduleAnalysisUseCase: ScheduleAnalysisUseCase,
 ) : ViewModel() {
 
     private val writeRoute: WriteRoute = savedStateHandle.toRoute()
@@ -41,6 +41,9 @@ class WriteViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(WriteUiState())
     val uiState: StateFlow<WriteUiState> = _uiState.asStateFlow()
+
+    // 편집 모드일 때 ID 저장
+    private var editingCommitId: Long? = null
 
     init {
         val commitId = writeRoute.commitId
@@ -55,6 +58,7 @@ class WriteViewModel @Inject constructor(
 
             getCommitByIdUseCase(CommitId(commitId))
                 .onSuccess { commit ->
+                    editingCommitId = commit.id.value // ID 저장
                     _uiState.update {
                         it.copy(
                             isLoading = false,
@@ -99,6 +103,9 @@ class WriteViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
+            // ID가 있으면(편집) 해당 ID 유지, 없으면 NONE(새 생성)
+            val currentId = editingCommitId?.let { CommitId(it) } ?: CommitId.NONE
+
             val commit = Commit.create(
                 date = state.date,
                 title = CommitTitle(state.title),
@@ -106,17 +113,23 @@ class WriteViewModel @Inject constructor(
                 difficulties = state.difficulties.ifBlank { null },
                 tomorrowPlan = state.tomorrowPlan.ifBlank { null },
                 isDraft = false
-            )
+            ).copy(id = currentId) // ID 설정
+
+            // 분석 상태 Pending
+            val commitToSave = commit.withAnalysisPending()
 
             val result = if (state.isEditMode) {
-                updateCommitUseCase(commit)
+                updateCommitUseCase(commitToSave).map { currentId.value }
             } else {
-                saveCommitUseCase(commit).map { }
+                saveCommitUseCase(commitToSave)
             }
 
             result
-                .onSuccess {
-                    _effect.emit(WriteEffect.ShowSuccess("커밋이 저장되었습니다"))
+                .onSuccess { savedId ->
+                    // WorkManager로 분석 요청 (UseCase 위임)
+                    scheduleAnalysisUseCase(savedId)
+
+                    _effect.emit(WriteEffect.ShowSuccess("커밋이 저장되었습니다. AI 분석을 시작합니다."))
                     _effect.emit(WriteEffect.NavigateBack)
                 }
                 .onFailure { error ->

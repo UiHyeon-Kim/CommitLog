@@ -59,7 +59,7 @@ private fun SwipeDeleteBackground(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color, MaterialTheme.shapes.medium)
+            .background(color, androidx.compose.foundation.shape.RoundedCornerShape(com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions.CardRadius))
             .padding(end = 16.dp),
         contentAlignment = Alignment.CenterEnd
     ) {

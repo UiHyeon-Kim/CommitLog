@@ -14,12 +14,17 @@ import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.data.source.remote.AiService
 import org.json.JSONObject
 import timber.log.Timber
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AiAnalysisRepositoryImpl @Inject constructor(
     private val aiService: AiService,
+    private val workManager: WorkManager,
 ) : AiAnalysisRepository {
 
     override suspend fun analyzeCommit(
@@ -36,6 +41,14 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         )
 
         return parseAnalysisResponse(responseText)
+    }
+
+    override suspend fun scheduleAnalysis(commitId: Long) {
+        val workRequest = OneTimeWorkRequestBuilder<AiAnalysisWorker>()
+            .setInputData(workDataOf(AiAnalysisWorker.KEY_COMMIT_ID to commitId))
+            .build()
+
+        workManager.enqueue(workRequest)
     }
 
     override suspend fun generateMonthlyReview(

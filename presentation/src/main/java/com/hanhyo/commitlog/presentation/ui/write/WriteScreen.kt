@@ -54,6 +54,27 @@ fun WriteScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showExitDialog by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Side Effect 관찰
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                WriteEffect.NavigateBack -> onBack()
+                is WriteEffect.ShowError -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
+                is WriteEffect.ShowSuccess -> {
+                    // 성공 메시지는 이전 화면에서 보여주거나, 현재 화면에서 보여주고 딜레이 후 이동
+                    // 여기서는 NavigateBack이 곧바로 호출되므로, 
+                    // 호출한 쪽(Home)에서 결과를 받거나, 아니면 여기서 잠깐 보여주고 이동해야 함.
+                    // 현재 로직상 NavigateBack도 같이 emit 되므로, 
+                    // Home에서 메시지를 띄우는 게 좋지만, 일단 여기서도 처리.
+                }
+            }
+        }
+    }
+
     // 뒤로가기 핸들링
     androidx.activity.compose.BackHandler {
         if (!uiState.isEditMode && (uiState.title.isNotBlank() || uiState.learnedToday.isNotBlank())) {
@@ -107,7 +128,7 @@ fun WriteScreen(
                 })
             )
         },
-        snackbarHost = { SnackbarHost(SnackbarHostState()) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = CommitLogTheme.colors.background,
         modifier = Modifier.imePadding() // 키보드 올라왔을 때 스크롤 가능하도록 패딩 추가
     ) { padding ->

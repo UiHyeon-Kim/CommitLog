@@ -71,12 +71,17 @@ fun DetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+
     LaunchedEffect(lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effect.collect { effect ->
                 when (effect) {
                     DetailEffect.NavigateBack -> onBack()
                     is DetailEffect.NavigateToEdit -> onNavigateToEdit(effect.commitId)
+                    is DetailEffect.ShowSnackbar -> {
+                        snackbarHostState.showSnackbar(effect.message)
+                    }
                 }
             }
         }
@@ -108,6 +113,7 @@ fun DetailScreen(
                 }
             )
         },
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
         floatingActionButton = {
              // "회고 추가하기" button from image seems to be a primary action. 
              // If it's for adding a new commit, FAB is good. 
@@ -128,6 +134,7 @@ fun DetailScreen(
             uiState.commit != null -> {
                 DetailContent(
                     commit = uiState.commit!!,
+                    onScheduleAnalysis = viewModel::scheduleAnalysis,
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -191,6 +198,7 @@ fun DetailScreen(
 @Composable
 private fun DetailContent(
     commit: Commit,
+    onScheduleAnalysis: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -296,7 +304,8 @@ private fun DetailContent(
         }
         
         // Card
-        commit.analysis?.let { analysis ->
+        if (commit.analysis != null) {
+            val analysis = commit.analysis!!
             Surface(
                 shape = MaterialTheme.shapes.large,
                 color = CommitLogTheme.colors.surfaceVariant.copy(alpha = 0.3f),
@@ -356,6 +365,12 @@ private fun DetailContent(
                     }
                 }
             }
+        } else {
+            // Empty State
+            EmptyAnalysisCard(
+                status = commit.analysisStatus,
+                onRegenerate = onScheduleAnalysis
+            )
         }
         
         Spacer(modifier = Modifier.height(Dimensions.SpacingLarge))
@@ -479,11 +494,58 @@ private fun DetailContentPreview() {
                 difficultyLevel = DifficultyLevel.NORMAL,
                 comment = "집중해서 학습하셨네요!"
             ),
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
         )
 
-        DetailContent(commit = mockCommit)
+        DetailContent(
+            commit = mockCommit,
+            onScheduleAnalysis = {}
+        )
+    }
+}
+
+@Composable
+private fun EmptyAnalysisCard(
+    status: com.hanhyo.commitlog.domain.model.AnalysisStatus,
+    onRegenerate: () -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = CommitLogTheme.colors.surfaceVariant.copy(alpha = 0.3f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(Dimensions.SpacingLarge),
+            verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = when (status) {
+                    com.hanhyo.commitlog.domain.model.AnalysisStatus.PENDING -> "AI가 열심히 분석 중입니다... ⏳"
+                    com.hanhyo.commitlog.domain.model.AnalysisStatus.FAILED -> "분석에 실패했습니다 😢"
+                    else -> "아직 AI 분석 결과가 없습니다"
+                },
+                style = CommitLogTheme.typography.bodyMedium,
+                color = CommitLogTheme.colors.textSecondary
+            )
+
+            if (status != com.hanhyo.commitlog.domain.model.AnalysisStatus.PENDING) {
+                TextButton(onClick = onRegenerate) {
+                    Text(
+                        text = "분석 다시 생성하기",
+                        color = CommitLogTheme.colors.primary
+                    )
+                }
+            } else {
+                 CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = CommitLogTheme.colors.primary,
+                    strokeWidth = 2.dp
+                 )
+            }
+        }
     }
 }

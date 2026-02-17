@@ -32,6 +32,9 @@ class CommitRepositoryImpl @Inject constructor(
     override suspend fun getCommitById(id: CommitId): Commit? =
         commitDao.getCommitById(id.value)?.toDomain()
 
+    override fun observeCommitById(id: CommitId): Flow<Commit?> =
+        commitDao.observeCommitById(id.value).map { it?.toDomain() }
+
     override suspend fun getCommitsByDateRange(
         startDate: LocalDate,
         endDate: LocalDate

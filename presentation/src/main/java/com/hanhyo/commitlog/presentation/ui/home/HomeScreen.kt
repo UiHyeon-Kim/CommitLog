@@ -283,6 +283,7 @@ private fun HomeContentPreview() {
             difficulties = null,
             tomorrowPlan = null,
             analysis = null,
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.NONE,
             updatedAt = null
         ),
         Commit(
@@ -296,6 +297,7 @@ private fun HomeContentPreview() {
             difficulties = null,
             tomorrowPlan = null,
             analysis = null,
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.NONE,
             updatedAt = null
         ),
         Commit(
@@ -309,6 +311,7 @@ private fun HomeContentPreview() {
             difficulties = null,
             tomorrowPlan = null,
             analysis = null,
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.NONE,
             updatedAt = null
         ),
     )

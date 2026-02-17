@@ -28,6 +28,9 @@ data class CommitEntity(
     val difficultyLevel: String?,
     val aiComment: String?,
 
+    @androidx.room.ColumnInfo(defaultValue = "NONE")
+    val analysisStatus: String = "NONE", // AnalysisStatus enum name stored as String
+
     val isDraft: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long?
