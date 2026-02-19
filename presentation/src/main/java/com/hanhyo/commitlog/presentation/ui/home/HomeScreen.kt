@@ -11,7 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,26 +40,14 @@ import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
-import com.hanhyo.commitlog.presentation.common.extension.toRelativeString
-import com.hanhyo.commitlog.presentation.designsystem.components.EmptyState
+import com.hanhyo.commitlog.presentation.ui.home.components.EmptyState
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogHomeAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.card.CommitCard
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.home.components.CommitLogFloatingActionButton
+import com.hanhyo.commitlog.presentation.ui.home.components.DateHeader
 import com.hanhyo.commitlog.presentation.ui.home.components.SwipeToDeleteCard
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.time.LocalDate
 
 @Composable
@@ -89,6 +82,30 @@ fun HomeScreen(
         }
     }
 
+    HomeContent(
+        commits = commits,
+        totalCommitCount = uiState.totalCommitCount,
+        isLoading = uiState.isLoading,
+        snackbarHostState = snackbarHostState,
+        onCommitClick = viewModel::navigateToCommit,
+        onDelete = viewModel::deleteCommit,
+        onNavigateToWrite = viewModel::navigateToWrite,
+        onNavigateToSearch = onNavigateToSearch
+    )
+}
+
+@Composable
+private fun HomeContent(
+    commits: List<Commit>,
+    totalCommitCount: Int,
+    isLoading: Boolean,
+    snackbarHostState: SnackbarHostState,
+    onCommitClick: (Long) -> Unit,
+    onDelete: (Commit) -> Unit,
+    onNavigateToWrite: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         topBar = {
             CommitLogHomeAppBar(
@@ -105,14 +122,15 @@ fun HomeScreen(
         },
         floatingActionButton = {
             CommitLogFloatingActionButton(
-                onClick = viewModel::navigateToWrite
+                onClick = onNavigateToWrite
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        containerColor = CommitLogTheme.colors.background
+        containerColor = CommitLogTheme.colors.background,
+        modifier = modifier
     ) { paddingValues ->
         when {
-            uiState.isLoading -> {
+            isLoading -> {
                 Box(modifier = Modifier.fillMaxSize()) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
@@ -121,22 +139,23 @@ fun HomeScreen(
                 }
             }
 
+            // TODO: 스켈레톤뷰로 변경
             commits.isEmpty() -> {
                 EmptyState(
                     emoji = "📝",
                     title = "첫 커밋을 작성해보세요!",
                     message = "오늘 배운 내용을 기록하고\nAI의 분석을 받아보세요",
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(top = paddingValues.calculateTopPadding())
                 )
             }
 
             else -> {
-                HomeContent(
-                    modifier = Modifier.padding(paddingValues),
+                HomeList(
+                    modifier = Modifier.padding(top = paddingValues.calculateTopPadding()),
                     commits = commits,
-                    totalCommitCount = uiState.totalCommitCount,
-                    onCommitClick = viewModel::navigateToCommit,
-                    onDelete = viewModel::deleteCommit
+                    totalCommitCount = totalCommitCount,
+                    onCommitClick = onCommitClick,
+                    onDelete = onDelete
                 )
             }
         }
@@ -144,7 +163,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeContent(
+private fun HomeList(
     commits: List<Commit>,
     totalCommitCount: Int,
     onCommitClick: (Long) -> Unit,
@@ -157,120 +176,59 @@ private fun HomeContent(
             .sortedByDescending { it.first }
     }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium),
-        verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
-    ) {
-        groupedCommits.forEach { (date, dateCommits) ->
-            item(key = "header_$date") {
-                DateHeader(
-                    date = date,
-                    totalCommitCount = if (date.isEqual(LocalDate.now())) totalCommitCount else null
-                )
-            }
+    Box {
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium),
+            verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
+        ) {
+            groupedCommits.forEach { (date, dateCommits) ->
+                item(key = "header_$date") {
+                    DateHeader(date = date)
+                }
 
-            items(
-                items = dateCommits,
-                key = { it.id.value }
-            ) { commit ->
-                SwipeToDeleteCard(
-                    onDelete = { onDelete(commit) }
-                ) {
-                    CommitCard(
-                        commit = commit,
-                        onClick = { onCommitClick(commit.id.value) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateItem()
-                    )
+                items(
+                    items = dateCommits,
+                    key = { it.id.value }
+                ) { commit ->
+                    SwipeToDeleteCard(
+                        onDelete = { onDelete(commit) }
+                    ) {
+                        CommitCard(
+                            commit = commit,
+                            onClick = { onCommitClick(commit.id.value) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateItem()
+                        )
+                    }
                 }
             }
+
+            item {
+                Spacer(modifier = Modifier.height(80.dp))
+            }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
-        }
+        Text(
+            text = "총 ${totalCommitCount}개",
+            style = CommitLogTheme.typography.bodyMedium,
+            color = CommitLogTheme.colors.textTertiary,
+            modifier = Modifier
+                .padding(top = 100.dp, end = 16.dp)
+                .background(
+                    color = CommitLogTheme.colors.surface,
+                    shape = MaterialTheme.shapes.small
+                )
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .align(Alignment.TopEnd)
+        )
     }
 }
 
+@Preview(showBackground = true, name = "Home - With Commits")
 @Composable
-private fun DateHeader(
-    date: LocalDate,
-    totalCommitCount: Int? = null
-) {
-    val today = LocalDate.now()
-    val isToday = date.isEqual(today)
-    val isYesterday = date.isEqual(today.minusDays(1))
-
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy년 M월 d일 EEEE", Locale.KOREAN)
-    val dateString = date.format(dateFormatter)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(CommitLogTheme.colors.background)
-            .padding(vertical = Dimensions.SpacingSmall)
-    ) {
-        if (isToday) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "오늘의 기록",
-                    style = CommitLogTheme.typography.headlineMedium,
-                    color = CommitLogTheme.colors.textPrimary
-                )
-
-                if (totalCommitCount != null) {
-                    Text(
-                        text = "총 ${totalCommitCount}개",
-                        style = CommitLogTheme.typography.bodyMedium,
-                        color = CommitLogTheme.colors.textTertiary,
-                        modifier = Modifier
-                            .background(
-                                color = CommitLogTheme.colors.surface,
-                                shape = androidx.compose.material3.MaterialTheme.shapes.small
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-        } else if (isYesterday) {
-            Text(
-                text = "어제 기록",
-                style = CommitLogTheme.typography.headlineMedium, // Big Text
-                color = CommitLogTheme.colors.textPrimary
-            )
-             Spacer(modifier = Modifier.height(4.dp))
-        }
-
-        // Common Date Text (Small)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isToday || isYesterday) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.DateRange, // Or generic calendar icon
-                    contentDescription = null,
-                    tint = CommitLogTheme.colors.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-             Text(
-                text = dateString,
-                style = CommitLogTheme.typography.bodyMedium, // Relatively small
-                color = if (isToday || isYesterday) CommitLogTheme.colors.primary else CommitLogTheme.colors.textTertiary
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeContentPreview() {
+private fun HomeContentWithCommitsPreview() {
     val sampleCommits = listOf(
         Commit(
             id = CommitId(1L),
@@ -319,8 +277,46 @@ private fun HomeContentPreview() {
         HomeContent(
             commits = sampleCommits,
             totalCommitCount = 10,
+            isLoading = false,
+            snackbarHostState = remember { SnackbarHostState() },
             onCommitClick = {},
-            onDelete = {}
+            onDelete = {},
+            onNavigateToWrite = {},
+            onNavigateToSearch = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Loading")
+@Composable
+private fun HomeContentLoadingPreview() {
+    CommitLogTheme {
+        HomeContent(
+            commits = emptyList(),
+            totalCommitCount = 0,
+            isLoading = true,
+            snackbarHostState = remember { SnackbarHostState() },
+            onCommitClick = {},
+            onDelete = {},
+            onNavigateToWrite = {},
+            onNavigateToSearch = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Home - Empty")
+@Composable
+private fun HomeContentEmptyPreview() {
+    CommitLogTheme {
+        HomeContent(
+            commits = emptyList(),
+            totalCommitCount = 0,
+            isLoading = false,
+            snackbarHostState = remember { SnackbarHostState() },
+            onCommitClick = {},
+            onDelete = {},
+            onNavigateToWrite = {},
+            onNavigateToSearch = {}
         )
     }
 }
