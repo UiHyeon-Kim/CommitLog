@@ -5,9 +5,6 @@ import kotlinx.serialization.Serializable
 sealed interface BottomRoute
 
 @Serializable
-data object SplashRoute
-
-@Serializable
 data object MainRoute
 
 @Serializable
