@@ -70,12 +70,11 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.work)
-    implementation(libs.androidx.hilt.work)
-    ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.hilt.android)
+    ksp(libs.androidx.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     // Networking
     implementation(libs.bundles.networking)

@@ -1,6 +1,7 @@
 package com.hanhyo.commitlog
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -10,7 +11,7 @@ import javax.inject.Inject
 class CommitLogApplication : Application(), Configuration.Provider {
 
     @Inject
-    lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+    lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

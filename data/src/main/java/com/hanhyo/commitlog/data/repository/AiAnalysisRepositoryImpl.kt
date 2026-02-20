@@ -1,6 +1,12 @@
 package com.hanhyo.commitlog.data.repository
 
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.hanhyo.commitlog.data.mapper.MonthlyReviewMapper
+import com.hanhyo.commitlog.data.source.remote.api.AiService
+import com.hanhyo.commitlog.data.source.remote.api.AiServiceException
+import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
 import com.hanhyo.commitlog.domain.model.AIMood
 import com.hanhyo.commitlog.domain.model.AiAnalysisResult
 import com.hanhyo.commitlog.domain.model.Commit
@@ -11,13 +17,9 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
-import com.hanhyo.commitlog.data.source.remote.AiService
 import org.json.JSONObject
 import timber.log.Timber
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,14 +35,25 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         difficulties: String?,
         tomorrowPlan: String?
     ): AiAnalysisResult {
-        val responseText = aiService.analyzeCommit(
-            title = title.value,
-            learned = learnedToday.value,
-            difficulty = difficulties,
-            tomorrow = tomorrowPlan,
-        )
+        try {
+            val responseText = aiService.analyzeCommit(
+                title = title.value,
+                learned = learnedToday.value,
+                difficulty = difficulties,
+                tomorrow = tomorrowPlan,
+            )
 
-        return parseAnalysisResponse(responseText)
+            return parseAnalysisResponse(responseText)
+
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: AiServiceException) {
+            // AI 서비스 에러는 그대로 전파
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "커밋 분석 중 예상치 못한 오류")
+            throw AiServiceException("커밋 분석 중 오류가 발생했습니다", e)
+        }
     }
 
     override suspend fun scheduleAnalysis(commitId: Long) {
@@ -56,48 +69,55 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         year: Int,
         month: Int
     ): MonthlyReview {
-        val prompt = buildMonthlyReviewPrompt(commits, year, month)
-        val aiSummary = aiService.generateMonthlyReview(prompt)
+        try {
+            val prompt = buildMonthlyReviewPrompt(commits, year, month)
+            val aiSummary = aiService.generateMonthlyReview(prompt)
 
-        return MonthlyReviewMapper.create(
-            commits = commits,
-            year = year,
-            month = month,
-            aiSummary = aiSummary
-        )
+            return MonthlyReviewMapper.create(
+                commits = commits,
+                year = year,
+                month = month,
+                aiSummary = aiSummary
+            )
+
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: AiServiceException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "월간 회고 생성 중 예상치 못한 오류")
+            throw AiServiceException("월간 회고 생성 중 오류가 발생했습니다", e)
+        }
     }
 
-    /**
-     * AI 응답 JSON을 AiAnalysisResult로 파싱
-     */
+    /** AI 응답 JSON을 AiAnalysisResult로 파싱 */
     private fun parseAnalysisResponse(responseText: String): AiAnalysisResult {
         try {
             // AI 응답에서 JSON 추출 (```json ... ``` 감싸기 제거)
             val jsonString = responseText
-                .replace("```json", "")
-                .replace("```", "")
+                .trim()
+                .removePrefix("```json")
+                .removePrefix("```")
+                .removeSuffix("```")
                 .trim()
 
             val json = JSONObject(jsonString)
 
-            val mood = AIMood.fromName(json.optString("mood", "NORMAL"))
+            // 각 필드 파싱 (기본값 제공)
+            val mood = json.optString("mood", "NORMAL")
+                .let { AIMood.fromName(it) }
+
             val moodScore = json.optInt("moodScore", 50)
-            val difficultyLevel = DifficultyLevel.fromDisplayName(
-                json.optString("difficultyLevel", "보통")
-            ) ?: DifficultyLevel.NORMAL
+                .coerceIn(1, 100)
+
+            val difficultyLevel = json.optString("difficultyLevel", "보통")
+                .let { DifficultyLevel.fromDisplayName(it) ?: DifficultyLevel.NORMAL }
+
             val comment = json.optString("comment", "꾸준한 학습을 이어가세요!")
+                .take(150)  // 최대 150자로
 
             // tags 파싱
-            val tagsArray = json.optJSONArray("tags")
-            val tags = if (tagsArray != null) {
-                val tagList = mutableListOf<String>()
-                for (i in 0 until tagsArray.length()) {
-                    tagList.add(tagsArray.getString(i))
-                }
-                LearningTag.fromStringList(tagList)
-            } else {
-                emptySet()
-            }
+            val tags = parseTags(json)
 
             return AiAnalysisResult(
                 analysis = CommitAnalysis(
@@ -110,14 +130,38 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Timber.e(e, "AI 응답 파싱 실패: $responseText")
-            throw IllegalStateException("AI 응답 파싱 실패", e)
+
+            // 파싱 실패 시 기본값 반환
+            return AiAnalysisResult(
+                analysis = CommitAnalysis(
+                    mood = AIMood.NORMAL,
+                    moodScore = 50,
+                    difficultyLevel = DifficultyLevel.NORMAL,
+                    comment = "분석 결과를 불러올 수 없습니다",
+                ),
+                tags = emptySet()
+            )
         }
     }
 
-    /**
-     * 월간 회고 프롬프트 생성
-     * 사용자가 지정한 프롬프트 구조를 사용
-     */
+    /** JSON에서 tags 배열 파싱 */
+    private fun parseTags(json: JSONObject): Set<LearningTag> {
+        return try {
+            val tagsArray = json.optJSONArray("tags") ?: return emptySet()
+
+            val tagList = mutableListOf<String>()
+            for (i in 0 until tagsArray.length()) {
+                tagList.add(tagsArray.getString(i))
+            }
+
+            LearningTag.fromStringList(tagList)
+        } catch (e: Exception) {
+            Timber.e(e, "태그 파싱 실패")
+            emptySet()
+        }
+    }
+
+    /** 월간 회고 프롬프트 생성 */
     private fun buildMonthlyReviewPrompt(
         commits: List<Commit>,
         year: Int,
@@ -131,6 +175,7 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             .groupingBy { it.displayNameKo }
             .eachCount()
             .entries
+            .sortedByDescending { it.value }
             .joinToString(", ") { "${it.key}: ${it.value}건" }
             .ifEmpty { "데이터 없음" }
 
@@ -144,61 +189,65 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             .sortedBy { it.key }
             .joinToString(", ") { "${it.key}: ${it.value.size}건" }
 
-        // 특이사항 분석
+        // 평균 점수
+        val avgScore = commits
+            .mapNotNull { it.analysis?.moodScore }
+            .average()
+            .takeIf { !it.isNaN() }
+            ?.toInt()
+            ?: 50
+
+        // 주요 태그
+        val topTags = commits
+            .flatMap { it.tags }
+            .groupingBy { it.value }
+            .eachCount()
+            .entries
+            .sortedByDescending { it.value }
+            .take(5)
+            .joinToString(", ") { "${it.key}(${it.value}회)" }
+            .ifEmpty { "없음" }
+
+        // 특이사항
         val notablePatterns = buildList {
-            val analyzedCommits = commits.filter { it.isAnalyzed() }
-            if (analyzedCommits.isNotEmpty()) {
-                val avgScore = analyzedCommits.mapNotNull { it.analysis?.moodScore }.average()
-                add("평균 학습 점수: ${avgScore.toInt()}/100")
-            }
-            val topTags = commits.flatMap { it.tags }
-                .groupingBy { it.value }
-                .eachCount()
-                .entries
-                .sortedByDescending { it.value }
-                .take(3)
-            if (topTags.isNotEmpty()) {
-                add("주요 학습 태그: ${topTags.joinToString(", ") { "${it.key}(${it.value}회)" }}")
-            }
+            add("평균 학습 점수: $avgScore/100")
+            add("주요 학습 태그: $topTags")
+
             val confusedCount = commits.count { it.analysis?.mood == AIMood.CONFUSED }
-            if (confusedCount > 0) {
-                add("혼란스러움 상태가 ${confusedCount}회 감지됨")
+            if (confusedCount > totalCommitCount / 4) {
+                add("혼란스러움 상태가 자주 감지됨 (${confusedCount}회)")
             }
-        }.joinToString("; ").ifEmpty { "없음" }
+
+            val productiveCount = commits.count { it.analysis?.mood == AIMood.PRODUCTIVE }
+            if (productiveCount > totalCommitCount / 3) {
+                add("성과적인 학습이 많았음 (${productiveCount}회)")
+            }
+        }.joinToString("; ")
 
         return """
-당신은 개발자의 학습 기록을 바탕으로
-월간 회고를 도와주는 AI 코치입니다.
+You are an AI coach helping a developer write a monthly retrospective based on their learning logs.
 
-아래에 주어진 학습 통계 데이터를 바탕으로
-한국어로 월간 학습 회고를 작성해주세요.
+Write a monthly learning retrospective in KOREAN based on the following statistics.
 
-다음 규칙을 반드시 지켜주세요.
+[Instructions]
+1. Focus on learning flow and pattern analysis rather than emotional comfort.
+2. Explain based on data without exaggerating results.
+3. Divide into the following 3 sections:
+   - 한 달 요약 (Monthly Summary): 3-4 sentences
+   - 학습 패턴 분석 (Pattern Analysis): 3-4 sentences
+   - 다음 달을 위한 제안 (Suggestions for Next Month): 2-3 sentences
 
-1. 감정적인 위로보다는 학습 흐름과 패턴 분석에 집중합니다.
-2. 결과를 과장하지 않고, 데이터에 근거해 설명합니다.
-3. 회고는 아래의 3개 섹션으로 나누어 작성합니다.
+[Tone & Style]
+- Objective and calm tone.
+- Retrospective report style (not a diary).
+- Keep it concise.
 
-[섹션 구성]
-
-1. 한 달 요약
-2. 학습 패턴 분석
-3. 다음 달을 위한 제안
-
-[작성 스타일]
-
-- 객관적이고 차분한 톤
-- 일기체가 아닌 회고 보고서 스타일
-- 각 섹션은 3~5문장 이내
-- 전체 분량은 너무 길지 않게 유지
-
-[학습 통계 데이터]
-
-- 기간: ${year}년 ${month}월
-- 총 커밋 수: ${totalCommitCount}
-- AI Mood 분포: $moodDistribution
-- 주차별 커밋 수: $weeklyCommitCount
-- 특이사항: $notablePatterns
+[Data]
+- Period: $year-$month
+- Total Commits: $totalCommitCount
+- AI Mood Distribution: $moodDistribution
+- Commits per Week: $weeklyCommitCount
+- Notable Patterns: $notablePatterns
 """.trimIndent()
     }
 }

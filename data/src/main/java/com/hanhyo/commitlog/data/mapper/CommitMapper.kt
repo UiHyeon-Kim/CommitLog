@@ -2,6 +2,7 @@ package com.hanhyo.commitlog.data.mapper
 
 import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
 import com.hanhyo.commitlog.domain.model.AIMood
+import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitAnalysis
 import com.hanhyo.commitlog.domain.model.CommitId
@@ -11,8 +12,6 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
-
-import com.hanhyo.commitlog.domain.model.AnalysisStatus
 
 private val json = Json { ignoreUnknownKeys = true }
 

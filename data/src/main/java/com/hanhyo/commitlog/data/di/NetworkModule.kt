@@ -1,9 +1,8 @@
 package com.hanhyo.commitlog.data.di
 
 import com.hanhyo.commitlog.data.BuildConfig
-import com.hanhyo.commitlog.data.source.remote.AiService
-import com.hanhyo.commitlog.data.source.remote.GeminiAiService
-import com.hanhyo.commitlog.data.source.remote.OpenAiService
+import com.hanhyo.commitlog.data.source.remote.api.AiService
+import com.hanhyo.commitlog.data.source.remote.api.GeminiAiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,24 +35,22 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * AI 서비스 제공
-     *
-     * 현재: Gemini (기본)
-     * OpenAI로 전환하려면 아래 한 줄만 변경:
-     *   GeminiAiService(...) → OpenAiService(BuildConfig.OPENAI_API_KEY, client)
-     */
     @Provides
     @Singleton
-    fun provideAiService(client: OkHttpClient): AiService {
-        return GeminiAiService(
-            apiKey = BuildConfig.GEMINI_API_KEY,
-            client = client,
-        )
-        // OpenAI로 변경 시:
-//         return OpenAiService(
-//             apiKey = BuildConfig.OPENAI_API_KEY,
-//             client = client,
-//         )
+    fun provideGeminiApiKey(): String {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        require(apiKey.isNotBlank()) {
+            "Gemini API 키가 설정되지 않았습니다. local.properties에 GEMINI_API_KEY를 추가하세요."
+        }
+        return apiKey
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiService(
+        apiKey: String,
+        client: OkHttpClient
+    ): AiService {
+        return GeminiAiService(apiKey, client)
     }
 }

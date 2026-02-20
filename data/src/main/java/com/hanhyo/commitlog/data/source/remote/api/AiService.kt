@@ -1,4 +1,4 @@
-package com.hanhyo.commitlog.data.source.remote
+package com.hanhyo.commitlog.data.source.remote.api
 
 /**
  * AI 서비스 인터페이스

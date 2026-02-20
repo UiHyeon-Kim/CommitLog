@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.data.source.local.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -28,8 +29,8 @@ data class CommitEntity(
     val difficultyLevel: String?,
     val aiComment: String?,
 
-    @androidx.room.ColumnInfo(defaultValue = "NONE")
-    val analysisStatus: String = "NONE", // AnalysisStatus enum name stored as String
+    @ColumnInfo(defaultValue = "분석 없음")
+    val analysisStatus: String = "분석 없음",
 
     val isDraft: Boolean = false,
     val createdAt: Long,
