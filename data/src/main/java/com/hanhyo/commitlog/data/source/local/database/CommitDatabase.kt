@@ -9,7 +9,10 @@ import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
 
 @Database(
     entities = [CommitEntity::class],
-    version = 1,
+    version = 2,
+    autoMigrations = [
+        androidx.room.AutoMigration(from = 1, to = 2)
+    ],
     exportSchema = true
 )
 @TypeConverters(LocalDateConverter::class)

@@ -62,7 +62,6 @@ dependencies {
     implementation(libs.timber)
 
     // Async
-    implementation(libs.bundles.coroutines)
     implementation(libs.kotlinx.serialization.json)
 
     // Utils

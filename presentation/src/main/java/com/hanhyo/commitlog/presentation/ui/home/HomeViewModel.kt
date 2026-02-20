@@ -2,12 +2,12 @@ package com.hanhyo.commitlog.presentation.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hanhyo.commitlog.domain.common.Result
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.Streak
 import com.hanhyo.commitlog.domain.usecase.commit.DeleteCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetStreakUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
+import com.hanhyo.commitlog.domain.usecase.commit.ObserveTotalCommitCountUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,6 +28,7 @@ class HomeViewModel @Inject constructor(
     private val deleteCommitUseCase: DeleteCommitUseCase,
     private val getStreakUseCase: GetStreakUseCase,
     private val saveCommitUseCase: SaveCommitUseCase,
+    private val observeTotalCommitCountUseCase: ObserveTotalCommitCountUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -45,22 +46,26 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-
     init {
         loadStreak()
+        loadTotalCommitCount()
     }
 
     private fun loadStreak() {
         viewModelScope.launch {
-            when (val result = getStreakUseCase()) {
-                is Result.Success -> {
-                    _uiState.update { it.copy(streak = result.data) }
+            getStreakUseCase()
+                .onSuccess { streak ->
+                    _uiState.update { it.copy(streak = streak) }
                 }
+        }
+    }
 
-                is Result.Error -> {}
-
-                is Result.Loading -> {}
-            }
+    private fun loadTotalCommitCount() {
+        viewModelScope.launch {
+            observeTotalCommitCountUseCase()
+                .collect { count ->
+                    _uiState.update { it.copy(totalCommitCount = count) }
+                }
         }
     }
 
@@ -79,8 +84,13 @@ class HomeViewModel @Inject constructor(
     fun deleteCommit(commit: Commit) {
         viewModelScope.launch {
             deleteCommitUseCase(commit)
-            recentlyDeletedCommit = commit
-            _effect.emit(HomeEffect.ShowSnackbar("커밋이 삭제되었습니다.", "실행 취소"))
+                .onSuccess {
+                    recentlyDeletedCommit = commit
+                    _effect.emit(HomeEffect.ShowSnackbar("커밋이 삭제되었습니다.", "실행 취소"))
+                }
+                .onFailure {
+                    _effect.emit(HomeEffect.ShowSnackbar("삭제에 실패했습니다."))
+                }
         }
     }
 
@@ -96,6 +106,7 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     val isLoading: Boolean = false,
     val streak: Streak? = null,
+    val totalCommitCount: Int = 0,
     val error: String? = null,
 )
 

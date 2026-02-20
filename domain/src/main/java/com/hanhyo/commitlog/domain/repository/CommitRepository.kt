@@ -18,6 +18,9 @@ interface CommitRepository {
     /** ID로 커밋 조회 - 상세, 수정 화면 */
     suspend fun getCommitById(id: CommitId): Commit?
 
+    /** ID로 커밋 관찰 - 상세 화면 (AI 분석 업데이트 반영) */
+    fun observeCommitById(id: CommitId): Flow<Commit?>
+
     /** 날짜 범위 조회 - 통계 화면 */
     suspend fun getCommitsByDateRange(startDate: LocalDate, endDate: LocalDate): List<Commit>
 
@@ -28,6 +31,8 @@ interface CommitRepository {
     suspend fun searchCommits(query: SearchQuery): List<Commit>
 
     /** 총 커밋 수 - 통계 화면 */
+    fun observeTotalCommitCount(): Flow<Int>
+
     suspend fun getTotalCommitCount(): Int
 
     /** Streak 계산 */

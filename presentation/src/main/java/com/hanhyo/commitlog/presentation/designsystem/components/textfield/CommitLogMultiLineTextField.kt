@@ -19,6 +19,8 @@ fun CommitLogMultiLineTextField(
     enabled: Boolean = true,
     minLines: Int = 3,
     maxLines: Int = 10,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
 ) {
     OutlinedTextField(
         value = value,
@@ -46,7 +48,9 @@ fun CommitLogMultiLineTextField(
             unfocusedContainerColor = CommitLogTheme.colors.surface,
             disabledContainerColor = CommitLogTheme.colors.surfaceVariant,
             cursorColor = CommitLogTheme.colors.primary
-        )
+        ),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions
     )
 }
 

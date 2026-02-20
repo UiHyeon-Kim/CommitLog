@@ -24,6 +24,10 @@ interface CommitDao {
     @Query("SELECT * FROM commits WHERE id = :id")
     suspend fun getCommitById(id: Long): CommitEntity?
 
+    /** 특정 Commit 관찰 */
+    @Query("SELECT * FROM commits WHERE id = :id")
+    fun observeCommitById(id: Long): Flow<CommitEntity?>
+
     /** 날짜 범위로 커밋 조회 */
     @Query("SELECT * FROM commits WHERE date BETWEEN :startDate AND :endDate AND isDraft = 0 ORDER BY date DESC, createdAt DESC")
     suspend fun getCommitsByDateRange(startDate: LocalDate, endDate: LocalDate): List<CommitEntity>
@@ -48,6 +52,9 @@ interface CommitDao {
     suspend fun searchByKeyword(keyword: String): List<CommitEntity>
 
     /** 총 Commit 개수 */
+    @Query("SELECT COUNT(*) FROM commits WHERE isDraft = 0")
+    fun observeTotalCommitCount(): Flow<Int>
+
     @Query("SELECT COUNT(*) FROM commits WHERE isDraft = 0")
     suspend fun getTotalCommitCount(): Int
 

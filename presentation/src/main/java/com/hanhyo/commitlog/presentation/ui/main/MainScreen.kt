@@ -1,6 +1,7 @@
 package com.hanhyo.commitlog.presentation.ui.main
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.Botto
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
 import com.hanhyo.commitlog.presentation.navigation.HomeRoute
 import com.hanhyo.commitlog.presentation.navigation.ReviewRoute
+import com.hanhyo.commitlog.presentation.navigation.SearchRoute
 import com.hanhyo.commitlog.presentation.navigation.StatisticsRoute
 import com.hanhyo.commitlog.presentation.navigation.WriteRoute
 import com.hanhyo.commitlog.presentation.ui.home.HomeScreen
@@ -44,7 +46,8 @@ fun MainScreen(
                     currentDestination = currentDestination
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { innerPadding ->
         NavHost(
             navController = bottomNavController,
@@ -58,6 +61,9 @@ fun MainScreen(
                     },
                     onNavigateToDetail = { commitId ->
                         rootNavController.navigate(DetailRoute(commitId))
+                    },
+                    onNavigateToSearch = {
+                        rootNavController.navigate(SearchRoute)
                     }
                 )
             }
