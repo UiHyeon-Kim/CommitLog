@@ -29,8 +29,8 @@ data class CommitEntity(
     val difficultyLevel: String?,
     val aiComment: String?,
 
-    @ColumnInfo(defaultValue = "분석 없음")
-    val analysisStatus: String = "분석 없음",
+    @ColumnInfo(defaultValue = "NONE")
+    val analysisStatus: String = "NONE",
 
     val isDraft: Boolean = false,
     val createdAt: Long,
