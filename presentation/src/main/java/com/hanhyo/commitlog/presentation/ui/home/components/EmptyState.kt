@@ -36,27 +36,27 @@ fun EmptyState(
                 text = emoji,
                 fontSize = Dimensions.EmptyStateEmojiSize
             )
-            
+
             Text(
                 text = title,
                 style = CommitLogTheme.typography.headlineSmall,
                 color = CommitLogTheme.colors.textPrimary,
                 textAlign = TextAlign.Center
             )
-            
+
             Text(
                 text = message,
                 style = CommitLogTheme.typography.bodyMedium,
                 color = CommitLogTheme.colors.textSecondary,
                 textAlign = TextAlign.Center
             )
-            
+
             action?.invoke()
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 private fun EmptyStatePreview() {
     CommitLogTheme {
