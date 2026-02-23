@@ -51,6 +51,16 @@ class SearchViewModel @Inject constructor(
         _query.value = newQuery
     }
 
+    fun clearQuery() {
+        _query.value = ""
+    }
+
+    fun search() {
+        if (_query.value.isNotBlank()) {
+            searchCommits(_query.value)
+        }
+    }
+
     private fun searchCommits(keyword: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
