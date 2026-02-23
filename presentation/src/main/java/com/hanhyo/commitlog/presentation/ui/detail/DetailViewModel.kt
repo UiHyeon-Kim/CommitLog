@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
+import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleAnalysisUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.DeleteCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveCommitUseCase
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
@@ -26,7 +27,7 @@ class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val observeCommitUseCase: ObserveCommitUseCase,
     private val deleteCommitUseCase: DeleteCommitUseCase,
-    private val scheduleAnalysisUseCase: com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleAnalysisUseCase,
+    private val scheduleAnalysisUseCase: ScheduleAnalysisUseCase,
 ) : ViewModel() {
 
     private val detailRoute: DetailRoute = savedStateHandle.toRoute()
