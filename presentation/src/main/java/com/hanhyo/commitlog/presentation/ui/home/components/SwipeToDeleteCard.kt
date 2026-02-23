@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
@@ -74,7 +74,8 @@ private fun SwipeDeleteBackground(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color,
+            .background(
+                color,
                 RoundedCornerShape(Dimensions.CardRadius)
             )
             .padding(end = 16.dp),
@@ -105,7 +106,7 @@ private fun SwipeToDeleteCardPreview() {
             difficulties = null,
             tomorrowPlan = null,
             analysis = null,
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.NONE,
+            analysisStatus = AnalysisStatus.NONE,
             updatedAt = null
         )
 

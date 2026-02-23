@@ -76,8 +76,8 @@ private fun MainContent(
         ) {
             composable<HomeRoute> {
                 HomeScreen(
-                    onNavigateToWrite = {
-                        rootNavController.navigate(WriteRoute())
+                    onNavigateToWrite = { draftId ->
+                        rootNavController.navigate(WriteRoute(draftId))
                     },
                     onNavigateToDetail = { commitId ->
                         rootNavController.navigate(DetailRoute(commitId))
@@ -87,7 +87,13 @@ private fun MainContent(
                     }
                 )
             }
-            composable<StatisticsRoute> { StatisticsScreen() }
+            composable<StatisticsRoute> {
+                StatisticsScreen(
+                    onNavigateToWrite = {
+                        rootNavController.navigate(WriteRoute())
+                    }
+                )
+            }
             composable<ReviewRoute> { ReviewScreen() }
         }
     }

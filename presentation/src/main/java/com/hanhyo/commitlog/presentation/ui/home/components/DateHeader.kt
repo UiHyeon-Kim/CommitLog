@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -67,7 +69,7 @@ fun DateHeader(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (isToday || isYesterday) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.DateRange,
+                            imageVector = Icons.Default.DateRange,
                             contentDescription = null,
                             tint = CommitLogTheme.colors.primary,
                             modifier = Modifier.size(16.dp)
@@ -90,7 +92,7 @@ fun DateHeader(
                     modifier = Modifier
                         .background(
                             color = CommitLogTheme.colors.surface,
-                            shape = androidx.compose.material3.MaterialTheme.shapes.small
+                            shape = RoundedCornerShape(Dimensions.ButtonRadius)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 )

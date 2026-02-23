@@ -1,7 +1,6 @@
 package com.hanhyo.commitlog.presentation.ui.home
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,6 +22,8 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,7 +59,7 @@ import java.time.LocalDate
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToWrite: () -> Unit,
+    onNavigateToWrite: (Long?) -> Unit,
     onNavigateToDetail: (Long) -> Unit,
     onNavigateToSearch: () -> Unit,
 ) {
@@ -70,7 +72,7 @@ fun HomeScreen(
         lifecycleOwner.lifecycle.repeatOnLifecycle(state = Lifecycle.State.STARTED) {
             viewModel.effect.collect { effect ->
                 when (effect) {
-                    HomeEffect.NavigateToWrite -> onNavigateToWrite()
+                    is HomeEffect.NavigateToWrite -> onNavigateToWrite(effect.draftId)
                     is HomeEffect.NavigateToCommit -> onNavigateToDetail(effect.commitId)
                     is HomeEffect.ShowSnackbar -> {
                         val result = snackbarHostState.showSnackbar(
@@ -87,14 +89,16 @@ fun HomeScreen(
     }
 
     HomeContent(
-        modifier = Modifier,
         isLoading = uiState.isLoading,
         commits = commits,
         totalCommitCount = uiState.totalCommitCount,
+        showDraftDialog = uiState.showDraftDialog,
         onCommitClick = viewModel::navigateToCommit,
         onDelete = viewModel::deleteCommit,
         onNavigateToSearch = onNavigateToSearch,
-        onNavigateToWrite = viewModel::navigateToWrite,
+        onFabClick = viewModel::onFabClicked,
+        onDraftDialogDismiss = viewModel::onDraftDialogDismiss,
+        onDraftDialogConfirm = viewModel::onDraftDialogConfirm,
         snackbarHostState = snackbarHostState
     )
 }
@@ -104,18 +108,41 @@ private fun HomeContent(
     commits: List<Commit>,
     totalCommitCount: Int,
     isLoading: Boolean,
-    onCommitClick: (Long) -> Unit,
-    onDelete: (Commit) -> Unit,
-    onNavigateToSearch: () -> Unit,
-    onNavigateToWrite: () -> Unit,
+    showDraftDialog: Boolean,
     snackbarHostState: SnackbarHostState,
-    modifier: Modifier = Modifier,
+    onFabClick: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onDraftDialogDismiss: () -> Unit,
+    onDelete: (Commit) -> Unit,
+    onCommitClick: (Long) -> Unit,
+    onDraftDialogConfirm: (Boolean) -> Unit,
 ) {
     val isSnackbarVisible = snackbarHostState.currentSnackbarData != null
     val fabOffset by animateDpAsState(
         targetValue = if (isSnackbarVisible) (-68).dp else 0.dp,
         label = "fab_slide_animation"
     )
+
+    if (showDraftDialog) {
+        AlertDialog(
+            onDismissRequest = onDraftDialogDismiss,
+            title = { Text("작성 중인 기록이 있습니다") },
+            text = { Text("이어서 작성하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = { onDraftDialogConfirm(true) }) {
+                    Text("이어서 쓰기")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onDraftDialogConfirm(false) }) {
+                    Text("새로 작성")
+                }
+            },
+            containerColor = CommitLogTheme.colors.surface,
+            titleContentColor = CommitLogTheme.colors.textPrimary,
+            textContentColor = CommitLogTheme.colors.textSecondary
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -133,7 +160,7 @@ private fun HomeContent(
         },
         floatingActionButton = {
             CommitLogFloatingActionButton(
-                onClick = onNavigateToWrite,
+                onClick = onFabClick,
                 modifier = Modifier.offset(y = fabOffset)
             )
         },
@@ -151,13 +178,14 @@ private fun HomeContent(
             }
         },
         containerColor = CommitLogTheme.colors.background,
-        modifier = modifier
     ) { paddingValues ->
         when {
             isLoading -> {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
                         color = CommitLogTheme.colors.primary
@@ -292,10 +320,13 @@ private fun HomeContentPreview() {
             ),
             totalCommitCount = 3,
             isLoading = false,
+            showDraftDialog = false,
             onCommitClick = {},
             onDelete = {},
             onNavigateToSearch = {},
-            onNavigateToWrite = {},
+            onFabClick = {},
+            onDraftDialogDismiss = {},
+            onDraftDialogConfirm = {},
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
