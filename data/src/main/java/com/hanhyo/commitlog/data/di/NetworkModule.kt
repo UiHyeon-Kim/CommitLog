@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.data.di
 
+import android.R.attr.apiKey
 import com.hanhyo.commitlog.data.BuildConfig
 import com.hanhyo.commitlog.data.source.remote.api.AiService
 import com.hanhyo.commitlog.data.source.remote.api.GeminiAiService
@@ -10,7 +11,12 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GeminiApiKey
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -37,18 +43,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @GeminiApiKey
     fun provideGeminiApiKey(): String {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        require(apiKey.isNotBlank()) {
-            "Gemini API 키가 설정되지 않았습니다. local.properties에 GEMINI_API_KEY를 추가하세요."
-        }
-        return apiKey
+        return BuildConfig.GEMINI_API_KEY
     }
 
     @Provides
     @Singleton
     fun provideAiService(
-        apiKey: String,
+        @GeminiApiKey apiKey: String,
         client: OkHttpClient
     ): AiService {
         return GeminiAiService(apiKey, client)

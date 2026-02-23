@@ -59,7 +59,7 @@ class AiAnalysisWorker @AssistedInject constructor(
                 commitRepository.updateCommit(it.withAnalysisFailed())
             }
             
-            if (runAttemptCount >= 3) {
+            if (runAttemptCount >= 2) {
                 Result.failure()
             } else {
                 Result.retry()

@@ -17,6 +17,7 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
+import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.concurrent.CancellationException
@@ -27,6 +28,7 @@ import javax.inject.Singleton
 class AiAnalysisRepositoryImpl @Inject constructor(
     private val aiService: AiService,
     private val workManager: WorkManager,
+    private val monthlyReviewDao: MonthlyReviewDao
 ) : AiAnalysisRepository {
 
     override suspend fun analyzeCommit(
@@ -70,15 +72,26 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         month: Int
     ): MonthlyReview {
         try {
+            // 1. DB에 저장된 회고가 있는지 확인
+            val savedEntity = monthlyReviewDao.getMonthlyReview(year, month)
+            if (savedEntity != null) {
+                return MonthlyReviewMapper.mapToDomain(savedEntity)
+            }
+
+            // 2. 없다면 AI에 요청하여 생성
             val prompt = buildMonthlyReviewPrompt(commits, year, month)
             val aiSummary = aiService.generateMonthlyReview(prompt)
 
-            return MonthlyReviewMapper.create(
+            val review = MonthlyReviewMapper.create(
                 commits = commits,
                 year = year,
                 month = month,
                 aiSummary = aiSummary
             )
+
+            // 3. DB에 저장 후 반환
+            monthlyReviewDao.insertMonthlyReview(MonthlyReviewMapper.mapToEntity(review))
+            return review
 
         } catch (e: CancellationException) {
             throw e

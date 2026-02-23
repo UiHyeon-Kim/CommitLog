@@ -82,6 +82,9 @@ class GeminiAiService(
         temperature: Double = DEFAULT_TEMPERATURE,
         maxTokens: Int = DEFAULT_MAX_TOKENS
     ): String {
+        if (apiKey.isBlank()) {
+            throw AiServiceException("Gemini API 키가 누락되었습니다.")
+        }
         val requestBody = JSONObject().apply {
             put("contents", JSONArray().apply {
                 put(JSONObject().apply {
@@ -122,30 +125,30 @@ class GeminiAiService(
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
-        val response = client.newCall(request).execute()
+        return client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                Timber.e("Gemini API error: ${response.code} - $errorBody")
 
-        if (!response.isSuccessful) {
-            val errorBody = response.body?.string() ?: "Unknown error"
-            Timber.e("Gemini API error: ${response.code} - $errorBody")
-
-            throw when (response.code) {
-                400 -> AiServiceException("잘못된 요청입니다")
-                401 -> AiServiceException("API 키가 유효하지 않습니다")
-                403 -> AiServiceException("API 접근이 거부되었습니다")
-                429 -> AiServiceException("API 사용량을 초과했습니다. 잠시 후 다시 시도해주세요")
-                500, 503 -> AiServiceException("AI 서버에 일시적인 문제가 있습니다")
-                else -> AiServiceException("AI 분석 중 오류가 발생했습니다 (${response.code})")
+                throw when (response.code) {
+                    400 -> AiServiceException("잘못된 요청입니다")
+                    401 -> AiServiceException("API 키가 유효하지 않습니다")
+                    403 -> AiServiceException("API 접근이 거부되었습니다")
+                    429 -> AiServiceException("API 사용량을 초과했습니다. 잠시 후 다시 시도해주세요")
+                    500, 503 -> AiServiceException("AI 서버에 일시적인 문제가 있습니다")
+                    else -> AiServiceException("AI 분석 중 오류가 발생했습니다 (${response.code})")
+                }
             }
-        }
 
-        val responseBody = response.body?.string()
-            ?: throw AiServiceException("AI 응답이 비어있습니다")
+            val responseBody = response.body?.string()
+                ?: throw AiServiceException("AI 응답이 비어있습니다")
 
-        return try {
-            parseGeminiResponse(responseBody)
-        } catch (e: Exception) {
-            Timber.e(e, "Gemini 응답 파싱 실패: $responseBody")
-            throw AiServiceException("AI 응답 형식이 올바르지 않습니다", e)
+            try {
+                parseGeminiResponse(responseBody)
+            } catch (e: Exception) {
+                Timber.e(e, "Gemini 응답 파싱 실패: $responseBody")
+                throw AiServiceException("AI 응답 형식이 올바르지 않습니다", e)
+            }
         }
     }
 
