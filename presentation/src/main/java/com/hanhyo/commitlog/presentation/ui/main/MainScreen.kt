@@ -1,12 +1,14 @@
 package com.hanhyo.commitlog.presentation.ui.main
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,7 +27,6 @@ import com.hanhyo.commitlog.presentation.ui.home.HomeScreen
 import com.hanhyo.commitlog.presentation.ui.review.ReviewScreen
 import com.hanhyo.commitlog.presentation.ui.stats.StatisticsScreen
 
-@SuppressLint("RestrictedApi")
 @Composable
 fun MainScreen(
     rootNavController: NavHostController
@@ -38,6 +39,22 @@ fun MainScreen(
         currentDestination?.hasRoute(item.tabRouteClass) == true
     }
 
+    MainContent(
+        rootNavController = rootNavController,
+        bottomNavController = bottomNavController,
+        currentDestination = currentDestination,
+        showBottomBar = showBottomBar
+    )
+}
+
+@Composable
+private fun MainContent(
+    rootNavController: NavHostController,
+    bottomNavController: NavHostController,
+    currentDestination: NavDestination?,
+    showBottomBar: Boolean,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
@@ -47,12 +64,15 @@ fun MainScreen(
                 )
             }
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { innerPadding ->
+        contentWindowInsets = WindowInsets.navigationBars,
+        modifier = modifier
+    ) { outerPadding ->
         NavHost(
             navController = bottomNavController,
             startDestination = HomeRoute,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+            modifier = Modifier
+                .padding(outerPadding)
+                .consumeWindowInsets(outerPadding)
         ) {
             composable<HomeRoute> {
                 HomeScreen(
