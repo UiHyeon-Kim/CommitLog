@@ -7,11 +7,13 @@ work = "2.10.0"
 hiltWork = "1.2.0"
 
 # AndroidX Core
+# AndroidX Core
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
 appcompat = "1.7.1"
 material = "1.13.0"
 datastore = "1.2.0"
+splashscreen = "1.0.1"
 
 # Compose
 activityCompose = "1.12.3"
@@ -47,7 +49,9 @@ mockk = "1.14.9"
 
 [libraries]
 # AndroidX & Material
+# AndroidX & Material
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }

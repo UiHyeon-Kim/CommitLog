@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":data"))
 
     implementation(libs.bundles.androidx.core)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.bundles.compose)
     implementation(platform(libs.androidx.compose.bom))
 

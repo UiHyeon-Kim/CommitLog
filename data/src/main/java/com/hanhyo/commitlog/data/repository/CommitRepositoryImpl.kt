@@ -26,8 +26,12 @@ class CommitRepositoryImpl @Inject constructor(
     override fun observeAllCommits(): Flow<List<Commit>> =
         commitDao.observeAllCommits().map { it.toDomainList() }
 
-    override fun observeAllDrafts(): Flow<List<Commit>> =
-        commitDao.observeAllDrafts().map { it.toDomainList() }
+    override fun observeDraft(): Flow<Commit?> =
+        commitDao.observeDraft().map { it?.toDomain() }
+
+    override suspend fun deleteAllDrafts() {
+        commitDao.deleteAllDrafts()
+    }
 
     override suspend fun getCommitById(id: CommitId): Commit? =
         commitDao.getCommitById(id.value)?.toDomain()
