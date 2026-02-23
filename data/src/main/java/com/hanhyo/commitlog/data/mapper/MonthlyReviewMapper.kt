@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.data.mapper
 
+import com.hanhyo.commitlog.data.source.local.database.entity.MonthlyReviewEntity
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import java.time.LocalDate
@@ -48,5 +49,36 @@ object MonthlyReviewMapper {
     private fun getWeekOfMonth(date: LocalDate): Int {
         val weekFields = WeekFields.of(Locale.KOREA)
         return date.get(weekFields.weekOfMonth())
+    }
+
+    /** Domain -> Entity 매핑 */
+    fun mapToEntity(domain: MonthlyReview): MonthlyReviewEntity {
+        return MonthlyReviewEntity(
+            year = domain.year,
+            month = domain.month,
+            totalCommitCount = domain.totalCommitCount,
+            weeklyCommitCount = domain.weeklyCommitCount,
+            moodDistribution = domain.moodDistribution.mapKeys { it.key.name },
+            tagDistribution = domain.tagDistribution.mapKeys { it.key.value },
+            aiSummary = domain.aiSummary,
+            generatedAt = domain.generatedAt
+        )
+    }
+
+    /** Entity -> Domain 매핑 */
+    fun mapToDomain(entity: MonthlyReviewEntity): MonthlyReview {
+        return MonthlyReview(
+            year = entity.year,
+            month = entity.month,
+            totalCommitCount = entity.totalCommitCount,
+            weeklyCommitCount = entity.weeklyCommitCount,
+            moodDistribution = entity.moodDistribution.mapKeys { com.hanhyo.commitlog.domain.model.AIMood.fromName(it.key) },
+            tagDistribution = entity.tagDistribution.mapNotNull {
+                val tag = com.hanhyo.commitlog.domain.model.LearningTag.fromString(it.key)
+                if (tag != null) tag to it.value else null
+            }.toMap(),
+            aiSummary = entity.aiSummary,
+            generatedAt = entity.generatedAt
+        )
     }
 }
