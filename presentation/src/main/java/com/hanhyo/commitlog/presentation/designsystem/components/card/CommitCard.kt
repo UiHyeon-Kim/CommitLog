@@ -195,3 +195,66 @@ private fun CommitCardDarkPreview() {
         )
     }
 }
+
+@Preview(name = "CommitCard - Long Text")
+@Composable
+private fun CommitCardLongTextPreview() {
+    CommitLogTheme {
+        val mockCommit = Commit(
+            id = CommitId(2),
+            date = LocalDate.now(),
+            title = CommitTitle("정말 정말 정말 정말 정말 정말 정말 정말 정말 긴 제목을 테스트합니다"),
+            learnedToday = LearnedContent("오늘은 Jetpack Compose의 State 관리 기법에 대해 깊이 파고들었습니다. 특히 remember, mutableStateOf, derivedStateOf, snapshotFlow 등 다양한 API들의 사용법과 내부 동작 원리를 비교 분석하며 어떤 상황에 어떤 것을 사용해야 가장 효율적인지에 대한 감을 잡았습니다. 또한 State Hoisting 패턴의 중요성을 다시 한번 깨닫고, UI 상태와 비즈니스 로직을 분리하는 연습을 했습니다."),
+            difficulties = null,
+            tomorrowPlan = null,
+            tags = setOf(LearningTag("compose"), LearningTag("state-management")),
+            analysis = CommitAnalysis(
+                mood = AIMood.NORMAL,
+                moodScore = 90,
+                difficultyLevel = DifficultyLevel.EASY,
+                comment = "완벽하게 이해하셨네요! 훌륭합니다."
+            ),
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
+            isDraft = false,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = null
+        )
+
+        CommitCard(
+            commit = mockCommit,
+            onClick = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
+}
+
+@Preview(name = "CommitCard - No Analysis")
+@Composable
+private fun CommitCardNoAnalysisPreview() {
+    CommitLogTheme {
+        val mockCommit = Commit(
+            id = CommitId(3),
+            date = LocalDate.now(),
+            title = CommitTitle("알고리즘 문제 풀이"),
+            learnedToday = LearnedContent("백준 1234번 문제를 풀었습니다. DFS/BFS를 사용하는 문제였습니다."),
+            difficulties = null,
+            tomorrowPlan = null,
+            tags = setOf(LearningTag("algorithm")),
+            analysis = null,
+            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.PENDING,
+            isDraft = false,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = null
+        )
+
+        CommitCard(
+            commit = mockCommit,
+            onClick = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
+}

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.hanhyo.commitlog.data.BuildConfig
 import com.hanhyo.commitlog.data.source.local.database.CommitDatabase
 import com.hanhyo.commitlog.data.source.local.database.dao.CommitDao
+import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +28,7 @@ object DatabaseModule {
             CommitDatabase.DATABASE_NAME
         )
             .apply {
-                if (BuildConfig.DEBUG) fallbackToDestructiveMigration(true)
+                fallbackToDestructiveMigration(true)
             }
             .build()
     }
@@ -37,5 +38,12 @@ object DatabaseModule {
         database: CommitDatabase
     ): CommitDao {
         return database.commitDao()
+    }
+
+    @Provides
+    fun provideMonthlyReviewDao(
+        database: CommitDatabase
+    ): MonthlyReviewDao {
+        return database.monthlyReviewDao()
     }
 }

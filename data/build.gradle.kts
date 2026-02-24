@@ -14,6 +14,12 @@ val localProperties = Properties().apply {
     }
 }
 
+val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+if (geminiApiKey.isBlank()) {
+    throw GradleException("GEMINI_API_KEY는 local.properties에 정의되어 있지 않습니다.")
+}
+val openAiApiKey = localProperties.getProperty("OPENAI_API_KEY") ?: ""
+
 android {
     namespace = "com.hanhyo.commitlog.data"
     compileSdk = 36
@@ -33,9 +39,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        // AI API Keys from local.properties
-        buildConfigField("String", "GEMINI_API_KEY", "\"${localProperties.getProperty("GEMINI_API_KEY") ?: ""}\"")
-        buildConfigField("String", "OPENAI_API_KEY", "\"${localProperties.getProperty("OPENAI_API_KEY") ?: ""}\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
     }
 
     buildTypes {
@@ -70,12 +75,11 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.work)
-    implementation(libs.androidx.hilt.work)
-    ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.hilt.android)
+    ksp(libs.androidx.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     // Networking
     implementation(libs.bundles.networking)

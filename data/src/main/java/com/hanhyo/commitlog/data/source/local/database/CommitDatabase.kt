@@ -3,22 +3,31 @@ package com.hanhyo.commitlog.data.source.local.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.hanhyo.commitlog.data.source.local.database.converter.AnalysisStatusConverter
 import com.hanhyo.commitlog.data.source.local.database.converter.LocalDateConverter
+import com.hanhyo.commitlog.data.source.local.database.converter.MapTypeConverter
 import com.hanhyo.commitlog.data.source.local.database.dao.CommitDao
+import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
 import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
+import com.hanhyo.commitlog.data.source.local.database.entity.MonthlyReviewEntity
 
 @Database(
-    entities = [CommitEntity::class],
-    version = 2,
-    autoMigrations = [
-        androidx.room.AutoMigration(from = 1, to = 2)
+    entities = [
+        CommitEntity::class,
+        MonthlyReviewEntity::class
     ],
+    version = 5,
     exportSchema = true
 )
-@TypeConverters(LocalDateConverter::class)
+@TypeConverters(
+    LocalDateConverter::class,
+    MapTypeConverter::class,
+    AnalysisStatusConverter::class
+)
 abstract class CommitDatabase : RoomDatabase() {
 
     abstract fun commitDao(): CommitDao
+    abstract fun monthlyReviewDao(): MonthlyReviewDao
 
     companion object {
         const val DATABASE_NAME = "commit_database"

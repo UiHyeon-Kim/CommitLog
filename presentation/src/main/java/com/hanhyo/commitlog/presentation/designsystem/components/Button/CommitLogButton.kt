@@ -1,6 +1,7 @@
-package com.hanhyo.commitlog.presentation.designsystem.components.Button
+package com.hanhyo.commitlog.presentation.designsystem.components.button
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,8 +31,7 @@ fun CommitLogButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier
-            .heightIn(min = Dimensions.ButtonHeightMedium),
+        modifier = modifier.height(Dimensions.ButtonHeightLarge),
         enabled = enabled && !loading,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,

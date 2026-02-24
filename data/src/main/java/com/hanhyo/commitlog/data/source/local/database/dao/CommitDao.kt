@@ -16,9 +16,9 @@ interface CommitDao {
     @Query("SELECT * FROM commits WHERE isDraft = 0 ORDER BY date DESC, createdAt DESC")
     fun observeAllCommits(): Flow<List<CommitEntity>>
 
-    /** Draft만 조회 */
-    @Query("SELECT * FROM commits WHERE isDraft = 1 ORDER BY (updatedAt IS NULL) DESC, updatedAt DESC, createdAt DESC")
-    fun observeAllDrafts(): Flow<List<CommitEntity>>
+    /** Draft 1개만 조회 (단일 임시저장) */
+    @Query("SELECT * FROM commits WHERE isDraft = 1 ORDER BY (updatedAt IS NULL) DESC, updatedAt DESC, createdAt DESC LIMIT 1")
+    fun observeDraft(): Flow<CommitEntity?>
 
     /** 특정 Commit 조회 */
     @Query("SELECT * FROM commits WHERE id = :id")

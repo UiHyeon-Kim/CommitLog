@@ -12,8 +12,6 @@ import com.hanhyo.commitlog.domain.model.LearningTag
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
-import com.hanhyo.commitlog.domain.model.AnalysisStatus
-
 private val json = Json { ignoreUnknownKeys = true }
 
 fun CommitEntity.toDomain(): Commit {
@@ -26,7 +24,7 @@ fun CommitEntity.toDomain(): Commit {
         tomorrowPlan = tomorrowPlan,
         tags = parseTags(tags),
         analysis = this.toAnalysis(),
-        analysisStatus = parseAnalysisStatus(analysisStatus),
+        analysisStatus = analysisStatus,
         isDraft = isDraft,
         createdAt = createdAt,
         updatedAt = updatedAt
@@ -46,19 +44,11 @@ fun Commit.toEntity(): CommitEntity {
         moodScore = analysis?.moodScore,
         difficultyLevel = analysis?.difficultyLevel?.name,
         aiComment = analysis?.comment,
-        analysisStatus = analysisStatus.name,
+        analysisStatus = analysisStatus,
         isDraft = isDraft,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
-}
-
-private fun parseAnalysisStatus(status: String): AnalysisStatus {
-    return try {
-        AnalysisStatus.valueOf(status)
-    } catch (e: Exception) {
-        AnalysisStatus.NONE
-    }
 }
 
 fun List<CommitEntity>.toDomainList(): List<Commit> =

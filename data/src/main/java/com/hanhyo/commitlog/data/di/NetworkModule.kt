@@ -1,9 +1,9 @@
 package com.hanhyo.commitlog.data.di
 
+import android.R.attr.apiKey
 import com.hanhyo.commitlog.data.BuildConfig
-import com.hanhyo.commitlog.data.source.remote.AiService
-import com.hanhyo.commitlog.data.source.remote.GeminiAiService
-import com.hanhyo.commitlog.data.source.remote.OpenAiService
+import com.hanhyo.commitlog.data.source.remote.api.AiService
+import com.hanhyo.commitlog.data.source.remote.api.GeminiAiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,7 +11,12 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GeminiApiKey
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -36,24 +41,19 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * AI 서비스 제공
-     *
-     * 현재: Gemini (기본)
-     * OpenAI로 전환하려면 아래 한 줄만 변경:
-     *   GeminiAiService(...) → OpenAiService(BuildConfig.OPENAI_API_KEY, client)
-     */
     @Provides
     @Singleton
-    fun provideAiService(client: OkHttpClient): AiService {
-        return GeminiAiService(
-            apiKey = BuildConfig.GEMINI_API_KEY,
-            client = client,
-        )
-        // OpenAI로 변경 시:
-//         return OpenAiService(
-//             apiKey = BuildConfig.OPENAI_API_KEY,
-//             client = client,
-//         )
+    @GeminiApiKey
+    fun provideGeminiApiKey(): String {
+        return BuildConfig.GEMINI_API_KEY
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiService(
+        @GeminiApiKey apiKey: String,
+        client: OkHttpClient
+    ): AiService {
+        return GeminiAiService(apiKey, client)
     }
 }

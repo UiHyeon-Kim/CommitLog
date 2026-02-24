@@ -12,8 +12,11 @@ interface CommitRepository {
     /** 모든 커밋 관찰 - 홈 실시간 커밋 목록 */
     fun observeAllCommits(): Flow<List<Commit>>
 
-    /** 모든 초안 관찰 - 작성 중 초안 목록 */
-    fun observeAllDrafts(): Flow<List<Commit>>
+    /** 단일 초안 관찰 - 작성 중 초안 데이터 */
+    fun observeDraft(): Flow<Commit?>
+
+    /** 모든 초안 초기화(단일 초안 유지를 위함) */
+    suspend fun deleteAllDrafts()
 
     /** ID로 커밋 조회 - 상세, 수정 화면 */
     suspend fun getCommitById(id: CommitId): Commit?

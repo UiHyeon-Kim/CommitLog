@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
@@ -74,7 +74,8 @@ private fun SwipeDeleteBackground(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color,
+            .background(
+                color,
                 RoundedCornerShape(Dimensions.CardRadius)
             )
             .padding(end = 16.dp),
@@ -97,25 +98,22 @@ private fun SwipeToDeleteCardPreview() {
         val sampleCommit = Commit(
             id = CommitId(1L),
             date = LocalDate.now(),
-            title = CommitTitle("Swipe To Delete"),
-            learnedToday = LearnedContent("This is a preview of the swipe to delete functionality."),
-            tags = setOf(LearningTag("preview")),
+            title = CommitTitle("안드로이드 Jetpack Compose 학습"),
+            learnedToday = LearnedContent("선언형 UI인 Jetpack Compose를 사용해보았다."),
+            tags = setOf(LearningTag("Jetpack Compose"), LearningTag("Android")),
             createdAt = System.currentTimeMillis(),
             isDraft = false,
             difficulties = null,
             tomorrowPlan = null,
             analysis = null,
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.NONE,
+            analysisStatus = AnalysisStatus.NONE,
             updatedAt = null
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Swipe left on the card to see the delete action.")
             SwipeToDeleteCard(
                 onDelete = {}
             ) {

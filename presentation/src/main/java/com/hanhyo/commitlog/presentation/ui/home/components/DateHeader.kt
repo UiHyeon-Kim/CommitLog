@@ -1,6 +1,7 @@
 package com.hanhyo.commitlog.presentation.ui.home.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
@@ -27,6 +29,7 @@ import java.util.Locale
 @Composable
 fun DateHeader(
     date: LocalDate,
+    totalCommitCount: Int? = null
 ) {
     val today = LocalDate.now()
     val isToday = date.isEqual(today)
@@ -41,43 +44,59 @@ fun DateHeader(
             .background(CommitLogTheme.colors.background)
             .padding(vertical = Dimensions.SpacingSmall)
     ) {
-        if (isToday) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "오늘의 기록",
-                    style = CommitLogTheme.typography.headlineMedium,
-                    color = CommitLogTheme.colors.textPrimary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-        } else if (isYesterday) {
-            Text(
-                text = "어제 기록",
-                style = CommitLogTheme.typography.headlineMedium,
-                color = CommitLogTheme.colors.textPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                if (isToday) {
+                    Text(
+                        text = "오늘의 기록",
+                        style = CommitLogTheme.typography.headlineMedium,
+                        color = CommitLogTheme.colors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                } else if (isYesterday) {
+                    Text(
+                        text = "어제 기록",
+                        style = CommitLogTheme.typography.headlineMedium,
+                        color = CommitLogTheme.colors.textPrimary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isToday || isYesterday) {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    contentDescription = null,
-                    tint = CommitLogTheme.colors.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isToday || isYesterday) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = null,
+                            tint = CommitLogTheme.colors.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                    Text(
+                        text = dateString,
+                        style = CommitLogTheme.typography.bodyMedium,
+                        color = if (isToday || isYesterday) CommitLogTheme.colors.primary else CommitLogTheme.colors.textTertiary
+                    )
+                }
             }
-            Text(
-                text = dateString,
-                style = CommitLogTheme.typography.bodyMedium,
-                color = if (isToday || isYesterday) CommitLogTheme.colors.primary else CommitLogTheme.colors.textTertiary
-            )
+
+            if (totalCommitCount != null) {
+                Text(
+                    text = "총 ${totalCommitCount}개",
+                    style = CommitLogTheme.typography.bodyMedium,
+                    color = CommitLogTheme.colors.textTertiary,
+                    modifier = Modifier
+                        .background(
+                            color = CommitLogTheme.colors.surface,
+                            shape = RoundedCornerShape(Dimensions.ButtonRadius)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 }

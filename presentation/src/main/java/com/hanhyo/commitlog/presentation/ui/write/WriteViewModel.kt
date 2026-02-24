@@ -8,7 +8,8 @@ import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
-import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleAnalysisUseCase
+import com.hanhyo.commitlog.domain.usecase.aianalysis.AnalyzeAndSaveCommitUseCase
+import com.hanhyo.commitlog.domain.usecase.commit.DeleteAllDraftsUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.GetCommitByIdUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.UpdateCommitUseCase
@@ -31,7 +32,8 @@ class WriteViewModel @Inject constructor(
     private val getCommitByIdUseCase: GetCommitByIdUseCase,
     private val saveCommitUseCase: SaveCommitUseCase,
     private val updateCommitUseCase: UpdateCommitUseCase,
-    private val scheduleAnalysisUseCase: ScheduleAnalysisUseCase,
+    private val analyzeAndSaveCommitUseCase: AnalyzeAndSaveCommitUseCase,
+    private val deleteAllDraftsUseCase: DeleteAllDraftsUseCase,
 ) : ViewModel() {
 
     private val writeRoute: WriteRoute = savedStateHandle.toRoute()
@@ -59,16 +61,19 @@ class WriteViewModel @Inject constructor(
             getCommitByIdUseCase(CommitId(commitId))
                 .onSuccess { commit ->
                     editingCommitId = commit.id.value // ID 저장
+                    val loadedTitle = if (commit.title.value == "제목 없음") "" else commit.title.value
+                    val loadedLearnedToday = if (commit.learnedToday.value == "내용 없음") "" else commit.learnedToday.value
+                    
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isEditMode = true,
                             date = commit.date,
-                            title = commit.title.value,
-                            learnedToday = commit.learnedToday.value,
+                            title = loadedTitle,
+                            learnedToday = loadedLearnedToday,
                             difficulties = commit.difficulties ?: "",
                             tomorrowPlan = commit.tomorrowPlan ?: "",
-                            canSave = true
+                            canSave = validateInput(loadedTitle, loadedLearnedToday)
                         )
                     }
                 }
@@ -103,9 +108,6 @@ class WriteViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // ID가 있으면(편집) 해당 ID 유지, 없으면 NONE(새 생성)
-            val currentId = editingCommitId?.let { CommitId(it) } ?: CommitId.NONE
-
             val commit = Commit.create(
                 date = state.date,
                 title = CommitTitle(state.title),
@@ -113,29 +115,62 @@ class WriteViewModel @Inject constructor(
                 difficulties = state.difficulties.ifBlank { null },
                 tomorrowPlan = state.tomorrowPlan.ifBlank { null },
                 isDraft = false
-            ).copy(id = currentId) // ID 설정
+            )
 
-            // 분석 상태 Pending
-            val commitToSave = commit.withAnalysisPending()
-
-            val result = if (state.isEditMode) {
-                updateCommitUseCase(commitToSave).map { currentId.value }
-            } else {
-                saveCommitUseCase(commitToSave)
-            }
-
-            result
-                .onSuccess { savedId ->
-                    // WorkManager로 분석 요청 (UseCase 위임)
-                    scheduleAnalysisUseCase(savedId)
-
-                    _effect.emit(WriteEffect.ShowSuccess("커밋이 저장되었습니다. AI 분석을 시작합니다."))
-                    _effect.emit(WriteEffect.NavigateBack)
-                }
-                .onFailure { error ->
+            if (state.isEditMode) {
+                // 수정 모드
+                val commitId = editingCommitId
+                if (commitId == null) {
                     _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(WriteEffect.ShowError(error.message ?: "저장 실패"))
+                    _effect.emit(WriteEffect.ShowError("커밋을 수정할 수 없습니다"))
+                    return@launch
                 }
+
+                val commitToUpdate = commit.copy(
+                    id = CommitId(commitId)
+                )
+
+                updateCommitUseCase(commitToUpdate)
+                    .onSuccess {
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effect.emit(WriteEffect.ShowSuccess("커밋이 수정되었습니다"))
+                        _effect.emit(WriteEffect.NavigateBack)
+                    }
+                    .onFailure { error ->
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effect.emit(
+                            WriteEffect.ShowError(
+                                error.message ?: "수정 실패"
+                            )
+                        )
+                    }
+            } else {
+                // 새 커밋 저장 + AI 분석 예약
+                analyzeAndSaveCommitUseCase(commit)
+                    .onSuccess { savedId ->
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effect.emit(
+                            WriteEffect.ShowSuccess(
+                                "커밋이 저장되었습니다. AI가 분석을 시작합니다"
+                            )
+                        )
+                        _effect.emit(WriteEffect.NavigateBack)
+                    }
+                    .onFailure { error ->
+                        _uiState.update { it.copy(isLoading = false) }
+
+                        val errorMessage = when {
+                            error is IllegalArgumentException ->
+                                error.message ?: "입력값이 올바르지 않습니다"
+                            error.message?.contains("API") == true ->
+                                "AI 분석을 시작할 수 없습니다. 잠시 후 다시 시도해주세요"
+                            else ->
+                                "저장 중 오류가 발생했습니다"
+                        }
+
+                        _effect.emit(WriteEffect.ShowError(errorMessage))
+                    }
+            }
         }
     }
 
@@ -155,14 +190,22 @@ class WriteViewModel @Inject constructor(
                 isDraft = true
             )
 
-            saveCommitUseCase(draft)
+            // 기존 임시저장 내용들을 모두 지워서 최근 1개의 단일 초안(Draft)만 유지
+            deleteAllDraftsUseCase()
                 .onSuccess {
-                    _effect.emit(WriteEffect.ShowSuccess("임시저장 되었습니다"))
-                    _effect.emit(WriteEffect.NavigateBack)
+                    saveCommitUseCase(draft)
+                        .onSuccess {
+                            _effect.emit(WriteEffect.ShowSuccess("임시저장 되었습니다"))
+                            _effect.emit(WriteEffect.NavigateBack)
+                        }
+                        .onFailure {
+                            _uiState.update { it.copy(isLoading = false) }
+                            _effect.emit(WriteEffect.ShowError("임시저장 실패"))
+                        }
                 }
                 .onFailure {
                     _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(WriteEffect.ShowError("임시저장 실패"))
+                    _effect.emit(WriteEffect.ShowError("이전 초안 삭제에 실패했습니다"))
                 }
         }
     }

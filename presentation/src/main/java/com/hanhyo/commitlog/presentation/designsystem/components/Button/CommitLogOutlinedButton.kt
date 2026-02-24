@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.presentation.designsystem.components.Button
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -22,8 +23,7 @@ fun CommitLogOutlinedButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier
-            .heightIn(min = Dimensions.ButtonHeightMedium),
+        modifier = modifier.height(Dimensions.ButtonHeightLarge),
         enabled = enabled,
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,

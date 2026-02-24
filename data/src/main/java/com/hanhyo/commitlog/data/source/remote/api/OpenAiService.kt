@@ -1,4 +1,4 @@
-package com.hanhyo.commitlog.data.source.remote
+package com.hanhyo.commitlog.data.source.remote.api
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -11,20 +11,22 @@ import org.json.JSONObject
 import timber.log.Timber
 
 /**
- * Gemini REST API 기반 AI 서비스
+ * OpenAI REST API 기반 AI 서비스
  *
- * @param apiKey Gemini API Key
+ * 참고: 현재 기본 프로바이더는 Gemini이며, OpenAI로 변경하려면
+ * NetworkModule에서 provideAiService()의 반환값만 교체하면 됩니다.
+ *
+ * @param apiKey OpenAI API Key
  * @param client OkHttpClient (공유)
  */
-class GeminiAiService(
+class OpenAiService(
     private val apiKey: String,
     private val client: OkHttpClient,
 ) : AiService {
 
     companion object {
-        // gemini-1.5-flash-001 (Specific version)
-        private const val BASE_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent"
+        private const val BASE_URL = "https://api.openai.com/v1/chat/completions"
+        private const val MODEL = "gpt-3.5-turbo"
     }
 
     override suspend fun analyzeCommit(
@@ -34,60 +36,55 @@ class GeminiAiService(
         tomorrow: String?,
     ): String = withContext(Dispatchers.IO) {
         val prompt = buildAnalyzePrompt(title, learned, difficulty, tomorrow)
-        callGemini(prompt)
+        callOpenAI(prompt, maxTokens = 300)
     }
 
     override suspend fun generateMonthlyReview(prompt: String): String =
         withContext(Dispatchers.IO) {
-            callGemini(prompt)
+            callOpenAI(prompt, maxTokens = 1024)
         }
 
     /**
-     * Gemini API 호출 공통 메서드
+     * OpenAI Chat Completions API 호출 공통 메서드
      */
-    private fun callGemini(prompt: String): String {
+    private fun callOpenAI(prompt: String, maxTokens: Int): String {
         val requestBody = JSONObject().apply {
-            put("contents", JSONArray().apply {
+            put("model", MODEL)
+            put("messages", JSONArray().apply {
                 put(JSONObject().apply {
-                    put("parts", JSONArray().apply {
-                        put(JSONObject().apply {
-                            put("text", prompt)
-                        })
-                    })
+                    put("role", "user")
+                    put("content", prompt)
                 })
             })
-            put("generationConfig", JSONObject().apply {
-                put("temperature", 0.7)
-                put("maxOutputTokens", 1024)
-            })
+            put("max_tokens", maxTokens)
+            put("temperature", 0.7)
         }
 
         val request = Request.Builder()
-            .url("$BASE_URL?key=$apiKey")
+            .url(BASE_URL)
+            .addHeader("Authorization", "Bearer $apiKey")
             .addHeader("Content-Type", "application/json")
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
         val response = client.newCall(request).execute()
         val responseBody = response.body?.string()
-            ?: throw Exception("Gemini API: 빈 응답")
+            ?: throw Exception("OpenAI API: 빈 응답")
 
         if (!response.isSuccessful) {
-            Timber.e("Gemini API error: ${response.code} - $responseBody")
+            Timber.e("OpenAI API error: ${response.code} - $responseBody")
             if (response.code == 429) {
                 throw Exception("AI 분석 한도가 초과되었습니다. 잠시 후 다시 시도해주세요.")
             }
-            throw Exception("Gemini API 오류 (${response.code}): $responseBody")
+            throw Exception("OpenAI API 오류 (${response.code}): $responseBody")
         }
 
         val jsonResponse = JSONObject(responseBody)
         return jsonResponse
-            .getJSONArray("candidates")
+            .getJSONArray("choices")
             .getJSONObject(0)
-            .getJSONObject("content")
-            .getJSONArray("parts")
-            .getJSONObject(0)
-            .getString("text")
+            .getJSONObject("message")
+            .getString("content")
     }
 
     private fun buildAnalyzePrompt(
