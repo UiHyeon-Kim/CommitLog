@@ -192,15 +192,20 @@ class WriteViewModel @Inject constructor(
 
             // 기존 임시저장 내용들을 모두 지워서 최근 1개의 단일 초안(Draft)만 유지
             deleteAllDraftsUseCase()
-
-            saveCommitUseCase(draft)
                 .onSuccess {
-                    _effect.emit(WriteEffect.ShowSuccess("임시저장 되었습니다"))
-                    _effect.emit(WriteEffect.NavigateBack)
+                    saveCommitUseCase(draft)
+                        .onSuccess {
+                            _effect.emit(WriteEffect.ShowSuccess("임시저장 되었습니다"))
+                            _effect.emit(WriteEffect.NavigateBack)
+                        }
+                        .onFailure {
+                            _uiState.update { it.copy(isLoading = false) }
+                            _effect.emit(WriteEffect.ShowError("임시저장 실패"))
+                        }
                 }
                 .onFailure {
                     _uiState.update { it.copy(isLoading = false) }
-                    _effect.emit(WriteEffect.ShowError("임시저장 실패"))
+                    _effect.emit(WriteEffect.ShowError("이전 초안 삭제에 실패했습니다"))
                 }
         }
     }

@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.presentation.ui.stats.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,9 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
@@ -57,6 +65,8 @@ import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Fill
 import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun StatisticsCharts(
@@ -71,7 +81,13 @@ fun StatisticsCharts(
     onNavigateToWrite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (yearlyStats.totalRecords == 0) {
+    val isEmpty = when (period) {
+        StatsPeriod.WEEKLY -> weeklyStats.commitCount == 0
+        StatsPeriod.MONTHLY -> monthlyStats.commitFrequency == 0
+        StatsPeriod.YEARLY -> yearlyStats.totalRecords == 0
+    }
+
+    if (isEmpty) {
         StatisticsEmptyView(
             onNavigateToWrite = onNavigateToWrite,
             modifier = modifier
@@ -309,7 +325,11 @@ private fun rememberCartesianMarker(): CartesianMarker {
 }
 
 @Composable
-private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>, chartProducer: CartesianChartModelProducer) {
+private fun YearlyStatsView(
+    stats: YearlyStats,
+    heatmap: List<Int>,
+    chartProducer: CartesianChartModelProducer
+) {
     Column(
         modifier = Modifier.padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
@@ -374,8 +394,8 @@ private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>, chartProduce
                 Text("More", style = CommitLogTheme.typography.labelSmall, color = CommitLogTheme.colors.textSecondary)
             }
 
-            androidx.compose.foundation.lazy.grid.LazyHorizontalGrid(
-                rows = androidx.compose.foundation.lazy.grid.GridCells.Fixed(7),
+            LazyHorizontalGrid(
+                rows = GridCells.Fixed(7),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
@@ -393,7 +413,7 @@ private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>, chartProduce
             }
         }
 
-        if (stats.skillGrowth.isNotEmpty()) {
+        if (stats.skillGrowth.size >= 3) {
             StatsCard(title = "스킬 성장 (Skill Radar)") {
                 RadarChart(
                     skills = stats.skillGrowth,
@@ -416,31 +436,31 @@ fun RadarChart(
     textColor: Color = CommitLogTheme.colors.textPrimary
 ) {
     val numSides = skills.size.coerceAtLeast(3)
-    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val textMeasurer = rememberTextMeasurer()
     val textStyle = CommitLogTheme.typography.labelSmall.copy(color = textColor)
 
-    androidx.compose.foundation.Canvas(modifier = modifier) {
+    Canvas(modifier = modifier) {
         val radius = size.minDimension / 2 * 0.7f
-        val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
+        val center = Offset(size.width / 2, size.height / 2)
         val angleStep = (2 * Math.PI / numSides).toFloat()
 
         // 1. 방사형 웹 구조 그리기 (배경 다각형)
         for (step in 1..4) {
             val stepRadius = radius * (step / 4f)
-            val path = androidx.compose.ui.graphics.Path()
+            val path = Path()
             for (i in 0 until numSides) {
                 val angle = angleStep * i - (Math.PI / 2).toFloat()
-                val x = center.x + stepRadius * kotlin.math.cos(angle)
-                val y = center.y + stepRadius * kotlin.math.sin(angle)
+                val x = center.x + stepRadius * cos(angle)
+                val y = center.y + stepRadius * sin(angle)
                 if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
             }
             path.close()
             drawPath(
                 path = path,
                 color = lineColor,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                style = Stroke(
                     width = 2f,
-                    pathEffect = if (step == 4) null else androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    pathEffect = if (step == 4) null else PathEffect.dashPathEffect(
                         floatArrayOf(10f, 10f)
                     ) // 최외곽 라인은 실선, 내부는 점선 처리
                 )
@@ -450,12 +470,12 @@ fun RadarChart(
         // 2. 방사형 가이드라인 그리기
         for (i in 0 until numSides) {
             val angle = angleStep * i - (Math.PI / 2).toFloat()
-            val endX = center.x + radius * kotlin.math.cos(angle)
-            val endY = center.y + radius * kotlin.math.sin(angle)
+            val endX = center.x + radius * cos(angle)
+            val endY = center.y + radius * sin(angle)
             drawLine(
                 color = lineColor,
                 start = center,
-                end = androidx.compose.ui.geometry.Offset(endX, endY),
+                end = Offset(endX, endY),
                 strokeWidth = 2f
             )
         }
@@ -464,8 +484,8 @@ fun RadarChart(
         for (i in 0 until numSides) {
             val angle = angleStep * i - (Math.PI / 2).toFloat()
             val labelRadius = radius * 1.2f // 라벨이 바깥에 위치하도록 반경 조정
-            val x = center.x + labelRadius * kotlin.math.cos(angle)
-            val y = center.y + labelRadius * kotlin.math.sin(angle)
+            val x = center.x + labelRadius * cos(angle)
+            val y = center.y + labelRadius * sin(angle)
 
             val skill = skills.getOrNull(i)
             if (skill != null) {
@@ -474,7 +494,7 @@ fun RadarChart(
                     textMeasurer = textMeasurer,
                     text = skill.name,
                     style = textStyle,
-                    topLeft = androidx.compose.ui.geometry.Offset(
+                    topLeft = Offset(
                         x = x - measuredText.size.width / 2,
                         y = y - measuredText.size.height / 2
                     )
@@ -483,7 +503,7 @@ fun RadarChart(
         }
 
         // 4. 데이터 다각형 그리기
-        val dataPath = androidx.compose.ui.graphics.Path()
+        val dataPath = Path()
         for (i in 0 until numSides) {
             val skill = skills.getOrNull(i)
             val scoreRatio = skill?.score?.coerceIn(0f, 1f) ?: 0f
@@ -491,8 +511,8 @@ fun RadarChart(
             val finalRatio = scoreRatio.coerceAtLeast(0.1f)
             val angle = angleStep * i - (Math.PI / 2).toFloat()
             val dataRadius = radius * finalRatio
-            val x = center.x + dataRadius * kotlin.math.cos(angle)
-            val y = center.y + dataRadius * kotlin.math.sin(angle)
+            val x = center.x + dataRadius * cos(angle)
+            val y = center.y + dataRadius * sin(angle)
 
             if (i == 0) dataPath.moveTo(x, y) else dataPath.lineTo(x, y)
         }
@@ -506,7 +526,7 @@ fun RadarChart(
         drawPath(
             path = dataPath,
             color = fillColor,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 8f)
+            style = Stroke(width = 8f)
         )
     }
 }
