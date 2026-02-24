@@ -86,9 +86,13 @@ fun StatisticsCharts(
         verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
     ) {
         when (period) {
-            StatsPeriod.WEEKLY -> WeeklyStatsView(weeklyStats, weeklyChartModelProducer)
-            StatsPeriod.MONTHLY -> MonthlyStatsView(monthlyStats, monthlyChartModelProducer)
-            StatsPeriod.YEARLY -> YearlyStatsView(yearlyStats, heatmap = yearlyHeatmap)
+            StatsPeriod.WEEKLY -> WeeklyStatsView(weeklyStats, chartProducer = weeklyChartModelProducer)
+            StatsPeriod.MONTHLY -> MonthlyStatsView(monthlyStats, chartProducer = monthlyChartModelProducer)
+            StatsPeriod.YEARLY -> YearlyStatsView(
+                yearlyStats,
+                heatmap = yearlyHeatmap,
+                chartProducer = yearlyChartModelProducer
+            )
         }
 
         Spacer(modifier = Modifier.height(Dimensions.SpacingLarge))
@@ -305,7 +309,7 @@ private fun rememberCartesianMarker(): CartesianMarker {
 }
 
 @Composable
-private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>) {
+private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>, chartProducer: CartesianChartModelProducer) {
     Column(
         modifier = Modifier.padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
@@ -362,15 +366,7 @@ private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>) {
                             modifier = Modifier
                                 .size(10.dp)
                                 .clip(RoundedCornerShape(2.dp))
-                                .background(
-                                    when (level) {
-                                        0 -> CommitLogTheme.colors.surfaceVariant
-                                        1 -> CommitLogTheme.colors.primary.copy(alpha = 0.3f)
-                                        2 -> CommitLogTheme.colors.primary.copy(alpha = 0.5f)
-                                        3 -> CommitLogTheme.colors.primary.copy(alpha = 0.7f)
-                                        else -> CommitLogTheme.colors.primary
-                                    }
-                                )
+                                .background(heatmapColor(level))
                         )
                     }
                 }
@@ -391,15 +387,7 @@ private fun YearlyStatsView(stats: YearlyStats, heatmap: List<Int>) {
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(2.dp))
-                            .background(
-                                when (level) {
-                                    0 -> CommitLogTheme.colors.surfaceVariant
-                                    1 -> CommitLogTheme.colors.primary.copy(alpha = 0.3f)
-                                    2 -> CommitLogTheme.colors.primary.copy(alpha = 0.5f)
-                                    3 -> CommitLogTheme.colors.primary.copy(alpha = 0.7f)
-                                    else -> CommitLogTheme.colors.primary
-                                }
-                            )
+                            .background(heatmapColor(level))
                     )
                 }
             }
@@ -523,6 +511,15 @@ fun RadarChart(
     }
 }
 
+@Composable
+private fun heatmapColor(level: Int): Color = when (level) {
+    0 -> CommitLogTheme.colors.surfaceVariant
+    1 -> CommitLogTheme.colors.primary.copy(alpha = 0.3f)
+    2 -> CommitLogTheme.colors.primary.copy(alpha = 0.5f)
+    3 -> CommitLogTheme.colors.primary.copy(alpha = 0.7f)
+    else -> CommitLogTheme.colors.primary
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun WeeklyStatsViewPreview() {
@@ -595,7 +592,8 @@ private fun YearlyStatsViewPreview() {
                         Skill("Android Architecture", 0.4f)
                     )
                 ),
-                heatmap = List(365) { (0..4).random() }
+                heatmap = List(365) { (0..4).random() },
+                chartProducer = CartesianChartModelProducer()
             )
         }
     }

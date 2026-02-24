@@ -114,8 +114,8 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             val jsonString = responseText
                 .trim()
                 .removePrefix("```json")
-                .trim()
-                .removeSurrounding("```")
+                .removePrefix("```")
+                .removeSuffix("```")
                 .trim()
 
             val json = JSONObject(jsonString)

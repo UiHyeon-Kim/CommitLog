@@ -88,7 +88,14 @@ fun WriteScreen(
     }
 
     val onSmartBack = {
-        if (!uiState.isEditMode && (uiState.title.isNotBlank() || uiState.learnedToday.isNotBlank())) {
+        if (
+            !uiState.isEditMode && (
+                    uiState.title.isNotBlank() ||
+                    uiState.learnedToday.isNotBlank() ||
+                    uiState.difficulties.isNotBlank() ||
+                    uiState.tomorrowPlan.isNotBlank()
+            )
+        ) {
             showExitDialog = true
         } else {
             onBack()

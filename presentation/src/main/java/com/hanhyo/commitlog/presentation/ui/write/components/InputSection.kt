@@ -18,9 +18,13 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 @Composable
 fun InputSection(
     title: String,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingSmall)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingSmall)
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = title,

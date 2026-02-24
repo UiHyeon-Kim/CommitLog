@@ -2,10 +2,12 @@ package com.hanhyo.commitlog.presentation.ui.stats.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.InsertChartOutlined
@@ -48,14 +50,15 @@ fun StatisticsEmptyView(
         Spacer(modifier = Modifier.height(Dimensions.SpacingLarge))
         Button(
             onClick = onNavigateToWrite,
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            contentPadding = PaddingValues(horizontal = Dimensions.SpacingMedium)
         ) {
             Icon(
                 imageVector = Icons.Outlined.Edit,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
-            Spacer(modifier = Modifier.height(Dimensions.SpacingSmall))
+            Spacer(modifier = Modifier.width(Dimensions.SpacingSmall))
             Text(text = "기록하러 가기")
         }
     }

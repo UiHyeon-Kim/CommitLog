@@ -309,7 +309,7 @@ private fun DetailContent(
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             CircularIndicatorItem(
-                                score = 85,
+                                score = analysis.moodScore.coerceIn(0, 100),
                                 label = "학습 확신도",
                                 color = CommitLogTheme.colors.primary
                             )

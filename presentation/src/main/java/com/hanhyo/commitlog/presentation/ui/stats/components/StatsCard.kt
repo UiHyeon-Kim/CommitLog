@@ -17,14 +17,15 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 @Composable
 fun StatsCard(
     title: String,
-    content: @Composable () -> Unit
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = CommitLogTheme.colors.surface
         ),
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(Dimensions.CardPadding),

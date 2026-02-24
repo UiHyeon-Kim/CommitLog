@@ -119,8 +119,15 @@ class WriteViewModel @Inject constructor(
 
             if (state.isEditMode) {
                 // 수정 모드
+                val commitId = editingCommitId
+                if (commitId == null) {
+                    _uiState.update { it.copy(isLoading = false) }
+                    _effect.emit(WriteEffect.ShowError("커밋을 수정할 수 없습니다"))
+                    return@launch
+                }
+
                 val commitToUpdate = commit.copy(
-                    id = CommitId(editingCommitId ?: 0L)
+                    id = CommitId(commitId)
                 )
 
                 updateCommitUseCase(commitToUpdate)
