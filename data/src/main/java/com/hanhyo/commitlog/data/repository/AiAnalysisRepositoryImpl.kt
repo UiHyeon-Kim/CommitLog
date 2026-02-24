@@ -18,6 +18,8 @@ import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.concurrent.CancellationException
@@ -30,6 +32,8 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     private val workManager: WorkManager,
     private val monthlyReviewDao: MonthlyReviewDao
 ) : AiAnalysisRepository {
+
+    private val monthlyReviewMutex = Mutex()
 
     override suspend fun analyzeCommit(
         title: CommitTitle,
@@ -70,12 +74,12 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         commits: List<Commit>,
         year: Int,
         month: Int
-    ): MonthlyReview {
+    ): MonthlyReview = monthlyReviewMutex.withLock {
         try {
             // 1. DB에 저장된 회고가 있는지 확인
             val savedEntity = monthlyReviewDao.getMonthlyReview(year, month)
             if (savedEntity != null) {
-                return MonthlyReviewMapper.mapToDomain(savedEntity)
+                return@withLock MonthlyReviewMapper.mapToDomain(savedEntity)
             }
 
             // 2. 없다면 AI에 요청하여 생성
@@ -91,7 +95,7 @@ class AiAnalysisRepositoryImpl @Inject constructor(
 
             // 3. DB에 저장 후 반환
             monthlyReviewDao.insertMonthlyReview(MonthlyReviewMapper.mapToEntity(review))
-            return review
+            return@withLock review
 
         } catch (e: CancellationException) {
             throw e
@@ -110,8 +114,8 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             val jsonString = responseText
                 .trim()
                 .removePrefix("```json")
-                .removePrefix("```")
-                .removeSuffix("```")
+                .trim()
+                .removeSurrounding("```")
                 .trim()
 
             val json = JSONObject(jsonString)
