@@ -9,6 +9,7 @@ import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.domain.repository.CommitRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 @HiltWorker
@@ -24,32 +25,38 @@ class AiAnalysisWorker @AssistedInject constructor(
         if (commitId == -1L) return Result.failure()
 
         return try {
-            val commit = commitRepository.getCommitById(CommitId(commitId))
+            val commitForAnalysis = commitRepository.getCommitById(CommitId(commitId))
                 ?: return Result.failure()
-
-            // 이미 분석되었거나 완료된 상태라면 스킵 (하지만 재분석 요청일 수도 있음)
-            // 여기서는 항상 재분석 수행
-
-            // 상태 업데이트: PENDING (이미 WriteViewModel에서 설정했겠지만, 안전장치)
-            commitRepository.updateCommit(commit.withAnalysisPending())
 
             // AI 분석 요청
             val result = aiAnalysisRepository.analyzeCommit(
-                title = commit.title,
-                learnedToday = commit.learnedToday,
-                difficulties = commit.difficulties,
-                tomorrowPlan = commit.tomorrowPlan
+                title = commitForAnalysis.title,
+                learnedToday = commitForAnalysis.learnedToday,
+                difficulties = commitForAnalysis.difficulties,
+                tomorrowPlan = commitForAnalysis.tomorrowPlan
             )
+
+            // 분석 수행 중 사용자가 커밋 내용을 수정했을 수 있으므로 최신 커밋 정보를 다시 가져옴
+            val latestCommit = commitRepository.getCommitById(CommitId(commitId))
+                ?: return Result.failure()
+
+            // AI 분석 응답 파싱 실패(기본값 반환)인 경우, 실패로 기록하고 무한 재시도 방지
+            if (result.analysis.comment == "분석 결과를 불러올 수 없습니다") {
+                commitRepository.updateCommit(latestCommit.withAnalysisFailed())
+                return Result.failure()
+            }
 
             // 분석 결과 저장 및 상태 완료
             commitRepository.updateCommit(
-                commit.withAnalysis(
+                latestCommit.withAnalysis(
                     analysis = result.analysis,
                     tags = result.tags // AI가 분석한 태그 사용
                 )
             )
 
             Result.success()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "AI Analysis failed for commit $commitId")
             
@@ -59,7 +66,7 @@ class AiAnalysisWorker @AssistedInject constructor(
                 commitRepository.updateCommit(it.withAnalysisFailed())
             }
             
-            if (runAttemptCount >= 2) {
+            if (runAttemptCount >= MAX_RETRY_COUNT) {
                 Result.failure()
             } else {
                 Result.retry()
@@ -69,5 +76,6 @@ class AiAnalysisWorker @AssistedInject constructor(
 
     companion object {
         const val KEY_COMMIT_ID = "commit_id"
+        const val MAX_RETRY_COUNT = 3
     }
 }

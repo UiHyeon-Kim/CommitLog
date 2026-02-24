@@ -28,7 +28,7 @@ object DatabaseModule {
             CommitDatabase.DATABASE_NAME
         )
             .apply {
-                if (BuildConfig.DEBUG) fallbackToDestructiveMigration(true)
+                fallbackToDestructiveMigration(true)
             }
             .build()
     }

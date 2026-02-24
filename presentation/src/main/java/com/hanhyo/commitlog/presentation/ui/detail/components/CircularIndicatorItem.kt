@@ -34,7 +34,7 @@ fun CircularIndicatorItem(
             modifier = Modifier.size(64.dp)
         ) {
             CircularProgressIndicator(
-                progress = { if (text == null) score / 100f else 1f },
+                progress = { if (text == null) (score / 100f).coerceIn(0f, 1f) else 1f },
                 modifier = Modifier.fillMaxSize(),
                 color = color,
                 trackColor = color.copy(alpha = 0.2f),

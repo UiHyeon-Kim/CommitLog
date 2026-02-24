@@ -2,6 +2,7 @@ package com.hanhyo.commitlog.data.source.local.database.converter
 
 import androidx.room.TypeConverter
 import org.json.JSONObject
+import timber.log.Timber
 
 class MapTypeConverter {
     @TypeConverter
@@ -23,7 +24,8 @@ class MapTypeConverter {
             }
             map
         } catch (e: Exception) {
-            emptyMap()
+            Timber.e(e, "IntIntMap을 구문 분석하지 못했습니다.: $jsonString")
+            null
         }
     }
 
@@ -46,7 +48,8 @@ class MapTypeConverter {
             }
             map
         } catch (e: Exception) {
-            emptyMap()
+            Timber.e(e, "StringIntMap을 구문 분석하지 못했습니다.: $jsonString")
+            null
         }
     }
 }

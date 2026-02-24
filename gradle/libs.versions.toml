@@ -7,7 +7,6 @@ work = "2.10.0"
 hiltWork = "1.2.0"
 
 # AndroidX Core
-# AndroidX Core
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
 appcompat = "1.7.1"
@@ -48,7 +47,6 @@ leakcanary = "2.14"
 mockk = "1.14.9"
 
 [libraries]
-# AndroidX & Material
 # AndroidX & Material
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }

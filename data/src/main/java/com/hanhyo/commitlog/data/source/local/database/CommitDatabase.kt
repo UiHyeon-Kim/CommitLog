@@ -3,6 +3,7 @@ package com.hanhyo.commitlog.data.source.local.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.hanhyo.commitlog.data.source.local.database.converter.AnalysisStatusConverter
 import com.hanhyo.commitlog.data.source.local.database.converter.LocalDateConverter
 import com.hanhyo.commitlog.data.source.local.database.converter.MapTypeConverter
 import com.hanhyo.commitlog.data.source.local.database.dao.CommitDao
@@ -20,7 +21,8 @@ import com.hanhyo.commitlog.data.source.local.database.entity.MonthlyReviewEntit
 )
 @TypeConverters(
     LocalDateConverter::class,
-    MapTypeConverter::class
+    MapTypeConverter::class,
+    AnalysisStatusConverter::class
 )
 abstract class CommitDatabase : RoomDatabase() {
 

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import java.time.LocalDate
 
 @Entity(
@@ -30,7 +31,7 @@ data class CommitEntity(
     val aiComment: String?,
 
     @ColumnInfo(defaultValue = "NONE")
-    val analysisStatus: String = "NONE",
+    val analysisStatus: AnalysisStatus = AnalysisStatus.NONE,
 
     val isDraft: Boolean = false,
     val createdAt: Long,

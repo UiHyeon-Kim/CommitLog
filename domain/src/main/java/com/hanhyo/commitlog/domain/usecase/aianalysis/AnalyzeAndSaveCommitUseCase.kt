@@ -2,8 +2,6 @@ package com.hanhyo.commitlog.domain.usecase.aianalysis
 
 import com.hanhyo.commitlog.domain.common.runSuspendCatching
 import com.hanhyo.commitlog.domain.model.Commit
-import com.hanhyo.commitlog.domain.model.CommitId
-import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.domain.repository.CommitRepository
 import javax.inject.Inject
 
@@ -23,7 +21,7 @@ class AnalyzeAndSaveCommitUseCase @Inject constructor(
         val savedId = commitRepository.saveCommit(commitWithPending)
 
         // WorkManager로 분석 예약
-        scheduleAnalysisUseCase(savedId)
+        scheduleAnalysisUseCase(savedId).getOrThrow()
         savedId
     }
 }

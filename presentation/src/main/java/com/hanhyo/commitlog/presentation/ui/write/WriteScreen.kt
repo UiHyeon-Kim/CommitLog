@@ -184,7 +184,8 @@ private fun WriteContent(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium),
+                .padding(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium)
+                .imePadding(),
             verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
         ) {
             // AI 분석 헤더
@@ -256,8 +257,7 @@ private fun WriteContent(
                     enabled = !isLoading,
                     minLines = 6,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .imePadding(),
+                        .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     )
@@ -272,8 +272,7 @@ private fun WriteContent(
                     enabled = !isLoading,
                     minLines = 4,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .imePadding(),
+                        .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Next
                     )
@@ -288,8 +287,7 @@ private fun WriteContent(
                     enabled = !isLoading,
                     minLines = 4,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .imePadding(),
+                        .fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
                         onDone = {

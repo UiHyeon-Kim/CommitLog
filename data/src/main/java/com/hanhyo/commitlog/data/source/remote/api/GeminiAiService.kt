@@ -120,7 +120,8 @@ class GeminiAiService(
 
         val url = String.format(BASE_URL_FORMAT, modelName)
         val request = Request.Builder()
-            .url("$url?key=$apiKey")
+            .url(url)
+            .addHeader("x-goog-api-key", apiKey)
             .addHeader("Content-Type", "application/json")
             .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
             .build()
@@ -174,6 +175,8 @@ class GeminiAiService(
         val finishReason = candidate.optString("finishReason", "")
         if (finishReason == "SAFETY") {
             throw AiServiceException("안전 필터에 의해 차단되었습니다")
+        } else if (finishReason == "MAX_TOKENS") {
+            throw AiServiceException("응답이 최대 길이를 초과하여 잘렸습니다")
         }
 
         return candidate

@@ -4,7 +4,17 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Locale
+
+/** Long (Timestamp)를 한국 오전/오후 시간 형식으로 변환 */
+fun Long.toKoreanTimeFormat(): String {
+    val formatter = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN)
+    return Instant.ofEpochMilli(this)
+        .atZone(ZoneId.systemDefault())
+        .format(formatter)
+}
 
 /** LocalDate를 한국어 날짜 형식으로 변환 */
 fun LocalDate.toKoreanFormat(): String = "${year}년 ${monthValue}월 ${dayOfMonth}일"

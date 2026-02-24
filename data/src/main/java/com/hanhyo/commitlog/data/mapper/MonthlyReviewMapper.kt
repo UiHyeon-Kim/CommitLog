@@ -1,7 +1,9 @@
 package com.hanhyo.commitlog.data.mapper
 
 import com.hanhyo.commitlog.data.source.local.database.entity.MonthlyReviewEntity
+import com.hanhyo.commitlog.domain.model.AIMood
 import com.hanhyo.commitlog.domain.model.Commit
+import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import java.time.LocalDate
 import java.time.temporal.WeekFields
@@ -72,9 +74,9 @@ object MonthlyReviewMapper {
             month = entity.month,
             totalCommitCount = entity.totalCommitCount,
             weeklyCommitCount = entity.weeklyCommitCount,
-            moodDistribution = entity.moodDistribution.mapKeys { com.hanhyo.commitlog.domain.model.AIMood.fromName(it.key) },
+            moodDistribution = entity.moodDistribution.mapKeys { AIMood.fromName(it.key) },
             tagDistribution = entity.tagDistribution.mapNotNull {
-                val tag = com.hanhyo.commitlog.domain.model.LearningTag.fromString(it.key)
+                val tag = LearningTag.fromString(it.key)
                 if (tag != null) tag to it.value else null
             }.toMap(),
             aiSummary = entity.aiSummary,

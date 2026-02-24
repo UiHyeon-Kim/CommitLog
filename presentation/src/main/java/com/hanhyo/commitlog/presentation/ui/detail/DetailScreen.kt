@@ -53,6 +53,7 @@ import com.hanhyo.commitlog.domain.model.DifficultyLevel
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.presentation.common.extension.toKoreanFormat
+import com.hanhyo.commitlog.presentation.common.extension.toKoreanTimeFormat
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.components.indicator.FullScreenLoading
@@ -241,7 +242,7 @@ private fun DetailContent(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "${commit.date.toKoreanFormat()} • 오후 10:45 기록",
+                    text = "${commit.date.toKoreanFormat()} • ${commit.createdAt.toKoreanTimeFormat()} 기록",
                     style = CommitLogTheme.typography.bodySmall,
                     color = CommitLogTheme.colors.textTertiary
                 )

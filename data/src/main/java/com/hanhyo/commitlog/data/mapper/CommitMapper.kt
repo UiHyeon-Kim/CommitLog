@@ -2,7 +2,6 @@ package com.hanhyo.commitlog.data.mapper
 
 import com.hanhyo.commitlog.data.source.local.database.entity.CommitEntity
 import com.hanhyo.commitlog.domain.model.AIMood
-import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitAnalysis
 import com.hanhyo.commitlog.domain.model.CommitId
@@ -25,7 +24,7 @@ fun CommitEntity.toDomain(): Commit {
         tomorrowPlan = tomorrowPlan,
         tags = parseTags(tags),
         analysis = this.toAnalysis(),
-        analysisStatus = parseAnalysisStatus(analysisStatus),
+        analysisStatus = analysisStatus,
         isDraft = isDraft,
         createdAt = createdAt,
         updatedAt = updatedAt
@@ -45,19 +44,11 @@ fun Commit.toEntity(): CommitEntity {
         moodScore = analysis?.moodScore,
         difficultyLevel = analysis?.difficultyLevel?.name,
         aiComment = analysis?.comment,
-        analysisStatus = analysisStatus.name,
+        analysisStatus = analysisStatus,
         isDraft = isDraft,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
-}
-
-private fun parseAnalysisStatus(status: String): AnalysisStatus {
-    return try {
-        AnalysisStatus.valueOf(status)
-    } catch (e: Exception) {
-        AnalysisStatus.NONE
-    }
 }
 
 fun List<CommitEntity>.toDomainList(): List<Commit> =
