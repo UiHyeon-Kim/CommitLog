@@ -5,9 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -19,7 +18,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
-
 import java.time.LocalDate
 
 /**
@@ -27,7 +25,7 @@ import java.time.LocalDate
  *
  * [Notification System Overview - Monthly Review]
  * 1. 발생 시점: 매월 1일 오전 9시 (NotificationScheduler에 의해 스케줄링됨)
- * 2. 동작: 
+ * 2. 동작:
  *    - 사용자가 직접 앱에서 '생성'을 누르지 않아도 백그라운드에서 지난 달의 데이터를 분석합니다.
  *    - AI 분석이 완료되면 DB에 저장하고, 시스템 알림(Status Bar)을 통해 완료를 알립니다.
  *    - 사용자가 알림을 클릭하면 앱의 '회고' 화면으로 딥링크 이동합니다.
@@ -49,7 +47,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
 
         return try {
             val result = generateMonthlyReviewUseCase(year, month)
-            
+
             // 정기 스케줄링 태그가 포함되어 있다면 다음 달 작업을 위해 재귀적으로 예약
             if (tags.contains(ReviewSchedulerImpl.TAG_MONTHLY_REVIEW_REGULAR)) {
                 reviewScheduler.scheduleRegularMonthlyReview()
@@ -69,7 +67,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             }
         } catch (e: CancellationException) {
             Timber.i("GenerateMonthlyReviewWorker cancelled")
-            throw e // CoroutineWorker requires rethrowing CancellationException
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Unexpected error in GenerateMonthlyReviewWorker")
             Result.failure(
@@ -85,19 +83,17 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val channelId = "monthly_review_channel"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "월간 회고 알림",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "월간 회고 생성 완료 및 리포트 도착 알림"
-            }
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            channelId,
+            "월간 회고 알림",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "월간 회고 생성 완료 및 리포트 도착 알림"
         }
+        notificationManager.createNotificationChannel(channel)
 
         // 클릭 시 ReviewScreen으로 이동하는 Deep Link 설정
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("app://commitlog/review")).apply {
+        val intent = Intent(Intent.ACTION_VIEW, "app://commitlog/review".toUri()).apply {
             // 패키지 명을 명시하여 외부 앱에서 낚아채지 못하게 함
             setPackage(context.packageName)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

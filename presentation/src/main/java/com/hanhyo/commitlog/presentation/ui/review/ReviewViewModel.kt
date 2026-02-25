@@ -78,7 +78,7 @@ class ReviewViewModel @Inject constructor(
                 .onEach { workInfos ->
                     // 1. 가장 최근의 작업 순으로 정렬 (결과 결정론성 확보)
                     val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis } 
-                    // Note: OneTimeWorkRequest의 경우 stopTime이나 id 등으로 정렬할 수 있으나, 
+                    // OneTimeWorkRequest의 경우 stopTime이나 id 등으로 정렬할 수 있으나,
                     // state 변화를 추적하기 위해 전체 리스트에서 활성 작업을 찾습니다.
                     
                     val activeWork = workInfos.firstOrNull { !it.state.isFinished }
