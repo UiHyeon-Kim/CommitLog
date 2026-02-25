@@ -1,12 +1,14 @@
 package com.hanhyo.commitlog.data.repository
 
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.hanhyo.commitlog.data.mapper.MonthlyReviewMapper
 import com.hanhyo.commitlog.data.source.remote.api.AiService
-import com.hanhyo.commitlog.data.source.remote.api.AiServiceException
 import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
+import com.hanhyo.commitlog.data.worker.GenerateMonthlyReviewWorker
+import com.hanhyo.commitlog.domain.exception.AiAnalysisException
 import com.hanhyo.commitlog.domain.model.AIMood
 import com.hanhyo.commitlog.domain.model.AiAnalysisResult
 import com.hanhyo.commitlog.domain.model.Commit
@@ -18,6 +20,8 @@ import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
@@ -53,12 +57,12 @@ class AiAnalysisRepositoryImpl @Inject constructor(
 
         } catch (e: CancellationException) {
             throw e
-        } catch (e: AiServiceException) {
-            // AI 서비스 에러는 그대로 전파
+        } catch (e: AiAnalysisException) {
+            // 이미 도메인 예외인 경우 그대로 전파
             throw e
         } catch (e: Exception) {
             Timber.e(e, "커밋 분석 중 예상치 못한 오류")
-            throw AiServiceException("커밋 분석 중 오류가 발생했습니다", e)
+            throw AiAnalysisException("커밋 분석 중 오류가 발생했습니다", e)
         }
     }
 
@@ -99,11 +103,30 @@ class AiAnalysisRepositoryImpl @Inject constructor(
 
         } catch (e: CancellationException) {
             throw e
-        } catch (e: AiServiceException) {
+        } catch (e: AiAnalysisException) {
             throw e
         } catch (e: Exception) {
             Timber.e(e, "월간 회고 생성 중 예상치 못한 오류")
-            throw AiServiceException("월간 회고 생성 중 오류가 발생했습니다", e)
+            throw AiAnalysisException("월간 회고 생성 중 오류가 발생했습니다", e)
+        }
+    }
+
+    override suspend fun scheduleMonthlyReview(year: Int, month: Int) {
+        val workRequest = OneTimeWorkRequestBuilder<GenerateMonthlyReviewWorker>()
+            .addTag("monthly_review_gen")
+            .setInputData(GenerateMonthlyReviewWorker.createInputData(year, month))
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "monthly_review_${year}_${month}",
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+    }
+
+    override fun observeMonthlyReview(year: Int, month: Int): Flow<MonthlyReview?> {
+        return monthlyReviewDao.observeMonthlyReview(year, month).map { entity ->
+            entity?.let { MonthlyReviewMapper.mapToDomain(it) }
         }
     }
 

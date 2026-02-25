@@ -2,9 +2,13 @@ package com.hanhyo.commitlog.presentation.ui.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.usecase.aianalysis.GenerateMonthlyReviewUseCase
+import com.hanhyo.commitlog.domain.usecase.aianalysis.ObserveMonthlyReviewUseCase
+import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,7 +17,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,8 +29,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReviewViewModel @Inject constructor(
-    private val generateMonthlyReviewUseCase: GenerateMonthlyReviewUseCase,
+    private val generateMonthlyReviewUseCase: GenerateMonthlyReviewUseCase, // Still used potentially for non-scheduled or detail fetching
+    private val observeMonthlyReviewUseCase: ObserveMonthlyReviewUseCase,
+    private val scheduleMonthlyReviewUseCase: ScheduleMonthlyReviewUseCase,
     private val observeAllCommitsUseCase: ObserveAllCommitsUseCase,
+    private val workManager: WorkManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReviewUiState())
@@ -36,7 +46,51 @@ class ReviewViewModel @Inject constructor(
 
     init {
         observeCommits()
+        observeWorkManager()
+        observeMonthlyReview()
     }
+
+    /**
+     * 선택된 연/월에 해당하는 회고 데이터를 관찰하여 UI 상태를 자동 업데이트합니다.
+     */
+    private fun observeMonthlyReview() {
+        _uiState
+            .map { it.selectedYear to it.selectedMonth }
+            .distinctUntilChanged()
+            .flatMapLatest { (year, month) ->
+                observeMonthlyReviewUseCase(year, month)
+            }
+            .onEach { review ->
+                _uiState.update { it.copy(review = review) }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * WorkManager의 상태를 관찰하여 백그라운드에서 진행 중인 회고 생성 상태를 UI에 반영합니다.
+     * Presentation 레이어는 Android 의존성을 가질 수 있으므로 WorkManager를 직접 참조합니다.
+     */
+    private fun observeWorkManager() {
+        workManager.getWorkInfosByTagFlow("monthly_review_gen")
+            .onEach { workInfos ->
+                val activeWork = workInfos.firstOrNull { !it.state.isFinished }
+                val lastFinishedWork = workInfos.firstOrNull { it.state.isFinished }
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = activeWork != null,
+                        errorMessage = if (lastFinishedWork?.state == WorkInfo.State.FAILED) "회고 생성에 실패했습니다." else state.errorMessage
+                    )
+                }
+
+                if (lastFinishedWork?.state == WorkInfo.State.SUCCEEDED) {
+                    // 이제 observeMonthlyReview()에서 DB를 실시간 관찰하므로 
+                    // 별도의 refreshReview() 호출이 필요 없습니다.
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
 
     private fun observeCommits() {
         observeAllCommitsUseCase()
@@ -69,32 +123,23 @@ class ReviewViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    /**
+     * 월간 회고 생성을 시작합니다.
+     *
+     * - ViewModelScope 대신 WorkManager를 사용하여 앱이 백그라운드로 나가도 작업이 유지되도록 합니다.
+     * - 작업 완료 후 알림 발송 로직은 GenerateMonthlyReviewWorker 내부에 포함되어 있습니다.
+     */
     fun generateReview() {
         val state = _uiState.value
         if (state.isLoading) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-            generateMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
-                .onSuccess { review ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            review = review,
-                            errorMessage = null,
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.message,
-                        )
-                    }
-                    _effect.emit(ReviewEffect.ShowError(error.message ?: "회고 생성 실패"))
-                }
+            try {
+                scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+            }
         }
     }
 

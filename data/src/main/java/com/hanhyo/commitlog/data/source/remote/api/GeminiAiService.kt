@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.data.source.remote.api
 
+import com.hanhyo.commitlog.domain.exception.AiAnalysisException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,7 +53,7 @@ class GeminiAiService(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Gemini 커밋 분석 실패")
-            throw AiServiceException("커밋 분석 중 오류가 발생했습니다: ${e.message}", e)
+            throw AiAnalysisException("커밋 분석 중 오류가 발생했습니다: ${e.message}", e)
         }
     }
 
@@ -69,7 +70,7 @@ class GeminiAiService(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "Gemini 월간 회고 생성 실패")
-                throw AiServiceException("월간 회고 생성 중 오류가 발생했습니다: ${e.message}", e)
+                throw AiAnalysisException("월간 회고 생성 중 오류가 발생했습니다: ${e.message}", e)
             }
         }
 
@@ -83,7 +84,7 @@ class GeminiAiService(
         maxTokens: Int = DEFAULT_MAX_TOKENS
     ): String {
         if (apiKey.isBlank()) {
-            throw AiServiceException("Gemini API 키가 누락되었습니다.")
+            throw AiAnalysisException("Gemini API 키가 누락되었습니다.")
         }
         val requestBody = JSONObject().apply {
             put("contents", JSONArray().apply {
@@ -132,23 +133,23 @@ class GeminiAiService(
                 Timber.e("Gemini API error: ${response.code} - $errorBody")
 
                 throw when (response.code) {
-                    400 -> AiServiceException("잘못된 요청입니다")
-                    401 -> AiServiceException("API 키가 유효하지 않습니다")
-                    403 -> AiServiceException("API 접근이 거부되었습니다")
-                    429 -> AiServiceException("API 사용량을 초과했습니다. 잠시 후 다시 시도해주세요")
-                    500, 503 -> AiServiceException("AI 서버에 일시적인 문제가 있습니다")
-                    else -> AiServiceException("AI 분석 중 오류가 발생했습니다 (${response.code})")
+                    400 -> AiAnalysisException("잘못된 요청입니다")
+                    401 -> AiAnalysisException("API 키가 유효하지 않습니다")
+                    403 -> AiAnalysisException("API 접근이 거부되었습니다")
+                    429 -> AiAnalysisException("API 사용량을 초과했습니다. 잠시 후 다시 시도해주세요")
+                    500, 503 -> AiAnalysisException("AI 서버에 일시적인 문제가 있습니다")
+                    else -> AiAnalysisException("AI 분석 중 오류가 발생했습니다 (${response.code})")
                 }
             }
 
             val responseBody = response.body?.string()
-                ?: throw AiServiceException("AI 응답이 비어있습니다")
+                ?: throw AiAnalysisException("AI 응답이 비어있습니다")
 
             try {
                 parseGeminiResponse(responseBody)
             } catch (e: Exception) {
                 Timber.e(e, "Gemini 응답 파싱 실패: $responseBody")
-                throw AiServiceException("AI 응답 형식이 올바르지 않습니다", e)
+                throw AiAnalysisException("AI 응답 형식이 올바르지 않습니다", e)
             }
         }
     }
@@ -161,12 +162,12 @@ class GeminiAiService(
 
         // candidates 배열 확인
         if (!jsonResponse.has("candidates")) {
-            throw AiServiceException("AI 응답에 candidates가 없습니다")
+            throw AiAnalysisException("AI 응답에 candidates가 없습니다")
         }
 
         val candidates = jsonResponse.getJSONArray("candidates")
         if (candidates.length() == 0) {
-            throw AiServiceException("AI가 응답을 생성하지 못했습니다")
+            throw AiAnalysisException("AI가 응답을 생성하지 못했습니다")
         }
 
         val candidate = candidates.getJSONObject(0)
@@ -174,9 +175,9 @@ class GeminiAiService(
         // finishReason 확인
         val finishReason = candidate.optString("finishReason", "")
         if (finishReason == "SAFETY") {
-            throw AiServiceException("안전 필터에 의해 차단되었습니다")
+            throw AiAnalysisException("안전 필터에 의해 차단되었습니다")
         } else if (finishReason == "MAX_TOKENS") {
-            throw AiServiceException("응답이 최대 길이를 초과하여 잘렸습니다")
+            throw AiAnalysisException("응답이 최대 길이를 초과하여 잘렸습니다")
         }
 
         return candidate
@@ -213,10 +214,3 @@ Response format:
 """.trimIndent()
 }
 
-/**
- * AI 서비스 예외
- */
-class AiServiceException(
-    message: String,
-    cause: Throwable? = null
-) : Exception(message, cause)

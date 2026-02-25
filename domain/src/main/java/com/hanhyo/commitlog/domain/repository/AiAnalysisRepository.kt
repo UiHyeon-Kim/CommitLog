@@ -5,6 +5,7 @@ import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.MonthlyReview
+import kotlinx.coroutines.flow.Flow
 
 interface AiAnalysisRepository {
 
@@ -34,4 +35,13 @@ interface AiAnalysisRepository {
         month: Int,
     ): MonthlyReview
 
+    /**
+     * 월간 회고 생성을 백그라운드 작업으로 예약합니다.
+     */
+    suspend fun scheduleMonthlyReview(year: Int, month: Int)
+
+    /**
+     * 특정 월의 회고 데이터를 관찰합니다.
+     */
+    fun observeMonthlyReview(year: Int, month: Int): Flow<MonthlyReview?>
 }
