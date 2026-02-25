@@ -10,7 +10,6 @@ object WorkerConstants {
     const val TAG_MONTHLY_REVIEW_REGULAR = "monthly_review_regular"
 
     // Work Names
-    const val WORK_NAME_COMMIT_ANALYSIS = "CommitAnalysisWork"
     const val WORK_NAME_MONTHLY_REVIEW_MANUAL_PREFIX = "monthly_review"
     const val WORK_NAME_MONTHLY_REVIEW_REGULAR = "MonthlyReviewRegularWork"
 

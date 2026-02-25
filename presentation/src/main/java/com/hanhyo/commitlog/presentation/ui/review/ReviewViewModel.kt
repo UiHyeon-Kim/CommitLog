@@ -10,14 +10,11 @@ import com.hanhyo.commitlog.domain.usecase.aianalysis.ObserveMonthlyReviewUseCas
 import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -40,15 +37,14 @@ class ReviewViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ReviewUiState())
     val uiState: StateFlow<ReviewUiState> = _uiState.asStateFlow()
 
-    private val _effect = MutableSharedFlow<ReviewEffect>(replay = 0)
-    val effect: SharedFlow<ReviewEffect> = _effect.asSharedFlow()
-
     private var allCommits: List<Commit> = emptyList()
 
     init {
         observeCommits()
         observeWorkManager()
         observeMonthlyReview()
+        val today = LocalDate.now()
+        setYearMonth(today.year, today.monthValue)
     }
 
     /**
@@ -74,40 +70,37 @@ class ReviewViewModel @Inject constructor(
         val manualFlow = workManager.getWorkInfosByTagFlow("monthly_review_manual")
         val regularFlow = workManager.getWorkInfosByTagFlow("monthly_review_regular")
 
-        combine(manualFlow, regularFlow) { manualWorks, regularWorks ->
-            manualWorks + regularWorks
+        // 1. 수동 및 정기 생성 태그 모두 관찰하여 병합
+        combine(manualFlow, regularFlow) { manual, regular ->
+            manual + regular
         }
-            .distinctUntilChanged()
             .onEach { workInfos ->
-                // 가장 최근의 작업 순으로 정렬
+                // 2. 가장 최근 작업 순으로 전체 리스트 정렬 (무의미한 UUID 대신 시간 기준 사용)
                 val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis }
 
-                val activeWork = workInfos.firstOrNull { !it.state.isFinished }
-                val lastFinishedWork = workInfos
-                    .filter { it.state.isFinished }
-                    .maxByOrNull { it.id.mostSignificantBits } // 임시 정렬 기준 (실제로는 stopTime이 더 정확)
+                // 3. 정렬된 리스트(sortedWorks)를 기반으로 상태 확인
+                val activeWork = sortedWorks.firstOrNull { !it.state.isFinished }
 
-                val errorMsg = if (lastFinishedWork?.state == WorkInfo.State.FAILED) {
-                    lastFinishedWork.outputData.getString("error_message")
+                // 활성화된 작업이 없다면, 가장 최근에 종료된 작업을 확인
+                val lastFinishedWork = sortedWorks.firstOrNull { it.state.isFinished }
+
+                // 4. 에러 메시지 로직 개선
+                val errorMsg = if (activeWork == null && lastFinishedWork?.state == WorkInfo.State.FAILED) {
+                    lastFinishedWork.outputData.getString("error_message") ?: "회고 생성에 실패했습니다."
                 } else {
-                    null
+                    null // 작업 중이거나 가장 최근 작업이 성공(SUCCEEDED)했다면 null 반환
                 }
 
                 _uiState.update { state ->
                     state.copy(
                         isLoading = activeWork != null,
-                        // 작업이 성공적으로 끝났다면 이전 에러 메시지를 초기화, 실패했다면 새 에러 메시지 표시
-                        errorMessage = when {
-                            activeWork != null -> null // 작업 중에는 에러 메시지 숨김
-                            lastFinishedWork?.state == WorkInfo.State.SUCCEEDED -> null
-                            else -> errorMsg ?: state.errorMessage
-                        }
+                        // 5. 이전 에러 상태를 유지하지 않고 덮어쓰기 (새 작업 성공 시 에러 해제됨)
+                        errorMessage = errorMsg
                     )
                 }
             }
             .launchIn(viewModelScope)
     }
-
 
     private fun observeCommits() {
         observeAllCommitsUseCase()
@@ -138,6 +131,10 @@ class ReviewViewModel @Inject constructor(
                 updateCommitCount()
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun setYearMonth(year: Int, month: Int) {
+        _uiState.update { it.copy(selectedYear = year, selectedMonth = month) }
     }
 
     /**
@@ -181,31 +178,6 @@ class ReviewViewModel @Inject constructor(
         }
         _uiState.update { it.copy(monthCommitCount = count) }
     }
-
-    fun goToPreviousMonth() {
-        val state = _uiState.value
-
-        val currentIndex = state.availableMonths.indexOfFirst {
-            it.year == state.selectedYear && it.monthValue == state.selectedMonth
-        }
-
-        if (currentIndex != -1 && currentIndex < state.availableMonths.lastIndex) {
-            val prev = state.availableMonths[currentIndex + 1]
-            updateMonth(prev.year, prev.monthValue)
-        }
-    }
-
-    fun goToNextMonth() {
-        val state = _uiState.value
-        val currentIndex = state.availableMonths.indexOfFirst {
-            it.year == state.selectedYear && it.monthValue == state.selectedMonth
-        }
-
-        if (currentIndex > 0) {
-            val next = state.availableMonths[currentIndex - 1]
-            updateMonth(next.year, next.monthValue)
-        }
-    }
 }
 
 data class ReviewUiState(
@@ -217,7 +189,3 @@ data class ReviewUiState(
     val review: MonthlyReview? = null,
     val errorMessage: String? = null,
 )
-
-sealed interface ReviewEffect {
-    data class ShowError(val message: String) : ReviewEffect
-}

@@ -1,11 +1,15 @@
 package com.hanhyo.commitlog.data.worker
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -42,42 +46,54 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
         val year = inputData.getInt(WorkerConstants.KEY_YEAR, today.minusMonths(1).year)
         val month = inputData.getInt(WorkerConstants.KEY_MONTH, today.minusMonths(1).monthValue)
 
-        Timber.d("Starting Monthly Review Generation for $year-$month")
+        Timber.d("$year-$month 에 대한 월간 리뷰 생성 시작")
 
         return try {
             val result = generateMonthlyReviewUseCase(year, month)
-
-            // 정기 스케줄링 태그가 포함되어 있다면 다음 달 작업을 위해 재귀적으로 예약
-            if (tags.contains(WorkerConstants.TAG_MONTHLY_REVIEW_REGULAR)) {
-                reviewScheduler.scheduleRegularMonthlyReview()
-            }
 
             if (result.isSuccess) {
                 showNotification(year, month)
                 Result.success()
             } else {
                 val exception = result.exceptionOrNull()
-                Timber.e(exception, "Failed to generate monthly review")
+                Timber.e(exception, "월별 리뷰를 생성하지 못했습니다.")
                 Result.failure(
                     Data.Builder()
-                        .putString(WorkerConstants.KEY_ERROR_MESSAGE, exception?.message ?: "Unknown error")
+                        .putString(WorkerConstants.KEY_ERROR_MESSAGE, exception?.message ?: "알 수 없는 오류")
                         .build()
                 )
             }
         } catch (e: CancellationException) {
-            Timber.i("GenerateMonthlyReviewWorker cancelled")
+            Timber.i("GenerationMonthlyReviewWorker가 취소되었습니다.")
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "Unexpected error in GenerateMonthlyReviewWorker")
+            Timber.e(e, "generateMonthlyReviewWorker에 예기치 않은 오류가 발생했습니다.")
             Result.failure(
                 Data.Builder()
-                    .putString(WorkerConstants.KEY_ERROR_MESSAGE, e.message ?: "Unexpected error")
+                    .putString(WorkerConstants.KEY_ERROR_MESSAGE, e.message ?: "예상치 못한 오류")
                     .build()
             )
+        } finally {
+            if (tags.contains(WorkerConstants.TAG_MONTHLY_REVIEW_REGULAR)) {
+                try {
+                    reviewScheduler.scheduleRegularMonthlyReview()
+                } catch (e: Exception) {
+                    Timber.e(e, "월별 검토 일정을 변경하지 못했습니다.")
+                }
+            }
         }
     }
 
     private fun showNotification(year: Int, month: Int) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            Timber.w("POST_NOTIFICATIONS 권한이 부여되지 않아 알림을 건너뜁니다")
+            return
+        }
+
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
