@@ -6,7 +6,6 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.hanhyo.commitlog.domain.model.Commit
 import com.hanhyo.commitlog.domain.model.MonthlyReview
-import com.hanhyo.commitlog.domain.usecase.aianalysis.GenerateMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.aianalysis.ObserveMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
@@ -29,7 +28,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReviewViewModel @Inject constructor(
-    private val generateMonthlyReviewUseCase: GenerateMonthlyReviewUseCase, // Still used potentially for non-scheduled or detail fetching
     private val observeMonthlyReviewUseCase: ObserveMonthlyReviewUseCase,
     private val scheduleMonthlyReviewUseCase: ScheduleMonthlyReviewUseCase,
     private val observeAllCommitsUseCase: ObserveAllCommitsUseCase,
@@ -68,27 +66,41 @@ class ReviewViewModel @Inject constructor(
 
     /**
      * WorkManager의 상태를 관찰하여 백그라운드에서 진행 중인 회고 생성 상태를 UI에 반영합니다.
-     * Presentation 레이어는 Android 의존성을 가질 수 있으므로 WorkManager를 직접 참조합니다.
      */
     private fun observeWorkManager() {
-        workManager.getWorkInfosByTagFlow("monthly_review_gen")
-            .onEach { workInfos ->
-                val activeWork = workInfos.firstOrNull { !it.state.isFinished }
-                val lastFinishedWork = workInfos.firstOrNull { it.state.isFinished }
+        // 수동 생성 및 정기 생성 태그 모두 관찰
+        val tags = listOf("monthly_review_manual", "monthly_review_regular")
+        
+        viewModelScope.launch {
+            // 여러 태그를 합쳐서 관찰하는 로직 (단순화를 위해 각 태그별로 Flow를 병합하거나 
+            // 여기서는 수동 생성("monthly_review_manual")을 우선시하여 관찰합니다.)
+            workManager.getWorkInfosByTagFlow("monthly_review_manual")
+                .onEach { workInfos ->
+                    // 1. 가장 최근의 작업 순으로 정렬 (결과 결정론성 확보)
+                    val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis } 
+                    // Note: OneTimeWorkRequest의 경우 stopTime이나 id 등으로 정렬할 수 있으나, 
+                    // state 변화를 추적하기 위해 전체 리스트에서 활성 작업을 찾습니다.
+                    
+                    val activeWork = workInfos.firstOrNull { !it.state.isFinished }
+                    val lastWork = workInfos.maxByOrNull { 
+                        if (it.state.isFinished) it.id.mostSignificantBits else Long.MIN_VALUE 
+                    }
 
-                _uiState.update { state ->
-                    state.copy(
-                        isLoading = activeWork != null,
-                        errorMessage = if (lastFinishedWork?.state == WorkInfo.State.FAILED) "회고 생성에 실패했습니다." else state.errorMessage
-                    )
-                }
+                    val errorMsg = if (lastWork?.state == WorkInfo.State.FAILED) {
+                        lastWork.outputData.getString("error_message") ?: "회고 생성에 실패했습니다."
+                    } else {
+                        null
+                    }
 
-                if (lastFinishedWork?.state == WorkInfo.State.SUCCEEDED) {
-                    // 이제 observeMonthlyReview()에서 DB를 실시간 관찰하므로 
-                    // 별도의 refreshReview() 호출이 필요 없습니다.
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoading = activeWork != null,
+                            errorMessage = errorMsg ?: state.errorMessage
+                        )
+                    }
                 }
-            }
-            .launchIn(viewModelScope)
+                .launchIn(this)
+        }
     }
 
 

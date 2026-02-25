@@ -12,9 +12,12 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
+import com.hanhyo.commitlog.data.scheduler.ReviewSchedulerImpl
+import com.hanhyo.commitlog.domain.scheduler.ReviewScheduler
 import com.hanhyo.commitlog.domain.usecase.aianalysis.GenerateMonthlyReviewUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 import java.time.LocalDate
@@ -33,13 +36,12 @@ import java.time.LocalDate
 class GenerateMonthlyReviewWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted workerParams: WorkerParameters,
-    private val generateMonthlyReviewUseCase: GenerateMonthlyReviewUseCase
+    private val generateMonthlyReviewUseCase: GenerateMonthlyReviewUseCase,
+    private val reviewScheduler: ReviewScheduler
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         val today = LocalDate.now()
-        // InputData로 전달된 정보가 있으면 사용하고, 없으면 실행 시점 기준 지난 달을 기본값으로 사용합니다.
-        // 이는 주기적(Periodic) 실행 시 매번 적절한 달을 계산하기 위함입니다.
         val year = inputData.getInt(KEY_YEAR, today.minusMonths(1).year)
         val month = inputData.getInt(KEY_MONTH, today.minusMonths(1).monthValue)
 
@@ -48,16 +50,33 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
         return try {
             val result = generateMonthlyReviewUseCase(year, month)
             
+            // 정기 스케줄링 태그가 포함되어 있다면 다음 달 작업을 위해 재귀적으로 예약
+            if (tags.contains(ReviewSchedulerImpl.TAG_MONTHLY_REVIEW_REGULAR)) {
+                reviewScheduler.scheduleRegularMonthlyReview()
+            }
+
             if (result.isSuccess) {
                 showNotification(year, month)
                 Result.success()
             } else {
-                Timber.e(result.exceptionOrNull(), "Failed to generate monthly review")
-                Result.failure()
+                val exception = result.exceptionOrNull()
+                Timber.e(exception, "Failed to generate monthly review")
+                Result.failure(
+                    Data.Builder()
+                        .putString(KEY_ERROR_MESSAGE, exception?.message ?: "Unknown error")
+                        .build()
+                )
             }
+        } catch (e: CancellationException) {
+            Timber.i("GenerateMonthlyReviewWorker cancelled")
+            throw e // CoroutineWorker requires rethrowing CancellationException
         } catch (e: Exception) {
             Timber.e(e, "Unexpected error in GenerateMonthlyReviewWorker")
-            Result.failure()
+            Result.failure(
+                Data.Builder()
+                    .putString(KEY_ERROR_MESSAGE, e.message ?: "Unexpected error")
+                    .build()
+            )
         }
     }
 
@@ -92,7 +111,6 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.sym_def_app_icon) // TODO: 앱 전용 아이콘으로 교체 필요
             .setContentTitle("${year}년 ${month}월 회고 리포트 도착 \uD83D\uDCCA")
             .setContentText("AI가 분석한 한 달간의 성장을 확인해보세요!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -106,6 +124,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
     companion object {
         const val KEY_YEAR = "year"
         const val KEY_MONTH = "month"
+        const val KEY_ERROR_MESSAGE = "error_message"
         private const val NOTIFICATION_ID = 2001
 
         /**

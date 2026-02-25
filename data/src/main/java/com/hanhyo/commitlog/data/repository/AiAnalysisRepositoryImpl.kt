@@ -1,10 +1,13 @@
 package com.hanhyo.commitlog.data.repository
 
+import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.hanhyo.commitlog.data.mapper.MonthlyReviewMapper
+import com.hanhyo.commitlog.data.scheduler.ReviewSchedulerImpl
 import com.hanhyo.commitlog.data.source.remote.api.AiService
 import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
 import com.hanhyo.commitlog.data.worker.GenerateMonthlyReviewWorker
@@ -67,8 +70,14 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     }
 
     override suspend fun scheduleAnalysis(commitId: Long) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
         val workRequest = OneTimeWorkRequestBuilder<AiAnalysisWorker>()
             .setInputData(workDataOf(AiAnalysisWorker.KEY_COMMIT_ID to commitId))
+            .setConstraints(constraints)
+            .addTag(TAG_COMMIT_ANALYSIS)
             .build()
 
         workManager.enqueue(workRequest)
@@ -112,13 +121,18 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     }
 
     override suspend fun scheduleMonthlyReview(year: Int, month: Int) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
         val workRequest = OneTimeWorkRequestBuilder<GenerateMonthlyReviewWorker>()
-            .addTag("monthly_review_gen")
+            .setConstraints(constraints)
+            .addTag(TAG_MONTHLY_REVIEW_MANUAL)
             .setInputData(GenerateMonthlyReviewWorker.createInputData(year, month))
             .build()
 
         workManager.enqueueUniqueWork(
-            "monthly_review_${year}_${month}",
+            "${WORK_NAME_PREFIX_MONTHLY_REVIEW}_${year}_${month}",
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
@@ -289,5 +303,11 @@ Write a monthly learning retrospective in KOREAN based on the following statisti
 - Commits per Week: $weeklyCommitCount
 - Notable Patterns: $notablePatterns
 """.trimIndent()
+    }
+
+    companion object {
+        private const val TAG_COMMIT_ANALYSIS = "commit_analysis"
+        private const val TAG_MONTHLY_REVIEW_MANUAL = "monthly_review_manual"
+        private const val WORK_NAME_PREFIX_MONTHLY_REVIEW = "monthly_review"
     }
 }
