@@ -11,7 +11,6 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
-import com.hanhyo.commitlog.data.scheduler.ReviewSchedulerImpl
 import com.hanhyo.commitlog.domain.scheduler.ReviewScheduler
 import com.hanhyo.commitlog.domain.usecase.aianalysis.GenerateMonthlyReviewUseCase
 import dagger.assisted.Assisted
@@ -40,8 +39,8 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val today = LocalDate.now()
-        val year = inputData.getInt(KEY_YEAR, today.minusMonths(1).year)
-        val month = inputData.getInt(KEY_MONTH, today.minusMonths(1).monthValue)
+        val year = inputData.getInt(WorkerConstants.KEY_YEAR, today.minusMonths(1).year)
+        val month = inputData.getInt(WorkerConstants.KEY_MONTH, today.minusMonths(1).monthValue)
 
         Timber.d("Starting Monthly Review Generation for $year-$month")
 
@@ -49,7 +48,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             val result = generateMonthlyReviewUseCase(year, month)
 
             // 정기 스케줄링 태그가 포함되어 있다면 다음 달 작업을 위해 재귀적으로 예약
-            if (tags.contains(ReviewSchedulerImpl.TAG_MONTHLY_REVIEW_REGULAR)) {
+            if (tags.contains(WorkerConstants.TAG_MONTHLY_REVIEW_REGULAR)) {
                 reviewScheduler.scheduleRegularMonthlyReview()
             }
 
@@ -61,7 +60,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
                 Timber.e(exception, "Failed to generate monthly review")
                 Result.failure(
                     Data.Builder()
-                        .putString(KEY_ERROR_MESSAGE, exception?.message ?: "Unknown error")
+                        .putString(WorkerConstants.KEY_ERROR_MESSAGE, exception?.message ?: "Unknown error")
                         .build()
                 )
             }
@@ -72,7 +71,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             Timber.e(e, "Unexpected error in GenerateMonthlyReviewWorker")
             Result.failure(
                 Data.Builder()
-                    .putString(KEY_ERROR_MESSAGE, e.message ?: "Unexpected error")
+                    .putString(WorkerConstants.KEY_ERROR_MESSAGE, e.message ?: "Unexpected error")
                     .build()
             )
         }
@@ -106,8 +105,16 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val iconResId = context.resources.getIdentifier(
+            "ic_notification",
+            "drawable",
+            context.packageName
+        )
+        val finalIcon = if (iconResId != 0) iconResId else android.R.drawable.ic_dialog_info
+
         val notification = NotificationCompat.Builder(context, channelId)
-            .setContentTitle("${year}년 ${month}월 회고 리포트 도착 \uD83D\uDCCA")
+            .setSmallIcon(finalIcon)
+            .setContentTitle("${year}년 ${month}월 회고 리포트 도착 📊")
             .setContentText("AI가 분석한 한 달간의 성장을 확인해보세요!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
@@ -118,9 +125,6 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
     }
 
     companion object {
-        const val KEY_YEAR = "year"
-        const val KEY_MONTH = "month"
-        const val KEY_ERROR_MESSAGE = "error_message"
         private const val NOTIFICATION_ID = 2001
 
         /**
@@ -128,8 +132,8 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
          */
         fun createInputData(year: Int, month: Int): Data {
             return Data.Builder()
-                .putInt(KEY_YEAR, year)
-                .putInt(KEY_MONTH, month)
+                .putInt(WorkerConstants.KEY_YEAR, year)
+                .putInt(WorkerConstants.KEY_MONTH, month)
                 .build()
         }
     }

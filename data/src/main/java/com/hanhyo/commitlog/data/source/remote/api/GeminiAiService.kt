@@ -42,7 +42,12 @@ class GeminiAiService(
         tomorrow: String?,
     ): String = withContext(Dispatchers.IO) {
         try {
-            val prompt = buildAnalyzePrompt(title, learned, difficulty, tomorrow)
+            val prompt = buildAnalyzePrompt(
+                title = sanitizeInput(title),
+                learned = sanitizeInput(learned),
+                difficulty = difficulty?.let { sanitizeInput(it) },
+                tomorrow = tomorrow?.let { sanitizeInput(it) }
+            )
             callGemini(
                 prompt = prompt,
                 modelName = MODEL_DEFAULT,
@@ -51,6 +56,8 @@ class GeminiAiService(
             )
         } catch (e: CancellationException) {
             throw e
+        } catch (e: AiAnalysisException) {
+            throw e // 이미 처리된 예외는 그대로 전달
         } catch (e: Exception) {
             Timber.e(e, "Gemini 커밋 분석 실패")
             throw AiAnalysisException("커밋 분석 중 오류가 발생했습니다: ${e.message}", e)
@@ -68,6 +75,8 @@ class GeminiAiService(
                 )
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: AiAnalysisException) {
+                throw e // 이미 처리된 예외는 그대로 전달
             } catch (e: Exception) {
                 Timber.e(e, "Gemini 월간 회고 생성 실패")
                 throw AiAnalysisException("월간 회고 생성 중 오류가 발생했습니다: ${e.message}", e)
@@ -189,6 +198,7 @@ class GeminiAiService(
 
     /**
      * 커밋 분석 프롬프트
+     * Prompt Injection 방지를 위해 구분자(###)와 입력값 정제(sanitizeInput) 적용
      */
     private fun buildAnalyzePrompt(
         title: String,
@@ -197,10 +207,13 @@ class GeminiAiService(
         tomorrow: String?,
     ): String = """
 Analyze this dev log and return ONLY a strict JSON object. No reasoning, no markdown formatting.
-Title: $title
-Learned: $learned
-Difficulty: ${difficulty ?: "None"}
-Tomorrow: ${tomorrow ?: "None"}
+
+[USER DATA START]
+### TITLE: $title
+### LEARNED: $learned
+### DIFFICULTY: ${difficulty ?: "None"}
+### TOMORROW: ${tomorrow ?: "None"}
+[USER DATA END]
 
 Requirements:
 - mood: Exact match from [CURIOUS, FOCUSED, PRODUCTIVE, CONFUSED, TIRED, RELIEVED, INSPIRED, NORMAL].
@@ -212,5 +225,15 @@ Requirements:
 Response format:
 {"mood":"FOCUSED","moodScore":75,"difficultyLevel":"보통","comment":"꾸준한 학습이 빛을 발하네요!","tags":["Jetpack Compose"]}
 """.trimIndent()
+
+    /**
+     * Prompt Injection 방지를 위한 입력값 정제
+     * - 프롬프트 구분자로 사용되는 특수 기호나 명령 실행 유도 문자열 제거/우회
+     */
+    private fun sanitizeInput(input: String): String {
+        return input.replace("[USER DATA", "[_USER_DATA")
+            .replace("###", "---")
+            .trim()
+    }
 }
 

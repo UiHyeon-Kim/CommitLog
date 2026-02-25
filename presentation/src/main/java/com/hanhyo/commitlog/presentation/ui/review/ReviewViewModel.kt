@@ -10,6 +10,8 @@ import com.hanhyo.commitlog.domain.usecase.aianalysis.ObserveMonthlyReviewUseCas
 import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
@@ -68,39 +71,41 @@ class ReviewViewModel @Inject constructor(
      * WorkManager의 상태를 관찰하여 백그라운드에서 진행 중인 회고 생성 상태를 UI에 반영합니다.
      */
     private fun observeWorkManager() {
-        // 수동 생성 및 정기 생성 태그 모두 관찰
-        val tags = listOf("monthly_review_manual", "monthly_review_regular")
-        
-        viewModelScope.launch {
-            // 여러 태그를 합쳐서 관찰하는 로직 (단순화를 위해 각 태그별로 Flow를 병합하거나 
-            // 여기서는 수동 생성("monthly_review_manual")을 우선시하여 관찰합니다.)
-            workManager.getWorkInfosByTagFlow("monthly_review_manual")
-                .onEach { workInfos ->
-                    // 1. 가장 최근의 작업 순으로 정렬 (결과 결정론성 확보)
-                    val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis } 
-                    // OneTimeWorkRequest의 경우 stopTime이나 id 등으로 정렬할 수 있으나,
-                    // state 변화를 추적하기 위해 전체 리스트에서 활성 작업을 찾습니다.
-                    
-                    val activeWork = workInfos.firstOrNull { !it.state.isFinished }
-                    val lastWork = workInfos.maxByOrNull { 
-                        if (it.state.isFinished) it.id.mostSignificantBits else Long.MIN_VALUE 
-                    }
+        val manualFlow = workManager.getWorkInfosByTagFlow("monthly_review_manual")
+        val regularFlow = workManager.getWorkInfosByTagFlow("monthly_review_regular")
 
-                    val errorMsg = if (lastWork?.state == WorkInfo.State.FAILED) {
-                        lastWork.outputData.getString("error_message") ?: "회고 생성에 실패했습니다."
-                    } else {
-                        null
-                    }
-
-                    _uiState.update { state ->
-                        state.copy(
-                            isLoading = activeWork != null,
-                            errorMessage = errorMsg ?: state.errorMessage
-                        )
-                    }
-                }
-                .launchIn(this)
+        combine(manualFlow, regularFlow) { manualWorks, regularWorks ->
+            manualWorks + regularWorks
         }
+            .distinctUntilChanged()
+            .onEach { workInfos ->
+                // 가장 최근의 작업 순으로 정렬
+                val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis }
+
+                val activeWork = workInfos.firstOrNull { !it.state.isFinished }
+                val lastFinishedWork = workInfos
+                    .filter { it.state.isFinished }
+                    .maxByOrNull { it.id.mostSignificantBits } // 임시 정렬 기준 (실제로는 stopTime이 더 정확)
+
+                val errorMsg = if (lastFinishedWork?.state == WorkInfo.State.FAILED) {
+                    lastFinishedWork.outputData.getString("error_message")
+                } else {
+                    null
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = activeWork != null,
+                        // 작업이 성공적으로 끝났다면 이전 에러 메시지를 초기화, 실패했다면 새 에러 메시지 표시
+                        errorMessage = when {
+                            activeWork != null -> null // 작업 중에는 에러 메시지 숨김
+                            lastFinishedWork?.state == WorkInfo.State.SUCCEEDED -> null
+                            else -> errorMsg ?: state.errorMessage
+                        }
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
 
@@ -149,8 +154,10 @@ class ReviewViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "요청 중 오류가 발생했습니다.") }
             }
         }
     }
@@ -203,8 +210,8 @@ class ReviewViewModel @Inject constructor(
 
 data class ReviewUiState(
     val isLoading: Boolean = false,
-    val selectedYear: Int = 2026,
-    val selectedMonth: Int = 1,
+    val selectedYear: Int = LocalDate.now().year,
+    val selectedMonth: Int = LocalDate.now().monthValue,
     val availableMonths: List<YearMonth> = emptyList(),
     val monthCommitCount: Int = 0,
     val review: MonthlyReview? = null,

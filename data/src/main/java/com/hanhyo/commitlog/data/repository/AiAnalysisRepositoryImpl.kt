@@ -9,8 +9,7 @@ import androidx.work.workDataOf
 import com.hanhyo.commitlog.data.mapper.MonthlyReviewMapper
 import com.hanhyo.commitlog.data.scheduler.ReviewSchedulerImpl
 import com.hanhyo.commitlog.data.source.remote.api.AiService
-import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
-import com.hanhyo.commitlog.data.worker.GenerateMonthlyReviewWorker
+import com.hanhyo.commitlog.data.worker.WorkerConstants
 import com.hanhyo.commitlog.domain.exception.AiAnalysisException
 import com.hanhyo.commitlog.domain.model.AIMood
 import com.hanhyo.commitlog.domain.model.AiAnalysisResult
@@ -23,6 +22,8 @@ import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import com.hanhyo.commitlog.data.source.local.database.dao.MonthlyReviewDao
+import com.hanhyo.commitlog.data.worker.AiAnalysisWorker
+import com.hanhyo.commitlog.data.worker.GenerateMonthlyReviewWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -75,9 +76,9 @@ class AiAnalysisRepositoryImpl @Inject constructor(
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<AiAnalysisWorker>()
-            .setInputData(workDataOf(AiAnalysisWorker.KEY_COMMIT_ID to commitId))
+            .setInputData(workDataOf(WorkerConstants.KEY_COMMIT_ID to commitId))
             .setConstraints(constraints)
-            .addTag(TAG_COMMIT_ANALYSIS)
+            .addTag(WorkerConstants.TAG_COMMIT_ANALYSIS)
             .build()
 
         workManager.enqueue(workRequest)
@@ -127,12 +128,12 @@ class AiAnalysisRepositoryImpl @Inject constructor(
 
         val workRequest = OneTimeWorkRequestBuilder<GenerateMonthlyReviewWorker>()
             .setConstraints(constraints)
-            .addTag(TAG_MONTHLY_REVIEW_MANUAL)
+            .addTag(WorkerConstants.TAG_MONTHLY_REVIEW_MANUAL)
             .setInputData(GenerateMonthlyReviewWorker.createInputData(year, month))
             .build()
 
         workManager.enqueueUniqueWork(
-            "${WORK_NAME_PREFIX_MONTHLY_REVIEW}_${year}_${month}",
+            "${WorkerConstants.WORK_NAME_MONTHLY_REVIEW_MANUAL_PREFIX}_${year}_${month}",
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
@@ -306,8 +307,6 @@ Write a monthly learning retrospective in KOREAN based on the following statisti
     }
 
     companion object {
-        private const val TAG_COMMIT_ANALYSIS = "commit_analysis"
-        private const val TAG_MONTHLY_REVIEW_MANUAL = "monthly_review_manual"
-        private const val WORK_NAME_PREFIX_MONTHLY_REVIEW = "monthly_review"
+        // Constants moved to WorkerConstants
     }
 }
