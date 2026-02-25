@@ -6,17 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.glance.Button
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Row
-import androidx.glance.layout.Spacer
+import androidx.glance.layout.Column
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.preview.ExperimentalGlancePreviewApi
@@ -57,14 +56,19 @@ class StreakWidget : GlanceAppWidget() {
  */
 @Composable
 fun StreakWidgetContent(currentStreak: Int) {
-    Row(
+    Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
+            .clickable(composeAction())
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            text = "🔥",
+            style = TextStyle(fontSize = 30.sp)
+        )
         // 스트릭 아이콘과 일수 표시
         Text(
             text = "${currentStreak}일째",
@@ -74,14 +78,6 @@ fun StreakWidgetContent(currentStreak: Int) {
                 fontWeight = FontWeight.Bold
             ),
             modifier = GlanceModifier.padding(end = 8.dp)
-        )
-
-        Spacer(modifier = GlanceModifier.defaultWeight())
-
-        // "기록하기" 버튼: 클릭 시 앱의 작성 화면(WriteRoute)으로 이동
-        Button(
-            text = "기록하기",
-            onClick = composeAction()
         )
     }
 }
@@ -100,7 +96,7 @@ private fun composeAction(): androidx.glance.action.Action {
 }
 
 @OptIn(ExperimentalGlancePreviewApi::class)
-@Preview(widthDp = 190, heightDp = 90)
+@Preview(widthDp = 90, heightDp = 90)
 @Composable
 fun StreakWidgetContentPreview() {
     StreakWidgetContent(currentStreak = 1)
