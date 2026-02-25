@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.glance.Button
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -23,23 +24,8 @@ import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import com.hanhyo.commitlog.domain.usecase.commit.GetStreakUseCase
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
-import androidx.core.net.toUri
 
-/**
- * Glance 위젯에서 Hilt 의존성 주입을 사용하기 위한 EntryPoint 인터페이스.
- * Glance AppWidget은 직접적인 Hilt 주입을 지원하지 않으므로 이 방식을 사용합니다.
- */
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface WidgetEntryPoint {
-    /** 스트릭 정보를 가져오는 UseCase */
-    fun getStreakUseCase(): GetStreakUseCase
-}
 
 /**
  * 사용자의 연속 스트릭을 표시하는 Glance 기반 앱 위젯.
