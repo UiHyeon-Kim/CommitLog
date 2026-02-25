@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogBottomNavBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.BottomNavItem
 import com.hanhyo.commitlog.presentation.navigation.DetailRoute
@@ -94,7 +95,11 @@ private fun MainContent(
                     }
                 )
             }
-            composable<ReviewRoute> { ReviewScreen() }
+            composable<ReviewRoute>(
+                deepLinks = listOf(
+                    navDeepLink<ReviewRoute>(basePath = "app://commitlog/review")
+                )
+            ) { ReviewScreen() }
         }
     }
 }
