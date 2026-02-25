@@ -51,15 +51,24 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
         return try {
             val result = generateMonthlyReviewUseCase(year, month)
 
+            val finishedAt = System.currentTimeMillis()
+
             if (result.isSuccess) {
                 showNotification(year, month)
-                Result.success()
+
+                Result.success(
+                    Data.Builder()
+                        .putLong(WorkerConstants.KEY_FINISHED_AT, finishedAt)
+                        .build()
+                )
             } else {
                 val exception = result.exceptionOrNull()
                 Timber.e(exception, "월별 리뷰를 생성하지 못했습니다.")
+
                 Result.failure(
                     Data.Builder()
                         .putString(WorkerConstants.KEY_ERROR_MESSAGE, exception?.message ?: "알 수 없는 오류")
+                        .putLong(WorkerConstants.KEY_FINISHED_AT, finishedAt)
                         .build()
                 )
             }
@@ -68,9 +77,11 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "generateMonthlyReviewWorker에 예기치 않은 오류가 발생했습니다.")
+
             Result.failure(
                 Data.Builder()
                     .putString(WorkerConstants.KEY_ERROR_MESSAGE, e.message ?: "예상치 못한 오류")
+                    .putLong(WorkerConstants.KEY_FINISHED_AT, System.currentTimeMillis())
                     .build()
             )
         } finally {

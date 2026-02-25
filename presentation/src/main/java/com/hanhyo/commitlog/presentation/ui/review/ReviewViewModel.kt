@@ -70,31 +70,36 @@ class ReviewViewModel @Inject constructor(
         val manualFlow = workManager.getWorkInfosByTagFlow("monthly_review_manual")
         val regularFlow = workManager.getWorkInfosByTagFlow("monthly_review_regular")
 
-        // 1. 수동 및 정기 생성 태그 모두 관찰하여 병합
+        // 수동 및 정기 생성 태그 모두 관찰하여 병합
         combine(manualFlow, regularFlow) { manual, regular ->
             manual + regular
         }
             .onEach { workInfos ->
-                // 2. 가장 최근 작업 순으로 전체 리스트 정렬 (무의미한 UUID 대신 시간 기준 사용)
-                val sortedWorks = workInfos.sortedByDescending { it.nextScheduleTimeMillis }
+                // 활성 작업 찾기
+                // 정기 작업(regular)의 ENQUEUED는 대기 상태이므로 로딩으로 치지 않음
+                // '실행 중(RUNNING)'이거나, '수동(manual)으로 방금 넣은 ENQUEUED'만 로딩으로 간주
+                val activeWork = workInfos.firstOrNull {
+                    it.state == WorkInfo.State.RUNNING ||
+                            (it.tags.contains("monthly_review_manual") && it.state == WorkInfo.State.ENQUEUED)
+                }
 
-                // 3. 정렬된 리스트(sortedWorks)를 기반으로 상태 확인
-                val activeWork = sortedWorks.firstOrNull { !it.state.isFinished }
+                // 완료된 작업만 필터링 후, 타임스탬프(finished_at) 기준으로 가장 최근 작업 추출
+                val finishedWorks = workInfos.filter { it.state.isFinished }
+                val lastFinishedWork = finishedWorks.maxByOrNull {
+                    // Worker가 outputData에 넣어준 시간을 기준점으로 사용
+                    it.outputData.getLong("finished_at", 0L)
+                }
 
-                // 활성화된 작업이 없다면, 가장 최근에 종료된 작업을 확인
-                val lastFinishedWork = sortedWorks.firstOrNull { it.state.isFinished }
-
-                // 4. 에러 메시지 로직 개선
+                // 에러 메시지 처리 (활성 작업이 없고, 가장 최근 종료된 작업이 실패했을 때만)
                 val errorMsg = if (activeWork == null && lastFinishedWork?.state == WorkInfo.State.FAILED) {
                     lastFinishedWork.outputData.getString("error_message") ?: "회고 생성에 실패했습니다."
                 } else {
-                    null // 작업 중이거나 가장 최근 작업이 성공(SUCCEEDED)했다면 null 반환
+                    null
                 }
 
                 _uiState.update { state ->
                     state.copy(
                         isLoading = activeWork != null,
-                        // 5. 이전 에러 상태를 유지하지 않고 덮어쓰기 (새 작업 성공 시 에러 해제됨)
                         errorMessage = errorMsg
                     )
                 }
@@ -152,6 +157,7 @@ class ReviewViewModel @Inject constructor(
             try {
                 scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
             } catch (e: CancellationException) {
+                _uiState.update { it.copy(isLoading = false) }
                 throw e
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "요청 중 오류가 발생했습니다.") }

@@ -18,4 +18,5 @@ object WorkerConstants {
     const val KEY_YEAR = "year"
     const val KEY_MONTH = "month"
     const val KEY_ERROR_MESSAGE = "error_message"
+    const val KEY_FINISHED_AT = "finished_at"
 }
