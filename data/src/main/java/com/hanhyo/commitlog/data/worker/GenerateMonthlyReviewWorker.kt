@@ -48,7 +48,7 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
 
         Timber.d("$year-$month 에 대한 월간 리뷰 생성 시작")
 
-        return try {
+        val generationResult = try {
             val result = generateMonthlyReviewUseCase(year, month)
 
             val finishedAt = System.currentTimeMillis()
@@ -84,15 +84,18 @@ class GenerateMonthlyReviewWorker @AssistedInject constructor(
                     .putLong(WorkerConstants.KEY_FINISHED_AT, System.currentTimeMillis())
                     .build()
             )
-        } finally {
-            if (tags.contains(WorkerConstants.TAG_MONTHLY_REVIEW_REGULAR)) {
-                try {
-                    reviewScheduler.scheduleRegularMonthlyReview()
-                } catch (e: Exception) {
-                    Timber.e(e, "월별 검토 일정을 변경하지 못했습니다.")
-                }
+        }
+
+        if (tags.contains(WorkerConstants.TAG_MONTHLY_REVIEW_REGULAR)) {
+            try {
+                reviewScheduler.scheduleRegularMonthlyReview()
+            } catch (e: Exception) {
+                Timber.e(e, "월별 검토 일정을 변경하지 못했습니다.")
+                return Result.retry()
             }
         }
+
+        return generationResult
     }
 
     private fun showNotification(year: Int, month: Int) {
