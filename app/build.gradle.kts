@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.hanhyo.commitlog"
-        minSdk = 30
+        minSdk = 31
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"

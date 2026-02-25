@@ -9,19 +9,17 @@ import androidx.glance.Button
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
-import androidx.glance.action.ActionParameters
-import androidx.glance.appwidget.action.actionStartActivity
-import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
+import androidx.glance.preview.ExperimentalGlancePreviewApi
+import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -30,6 +28,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import androidx.core.net.toUri
 
 /**
  * Glance 위젯에서 Hilt 의존성 주입을 사용하기 위한 EntryPoint 인터페이스.
@@ -67,7 +66,7 @@ class StreakWidget : GlanceAppWidget() {
 
 /**
  * 위젯의 실제 UI를 구성하는 Composable.
- * 
+ *
  * @param currentStreak 현재 사용자의 연속 스트릭 일수
  */
 @Composable
@@ -82,7 +81,7 @@ fun StreakWidgetContent(currentStreak: Int) {
     ) {
         // 스트릭 아이콘과 일수 표시
         Text(
-            text = "\uD83D\uDD25 ${currentStreak}일째",
+            text = "${currentStreak}일째",
             style = TextStyle(
                 color = GlanceTheme.colors.onSurface,
                 fontSize = 16.sp,
@@ -95,8 +94,8 @@ fun StreakWidgetContent(currentStreak: Int) {
 
         // "기록하기" 버튼: 클릭 시 앱의 작성 화면(WriteRoute)으로 이동
         Button(
-            text = "기록하기 ✏\uFE0F",
-            onClick = composeAction() 
+            text = "기록하기",
+            onClick = composeAction()
         )
     }
 }
@@ -107,9 +106,16 @@ fun StreakWidgetContent(currentStreak: Int) {
  */
 private fun composeAction(): androidx.glance.action.Action {
     return actionStartActivity(
-        Intent(Intent.ACTION_VIEW, android.net.Uri.parse("app://commitlog/write")).apply {
+        Intent(Intent.ACTION_VIEW, "app://commitlog/write".toUri()).apply {
             setPackage("com.hanhyo.commitlog")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
     )
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(widthDp = 190, heightDp = 90)
+@Composable
+fun StreakWidgetContentPreview() {
+    StreakWidgetContent(currentStreak = 1)
 }
