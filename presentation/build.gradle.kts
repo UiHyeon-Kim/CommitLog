@@ -56,6 +56,9 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+
     // UI Tools
     implementation(libs.bundles.vico)
     implementation(libs.shimmer.compose)

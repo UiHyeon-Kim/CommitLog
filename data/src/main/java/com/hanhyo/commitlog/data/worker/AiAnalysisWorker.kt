@@ -21,7 +21,7 @@ class AiAnalysisWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val commitId = inputData.getLong(KEY_COMMIT_ID, -1)
+        val commitId = inputData.getLong(WorkerConstants.KEY_COMMIT_ID, -1)
         if (commitId == -1L) return Result.failure()
 
         return try {
@@ -75,7 +75,6 @@ class AiAnalysisWorker @AssistedInject constructor(
     }
 
     companion object {
-        const val KEY_COMMIT_ID = "commit_id"
         const val MAX_RETRY_COUNT = 3
     }
 }
