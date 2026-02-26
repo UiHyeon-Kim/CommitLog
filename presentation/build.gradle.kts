@@ -57,8 +57,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Glance Widget
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
+    implementation(libs.bundles.glance)
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
@@ -84,6 +83,5 @@ dependencies {
     debugImplementation(libs.leakcanary)
 
     // Glance Widget Preview
-    debugImplementation(libs.androidx.glance.preview)
-    debugImplementation(libs.androidx.glance.appwidget.preview)
+    debugImplementation(libs.bundles.glance.debug)
 }
