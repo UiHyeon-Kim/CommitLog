@@ -11,7 +11,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 30
+        minSdk = 31
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -56,13 +56,15 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 
+    // Glance Widget
+    implementation(libs.bundles.glance)
+
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 
     // UI Tools
     implementation(libs.bundles.vico)
     implementation(libs.shimmer.compose)
-    implementation(libs.timber)
 
     // Async
     implementation(libs.kotlinx.serialization.json)
@@ -78,4 +80,7 @@ dependencies {
 
     debugImplementation(libs.bundles.compose.debug)
     debugImplementation(libs.leakcanary)
+
+    // Glance Widget Preview
+    debugImplementation(libs.bundles.glance.debug)
 }

@@ -6,20 +6,36 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import com.hanhyo.commitlog.presentation.ui.main.MainScreen
 import com.hanhyo.commitlog.presentation.ui.search.SearchScreen
 
 @Composable
 fun CommitLogNavHost(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    startDestination: Any = MainRoute
 ) {
     Surface {
         NavHost(
             navController = navController,
-            startDestination = MainRoute
+            startDestination = startDestination
         ) {
             composable<MainRoute> {
-                MainScreen(navController)
+                MainScreen(
+                    rootNavController = navController,
+                    initialBottomRoute = null
+                )
+            }
+
+            composable<ReviewRoute>(
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "app://commitlog/review" }
+                )
+            ) {
+                MainScreen(
+                    rootNavController = navController,
+                    initialBottomRoute = ReviewRoute
+                )
             }
 
             homeDestination(navController)
