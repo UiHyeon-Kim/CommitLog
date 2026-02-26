@@ -10,16 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.hanhyo.commitlog.presentation.designsystem.components.indicator.SkeletonItem
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.valentinilk.shimmer.shimmer
@@ -36,7 +34,9 @@ fun HomeSkeleton(
     ) {
         // 1. Date Header Skeleton
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -53,7 +53,9 @@ fun HomeSkeleton(
 
         // 3. Another Date Header Skeleton
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -85,14 +87,20 @@ private fun HomeCardSkeleton() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SkeletonItem(modifier = Modifier.weight(1f).height(24.dp))
+                SkeletonItem(modifier = Modifier
+                    .weight(1f)
+                    .height(24.dp))
                 SkeletonItem(width = 24.dp, height = 24.dp)
             }
 
             // Learned Content Preview (2 lines)
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                SkeletonItem(modifier = Modifier.fillMaxWidth().height(14.dp))
-                SkeletonItem(modifier = Modifier.fillMaxWidth(0.7f).height(14.dp))
+                SkeletonItem(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(14.dp))
+                SkeletonItem(modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(14.dp))
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -105,29 +113,6 @@ private fun HomeCardSkeleton() {
             }
         }
     }
-}
-
-@Composable
-private fun SkeletonItem(
-    modifier: Modifier = Modifier,
-    width: Dp? = null,
-    height: Dp? = null,
-) {
-    val sizeModifier = if (width != null && height != null) {
-        Modifier.size(width = width, height = height)
-    } else if (height != null) {
-        Modifier.height(height)
-    } else {
-        Modifier
-    }
-
-    Box(
-        modifier = modifier
-            .then(sizeModifier)
-            .clip(RoundedCornerShape(4.dp))
-            .shimmer()
-            .background(CommitLogTheme.colors.textTertiary.copy(alpha = 0.1f))
-    )
 }
 
 @Preview(showBackground = true)

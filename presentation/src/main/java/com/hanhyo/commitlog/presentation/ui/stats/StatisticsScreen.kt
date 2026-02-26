@@ -1,6 +1,5 @@
 package com.hanhyo.commitlog.presentation.ui.stats
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,6 +7,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -98,7 +98,8 @@ fun StatisticsScreen(
         monthlyChartModelProducer = viewModel.monthlyChartModelProducer,
         yearlyChartModelProducer = viewModel.yearlyChartModelProducer,
         onPeriodSelected = onPeriodSelected,
-        onNavigateToWrite = onNavigateToWriteFixed
+        onNavigateToWrite = onNavigateToWriteFixed,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -111,6 +112,7 @@ private fun StatisticsContent(
     yearlyChartModelProducer: CartesianChartModelProducer,
     onPeriodSelected: (StatsPeriod) -> Unit,
     onNavigateToWrite: () -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     Scaffold(
         topBar = {
@@ -118,7 +120,8 @@ private fun StatisticsContent(
                 title = "학습 통계",
             )
         },
-        containerColor = CommitLogTheme.colors.background
+        containerColor = CommitLogTheme.colors.background,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -227,7 +230,8 @@ fun StatisticsScreenPreview() {
             monthlyChartModelProducer = dummyMonthlyProducer,
             yearlyChartModelProducer = dummyYearlyProducer,
             onPeriodSelected = {},
-            onNavigateToWrite = {}
+            onNavigateToWrite = {},
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
