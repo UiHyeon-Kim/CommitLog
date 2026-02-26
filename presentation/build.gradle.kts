@@ -32,9 +32,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeCompiler {
-        stabilityConfigurationFile = rootProject.file("compose_stability.conf")
-    }
 }
 
 kotlin {
@@ -60,8 +57,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Glance Widget
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
+    implementation(libs.bundles.glance)
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
@@ -70,7 +66,6 @@ dependencies {
     implementation(libs.bundles.vico)
     implementation(libs.shimmer.compose)
     implementation(libs.compose.markdown)
-    implementation(libs.timber)
 
     // Async
     implementation(libs.kotlinx.serialization.json)
@@ -88,6 +83,5 @@ dependencies {
     debugImplementation(libs.leakcanary)
 
     // Glance Widget Preview
-    debugImplementation(libs.androidx.glance.preview)
-    debugImplementation(libs.androidx.glance.appwidget.preview)
+    debugImplementation(libs.bundles.glance.debug)
 }

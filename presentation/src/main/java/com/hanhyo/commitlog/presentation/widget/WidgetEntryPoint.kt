@@ -1,6 +1,7 @@
 package com.hanhyo.commitlog.presentation.widget
 
 import com.hanhyo.commitlog.domain.usecase.commit.GetStreakUseCase
+import com.hanhyo.commitlog.domain.usecase.commit.GetTodayCommitUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -15,5 +16,5 @@ interface WidgetEntryPoint {
     /** 스트릭 정보를 가져오는 UseCase */
     fun getStreakUseCase(): GetStreakUseCase
     /** 오늘 커밋 정보를 가져오는 UseCase */
-    fun getTodayCommitUseCase(): com.hanhyo.commitlog.domain.usecase.commit.GetTodayCommitUseCase
+    fun getTodayCommitUseCase(): GetTodayCommitUseCase
 }
