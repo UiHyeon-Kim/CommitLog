@@ -44,14 +44,14 @@ fun ReviewAiReportCard(
                 Text(text = emoji, fontSize = 18.sp)
                 Text(
                     text = title,
-                    style = CommitLogTheme.typography.titleMedium,
+                    style = CommitLogTheme.typography.titleLarge,
                     color = CommitLogTheme.colors.textPrimary,
                 )
             }
 
             MarkdownText(
                 markdown = content,
-                style = CommitLogTheme.typography.bodyMedium.copy(
+                style = CommitLogTheme.typography.bodyLarge.copy(
                     color = CommitLogTheme.colors.textSecondary
                 ),
                 linkifyMask = 0,

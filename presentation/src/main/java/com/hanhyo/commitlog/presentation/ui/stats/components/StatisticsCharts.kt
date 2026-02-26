@@ -2,20 +2,19 @@ package com.hanhyo.commitlog.presentation.ui.stats.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,11 +42,9 @@ import com.hanhyo.commitlog.presentation.ui.stats.model.ProductiveDay
 import com.hanhyo.commitlog.presentation.ui.stats.model.Skill
 import com.hanhyo.commitlog.presentation.ui.stats.model.StatsPeriod
 import com.hanhyo.commitlog.presentation.ui.stats.model.WeeklyStats
-import com.hanhyo.commitlog.presentation.ui.stats.model.YearlyHeatmapData
 import com.hanhyo.commitlog.presentation.ui.stats.model.YearlyStats
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
@@ -56,10 +53,8 @@ import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
@@ -200,10 +195,6 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
                 }
             }
         }
-
-        AiInsightCard(
-            insight = "꾸준한 기록이 성장의 밑거름이 됩니다. 오늘도 화이팅하세요!"
-        )
     }
 }
 
@@ -257,7 +248,8 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
                                 fill = LineCartesianLayer.LineFill.single(Fill(CommitLogTheme.colors.primary.toArgb())),
                                 areaFill = LineCartesianLayer.AreaFill.single(
                                     Fill(CommitLogTheme.colors.primary.copy(alpha = 0.3f).toArgb())
-                                )
+                                ),
+                                pointConnector = LineCartesianLayer.PointConnector.cubic()
                             )
                         )
                     ),
@@ -323,9 +315,14 @@ private fun rememberCartesianMarker(): CartesianMarker {
         color = CommitLogTheme.colors.textPrimary,
         background = labelBackground
     )
+    val indicatorComponent = rememberShapeComponent(
+        fill = Fill(CommitLogTheme.colors.primary.toArgb()),
+        shape = CorneredShape.Pill
+    )
     return rememberDefaultCartesianMarker(
         label = label,
         labelPosition = DefaultCartesianMarker.LabelPosition.Top,
+        indicator = { indicatorComponent }
     )
 }
 
@@ -381,7 +378,11 @@ private fun YearlyStatsView(
                         color = CommitLogTheme.colors.textSecondary,
                         modifier = Modifier.weight(1f)
                     )
-                    Text("Less", style = CommitLogTheme.typography.labelSmall, color = CommitLogTheme.colors.textSecondary)
+                    Text(
+                        "Less",
+                        style = CommitLogTheme.typography.labelSmall,
+                        color = CommitLogTheme.colors.textSecondary
+                    )
                     Spacer(Modifier.width(4.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -390,14 +391,18 @@ private fun YearlyStatsView(
                         (0..4).forEach { level ->
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp)
+                                    .size(11.dp)
                                     .clip(RoundedCornerShape(2.dp))
                                     .background(heatmapColor(level))
                             )
                         }
                     }
                     Spacer(Modifier.width(4.dp))
-                    Text("More", style = CommitLogTheme.typography.labelSmall, color = CommitLogTheme.colors.textSecondary)
+                    Text(
+                        "More",
+                        style = CommitLogTheme.typography.labelSmall,
+                        color = CommitLogTheme.colors.textSecondary
+                    )
                 }
 
                 Box(
@@ -415,29 +420,45 @@ private fun YearlyStatsView(
                         val firstDayOffset = startDate.dayOfWeek.value % 7
 
                         weeks.forEachIndexed { weekIndex, days ->
+                            val currentMonth = remember(weekIndex) {
+                                val firstRealDayIndex = days.indexOfFirst { it >= -1 }
+                                if (firstRealDayIndex != -1) {
+                                    val dayOfYear = (weekIndex * 7 + firstRealDayIndex - firstDayOffset) + 1
+                                    if (dayOfYear >= 1 && dayOfYear <= startDate.lengthOfYear()) {
+                                        startDate.withDayOfYear(dayOfYear).monthValue
+                                    } else -1
+                                } else -1
+                            }
+
+                            val prevMonth = remember(weekIndex) {
+                                if (weekIndex > 0) {
+                                    val prevWeekDays = weeks[weekIndex - 1]
+                                    val firstRealDayIndex = prevWeekDays.indexOfFirst { it >= -1 }
+                                    if (firstRealDayIndex != -1) {
+                                        val dayOfYear = ((weekIndex - 1) * 7 + firstRealDayIndex - firstDayOffset) + 1
+                                        if (dayOfYear >= 1 && dayOfYear <= startDate.lengthOfYear()) {
+                                            startDate.withDayOfYear(dayOfYear).monthValue
+                                        } else -1
+                                    } else -1
+                                } else -1
+                            }
+
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Month Label
-                                val label = remember(weekIndex) {
-                                    val firstRealDayIndex = days.indexOfFirst { it >= -1 }
-                                    if (firstRealDayIndex != -1) {
-                                        val dayOfYear = (weekIndex * 7 + firstRealDayIndex - firstDayOffset) + 1
-                                        if (dayOfYear >= 1 && dayOfYear <= startDate.lengthOfYear()) {
-                                            val date = startDate.withDayOfYear(dayOfYear.toInt())
-                                            if (date.dayOfMonth <= 7) "${date.monthValue}월" else ""
-                                        } else ""
-                                    } else ""
-                                }
+                                // Month Label (월이 바뀔 때만 표시)
+                                val labelText =
+                                    if (currentMonth != -1 && currentMonth != prevMonth) "${currentMonth}월" else ""
 
                                 Box(modifier = Modifier.height(16.dp)) {
-                                    if (label.isNotEmpty()) {
+                                    if (labelText.isNotEmpty()) {
                                         Text(
-                                            text = label,
+                                            text = labelText,
                                             style = CommitLogTheme.typography.labelSmall,
                                             color = CommitLogTheme.colors.textSecondary,
-                                            maxLines = 1
+                                            maxLines = 1,
+                                            modifier = Modifier.align(Alignment.CenterStart)
                                         )
                                     }
                                 }
@@ -445,8 +466,8 @@ private fun YearlyStatsView(
                                 days.forEach { level ->
                                     Box(
                                         modifier = Modifier
-                                            .size(12.dp)
-                                            .clip(RoundedCornerShape(2.dp))
+                                            .size(20.dp)
+                                            .clip(RoundedCornerShape(3.dp))
                                             .background(heatmapColor(level))
                                     )
                                 }

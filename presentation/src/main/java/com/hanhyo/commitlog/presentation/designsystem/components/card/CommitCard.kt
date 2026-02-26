@@ -31,6 +31,7 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
+import com.hanhyo.commitlog.domain.model.AnalysisStatus
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -150,7 +151,7 @@ private fun CommitCardLightPreview() {
                 difficultyLevel = DifficultyLevel.NORMAL,
                 comment = "집중해서 학습하셨네요!"
             ),
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
+            analysisStatus = AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
@@ -183,7 +184,7 @@ private fun CommitCardDarkPreview() {
                 difficultyLevel = DifficultyLevel.NORMAL,
                 comment = "집중해서 학습하셨네요!"
             ),
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
+            analysisStatus = AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
@@ -217,7 +218,7 @@ private fun CommitCardLongTextPreview() {
                 difficultyLevel = DifficultyLevel.EASY,
                 comment = "완벽하게 이해하셨네요! 훌륭합니다."
             ),
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.COMPLETED,
+            analysisStatus = AnalysisStatus.COMPLETED,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null
@@ -246,7 +247,7 @@ private fun CommitCardNoAnalysisPreview() {
             tomorrowPlan = null,
             tags = setOf(LearningTag("algorithm")),
             analysis = null,
-            analysisStatus = com.hanhyo.commitlog.domain.model.AnalysisStatus.PENDING,
+            analysisStatus = AnalysisStatus.PENDING,
             isDraft = false,
             createdAt = System.currentTimeMillis(),
             updatedAt = null

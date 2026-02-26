@@ -18,7 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hanhyo.commitlog.domain.model.AIMood
+import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
+import java.time.YearMonth
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.button.CommitLogButton
 import com.hanhyo.commitlog.presentation.designsystem.components.indicator.FullScreenLoading
@@ -28,7 +31,6 @@ import com.hanhyo.commitlog.presentation.ui.home.components.EmptyState
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewAiReportCard
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewMonthTabs
 import com.hanhyo.commitlog.presentation.ui.review.components.SummaryStatCard
-import java.time.YearMonth
 
 @Composable
 fun ReviewScreen(
@@ -209,12 +211,12 @@ private fun ReviewContentCompletedPreview() {
                     totalCommitCount = 20,
                     weeklyCommitCount = mapOf(1 to 5, 2 to 4, 3 to 6, 4 to 5),
                     moodDistribution = mapOf(
-                        com.hanhyo.commitlog.domain.model.AIMood.PRODUCTIVE to 10,
-                        com.hanhyo.commitlog.domain.model.AIMood.FOCUSED to 5
+                        AIMood.PRODUCTIVE to 10,
+                        AIMood.FOCUSED to 5
                     ),
                     tagDistribution = mapOf(
-                        com.hanhyo.commitlog.domain.model.LearningTag("android") to 8,
-                        com.hanhyo.commitlog.domain.model.LearningTag("kotlin") to 12
+                        LearningTag("android") to 8,
+                        LearningTag("kotlin") to 12
                     ),
                     aiSummary = "이번 달에는 특히 Jetpack Compose 학습에 많은 시간을 쏟으셨네요. 꾸준한 노력이 돋보입니다!"
                 )
