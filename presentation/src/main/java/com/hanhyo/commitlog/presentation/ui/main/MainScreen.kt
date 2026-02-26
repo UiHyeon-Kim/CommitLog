@@ -99,7 +99,15 @@ private fun MainContent(
                 deepLinks = listOf(
                     navDeepLink<ReviewRoute>(basePath = "app://commitlog/review")
                 )
-            ) { ReviewScreen() }
+            ) {
+                ReviewScreen(
+                    onNavigateToHome = {
+                        bottomNavController.navigate(HomeRoute) {
+                            popUpTo(HomeRoute) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
     }
 }

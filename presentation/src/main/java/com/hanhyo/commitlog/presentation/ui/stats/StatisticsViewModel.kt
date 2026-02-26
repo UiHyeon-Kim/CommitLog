@@ -54,7 +54,10 @@ class StatisticsViewModel @Inject constructor(
 
     private fun loadStatistics(period: StatsPeriod) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            val isFirstLoad = period !in _uiState.value.loadedPeriods
+            if (isFirstLoad) {
+                _uiState.update { it.copy(loadingPeriods = it.loadingPeriods + period) }
+            }
             val now = LocalDate.now()
 
             when (period) {
@@ -62,7 +65,12 @@ class StatisticsViewModel @Inject constructor(
                 StatsPeriod.MONTHLY -> loadMonthlyStats(now)
                 StatsPeriod.YEARLY -> loadYearlyStats(now)
             }
-            _uiState.update { it.copy(isLoading = false) }
+            _uiState.update {
+                it.copy(
+                    loadingPeriods = it.loadingPeriods - period,
+                    loadedPeriods = it.loadedPeriods + period
+                )
+            }
         }
     }
 
@@ -73,13 +81,6 @@ class StatisticsViewModel @Inject constructor(
             val dailyCounts = (0..6).map { offset ->
                 val date = startDate.plusDays(offset.toLong())
                 commits.count { it.date == date }
-            }
-
-            // 차트 데이터
-            weeklyChartModelProducer.runTransaction {
-                columnSeries {
-                    series(dailyCounts)
-                }
             }
 
             val productiveDays = (0..6).mapNotNull { offset ->
@@ -97,14 +98,21 @@ class StatisticsViewModel @Inject constructor(
                 day.copy(isTop = index == 0)
             }
 
-            _uiState.update { state ->
-                state.copy(
-                    weeklyStats = state.weeklyStats.copy(
-                        commitCount = commits.size,
-                        focusTime = 0,
-                        productiveDays = productiveDays
-                    )
-                )
+            val newWeeklyStats = WeeklyStats(
+                commitCount = commits.size,
+                focusTime = 0,
+                productiveDays = productiveDays
+            )
+
+            if (_uiState.value.weeklyStats != newWeeklyStats) {
+                weeklyChartModelProducer.runTransaction {
+                    columnSeries {
+                        series(dailyCounts)
+                    }
+                }
+                _uiState.update { state ->
+                    state.copy(weeklyStats = newWeeklyStats)
+                }
             }
         }.onFailure {
             _effect.emit(StatisticsEffect.ShowSnackbar("데이터를 불러오지 못했습니다."))
@@ -116,31 +124,20 @@ class StatisticsViewModel @Inject constructor(
         val endDate = now.withDayOfMonth(now.lengthOfMonth())
 
         getCommitsByDateRangeUseCase(startDate, endDate).onSuccess { commits ->
-            // Mood Flow Cartesian 차트 데이터 (일별로 요약, 1~10 스케일)
             val dailyMoodScores = (1..now.lengthOfMonth()).map { day ->
                 val date = now.withDayOfMonth(day)
                 val dailyCommits = commits.filter { it.date == date }
                 if (dailyCommits.isNotEmpty()) {
-                    // 기분(mood) 또는 커밋 빈도를 기반으로 Flow 계산
                     val moodTotal = dailyCommits.mapNotNull { it.analysis?.mood?.name?.length }.sum()
-                    // 1에서 10 사이의 값으로 안전하게 매핑
                     (moodTotal + dailyCommits.size * 2).coerceIn(1..10)
                 } else {
-                    0 // 기록 없음
+                    0
                 }
             }
 
-            monthlyChartModelProducer.runTransaction {
-                lineSeries {
-                    series(dailyMoodScores)
-                }
-            }
-
-            // 태그를 기반으로 키워드 추출
             val tagCounts = commits.flatMap { it.tags }.groupingBy { it.value }.eachCount()
             val keywords = tagCounts.entries.sortedByDescending { it.value }.take(5).map { "#${it.key}" }
 
-            // Mood 분포
             val moodCounts = commits.mapNotNull { it.analysis?.mood }.groupingBy { it }.eachCount()
             val totalMoods = moodCounts.values.sum()
             val moodDist = moodCounts.entries.map { (mood, count) ->
@@ -151,15 +148,22 @@ class StatisticsViewModel @Inject constructor(
                 )
             }.sortedByDescending { it.percentage }
 
-            _uiState.update { state ->
-                state.copy(
-                    monthlyStats = state.monthlyStats.copy(
-                        commitFrequency = commits.size,
-                        streak = 0,
-                        moods = moodDist,
-                        keywords = keywords
-                    )
-                )
+            val newMonthlyStats = MonthlyStats(
+                commitFrequency = commits.size,
+                streak = 0,
+                moods = moodDist,
+                keywords = keywords
+            )
+
+            if (_uiState.value.monthlyStats != newMonthlyStats) {
+                monthlyChartModelProducer.runTransaction {
+                    lineSeries {
+                        series(dailyMoodScores)
+                    }
+                }
+                _uiState.update { state ->
+                    state.copy(monthlyStats = newMonthlyStats)
+                }
             }
         }.onFailure {
             _effect.emit(StatisticsEffect.ShowSnackbar("데이터를 불러오지 못했습니다."))
@@ -238,13 +242,16 @@ class StatisticsViewModel @Inject constructor(
 
 
 data class StatisticsUiState(
-    val isLoading: Boolean = false,
+    val loadingPeriods: Set<StatsPeriod> = emptySet(),
+    val loadedPeriods: Set<StatsPeriod> = emptySet(),
     val selectedPeriod: StatsPeriod = StatsPeriod.WEEKLY,
     val weeklyStats: WeeklyStats = WeeklyStats(),
     val monthlyStats: MonthlyStats = MonthlyStats(),
     val yearlyStats: YearlyStats = YearlyStats(),
     val yearlyHeatmapData: List<Int> = emptyList()
-)
+) {
+    val isLoading: Boolean get() = loadingPeriods.isNotEmpty()
+}
 
 sealed interface StatisticsEffect {
     data class ShowSnackbar(val message: String) : StatisticsEffect

@@ -32,6 +32,7 @@ import java.time.YearMonth
 
 @Composable
 fun ReviewScreen(
+    onNavigateToHome: () -> Unit,
     viewModel: ReviewViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -42,6 +43,7 @@ fun ReviewScreen(
         availableMonths = uiState.availableMonths,
         onMonthSelected = viewModel::updateMonth,
         onGenerateReview = viewModel::generateReview,
+        onNavigateToHome = onNavigateToHome,
         modifier = modifier
     )
 }
@@ -52,6 +54,7 @@ private fun ReviewContent(
     availableMonths: List<YearMonth>,
     onMonthSelected: (Int, Int) -> Unit,
     onGenerateReview: () -> Unit,
+    onNavigateToHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -132,6 +135,19 @@ private fun ReviewContent(
                                 )
                             },
                         )
+                    } else if (uiState.monthCommitCount == 0) {
+                        EmptyState(
+                            emoji = "🏜️",
+                            title = "기록이 아직 없어요",
+                            message = "${uiState.selectedMonth}월에는 아직 기록된 커밋이 없습니다. 기록을 시작해볼까요?",
+                            action = {
+                                CommitLogButton(
+                                    text = "첫 기록 남기러 가기",
+                                    onClick = onNavigateToHome,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                        )
                     } else {
                         CommitLogButton(
                             text = "✨ AI 회고 생성하기",
@@ -159,7 +175,8 @@ private fun ReviewContentBeforeGenerationPreview() {
             uiState = ReviewUiState(selectedYear = 2024, selectedMonth = 5, monthCommitCount = 15),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {}
         )
     }
 }
@@ -172,7 +189,8 @@ private fun ReviewContentLoadingPreview() {
             uiState = ReviewUiState(selectedYear = 2024, selectedMonth = 5, isLoading = true),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {}
         )
     }
 }
@@ -203,7 +221,8 @@ private fun ReviewContentCompletedPreview() {
             ),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {}
         )
     }
 }
@@ -220,7 +239,8 @@ private fun ReviewContentFailedPreview() {
             ),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {}
         )
     }
 }

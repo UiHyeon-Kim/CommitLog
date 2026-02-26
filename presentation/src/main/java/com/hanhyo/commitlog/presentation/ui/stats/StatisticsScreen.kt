@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +25,7 @@ import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTo
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.stats.components.StatisticsCharts
+import com.hanhyo.commitlog.presentation.ui.stats.components.StatisticsSkeleton
 import com.hanhyo.commitlog.presentation.ui.stats.components.StatsPeriodTabs
 import com.hanhyo.commitlog.presentation.ui.stats.model.MonthlyStats
 import com.hanhyo.commitlog.presentation.ui.stats.model.MoodDistribution
@@ -33,6 +35,7 @@ import com.hanhyo.commitlog.presentation.ui.stats.model.StatsPeriod
 import com.hanhyo.commitlog.presentation.ui.stats.model.WeeklyStats
 import com.hanhyo.commitlog.presentation.ui.stats.model.YearlyStats
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun StatisticsScreen(
@@ -48,17 +51,27 @@ fun StatisticsScreen(
         pageCount = { StatsPeriod.entries.size }
     )
 
-    // 탭 클릭 시 해당 페이지로 애니메이션 이동
+    val onPeriodSelected = remember(viewModel) {
+        { period: StatsPeriod -> viewModel.updatePeriod(period) }
+    }
+
+    val onNavigateToWriteFixed = remember(onNavigateToWrite) {
+        onNavigateToWrite
+    }
+
+    // Pager 동기화 최적화 (snapshotFlow 사용)
+    LaunchedEffect(pagerState, onPeriodSelected) {
+        snapshotFlow { pagerState.currentPage }
+            .distinctUntilChanged()
+            .collect { page ->
+                onPeriodSelected(StatsPeriod.entries[page])
+            }
+    }
+
+    // 탭 클릭 시 애니메이션 이동 (상태 변경에 반응)
     LaunchedEffect(uiState.selectedPeriod) {
         if (pagerState.currentPage != uiState.selectedPeriod.ordinal) {
             pagerState.animateScrollToPage(uiState.selectedPeriod.ordinal)
-        }
-    }
-
-    // 스와이프 시 뷰모델 상태 업데이트
-    LaunchedEffect(pagerState.currentPage) {
-        if (uiState.selectedPeriod.ordinal != pagerState.currentPage) {
-            viewModel.updatePeriod(StatsPeriod.entries[pagerState.currentPage])
         }
     }
 
@@ -77,12 +90,11 @@ fun StatisticsScreen(
     StatisticsContent(
         uiState = uiState,
         pagerState = pagerState,
-        snackbarHostState = snackbarHostState,
         weeklyChartModelProducer = viewModel.weeklyChartModelProducer,
         monthlyChartModelProducer = viewModel.monthlyChartModelProducer,
         yearlyChartModelProducer = viewModel.yearlyChartModelProducer,
-        onPeriodSelected = viewModel::updatePeriod,
-        onNavigateToWrite = onNavigateToWrite
+        onPeriodSelected = onPeriodSelected,
+        onNavigateToWrite = onNavigateToWriteFixed
     )
 }
 
@@ -90,7 +102,6 @@ fun StatisticsScreen(
 private fun StatisticsContent(
     uiState: StatisticsUiState,
     pagerState: PagerState,
-    snackbarHostState: SnackbarHostState,
     weeklyChartModelProducer: CartesianChartModelProducer,
     monthlyChartModelProducer: CartesianChartModelProducer,
     yearlyChartModelProducer: CartesianChartModelProducer,
@@ -121,20 +132,31 @@ private fun StatisticsContent(
                     .weight(1f)
             ) { page ->
                 val periodForPage = StatsPeriod.entries[page]
-                StatisticsCharts(
-                    period = periodForPage,
-                    weeklyStats = uiState.weeklyStats,
-                    monthlyStats = uiState.monthlyStats,
-                    yearlyStats = uiState.yearlyStats,
-                    yearlyHeatmap = uiState.yearlyHeatmapData,
-                    weeklyChartModelProducer = weeklyChartModelProducer,
-                    monthlyChartModelProducer = monthlyChartModelProducer,
-                    yearlyChartModelProducer = yearlyChartModelProducer,
-                    onNavigateToWrite = onNavigateToWrite,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = Dimensions.SpacingLarge)
-                )
+                val isCurrentPageLoading = periodForPage in uiState.loadingPeriods
+                val isAlreadyLoaded = periodForPage in uiState.loadedPeriods
+
+                if (!isAlreadyLoaded) {
+                    StatisticsSkeleton(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = Dimensions.SpacingLarge)
+                    )
+                } else {
+                    StatisticsCharts(
+                        period = periodForPage,
+                        weeklyStats = uiState.weeklyStats,
+                        monthlyStats = uiState.monthlyStats,
+                        yearlyStats = uiState.yearlyStats,
+                        yearlyHeatmap = uiState.yearlyHeatmapData,
+                        weeklyChartModelProducer = weeklyChartModelProducer,
+                        monthlyChartModelProducer = monthlyChartModelProducer,
+                        yearlyChartModelProducer = yearlyChartModelProducer,
+                        onNavigateToWrite = onNavigateToWrite,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = Dimensions.SpacingLarge)
+                    )
+                }
             }
         }
     }
@@ -151,7 +173,6 @@ fun StatisticsScreenPreview() {
 
         StatisticsContent(
             uiState = StatisticsUiState(
-                isLoading = false,
                 selectedPeriod = StatsPeriod.WEEKLY,
                 weeklyStats = WeeklyStats(
                     focusTime = 14,
@@ -198,7 +219,6 @@ fun StatisticsScreenPreview() {
                 yearlyHeatmapData = List(365) { (0..4).random() }
             ),
             pagerState = dummyPagerState,
-            snackbarHostState = remember { SnackbarHostState() },
             weeklyChartModelProducer = dummyWeeklyProducer,
             monthlyChartModelProducer = dummyMonthlyProducer,
             yearlyChartModelProducer = dummyYearlyProducer,

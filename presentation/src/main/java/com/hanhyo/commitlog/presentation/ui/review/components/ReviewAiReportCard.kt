@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
 fun ReviewAiReportCard(
@@ -48,11 +49,12 @@ fun ReviewAiReportCard(
                 )
             }
 
-            Text(
-                text = content,
-                style = CommitLogTheme.typography.bodyMedium,
-                color = CommitLogTheme.colors.textSecondary,
-                lineHeight = 22.sp,
+            MarkdownText(
+                markdown = content,
+                style = CommitLogTheme.typography.bodyMedium.copy(
+                    color = CommitLogTheme.colors.textSecondary
+                ),
+                linkifyMask = 0,
             )
         }
     }

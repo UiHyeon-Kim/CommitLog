@@ -68,7 +68,7 @@ fun SearchCommitItem(
 
             Text(
                 text = commit.title.value,
-                style = CommitLogTheme.typography.titleMedium,
+                style = CommitLogTheme.typography.titleLarge,
                 color = CommitLogTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

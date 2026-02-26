@@ -32,6 +32,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeCompiler {
+        stabilityConfigurationFile = rootProject.file("compose_stability.conf")
+    }
 }
 
 kotlin {
@@ -66,6 +69,7 @@ dependencies {
     // UI Tools
     implementation(libs.bundles.vico)
     implementation(libs.shimmer.compose)
+    implementation(libs.compose.markdown)
     implementation(libs.timber)
 
     // Async
