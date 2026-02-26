@@ -25,7 +25,7 @@ fun StatsSummaryCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = CommitLogTheme.colors.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = CommitLogTheme.colors.surface
         ),
         shape = MaterialTheme.shapes.medium
     ) {
