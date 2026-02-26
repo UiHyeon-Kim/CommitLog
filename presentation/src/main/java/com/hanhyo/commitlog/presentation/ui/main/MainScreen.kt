@@ -108,6 +108,9 @@ private fun MainContent(
                         bottomNavController.navigate(HomeRoute) {
                             popUpTo(HomeRoute) { inclusive = true }
                         }
+                    },
+                    onNavigateToWrite = {
+                        rootNavController.navigate(WriteRoute())
                     }
                 )
             }

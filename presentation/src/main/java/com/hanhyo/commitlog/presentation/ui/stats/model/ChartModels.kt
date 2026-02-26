@@ -45,11 +45,6 @@ data class Skill(
     val score: Float
 )
 
-@Immutable
-data class YearlyHeatmapData(
-    val levels: List<Int> = emptyList()
-)
-
 enum class StatsPeriod(val title: String) {
     WEEKLY("주간"),
     MONTHLY("월간"),

@@ -420,7 +420,7 @@ private fun YearlyStatsView(
                         val firstDayOffset = startDate.dayOfWeek.value % 7
 
                         weeks.forEachIndexed { weekIndex, days ->
-                            val currentMonth = remember(weekIndex) {
+                            val currentMonth = run {
                                 val firstRealDayIndex = days.indexOfFirst { it >= -1 }
                                 if (firstRealDayIndex != -1) {
                                     val dayOfYear = (weekIndex * 7 + firstRealDayIndex - firstDayOffset) + 1
@@ -430,7 +430,7 @@ private fun YearlyStatsView(
                                 } else -1
                             }
 
-                            val prevMonth = remember(weekIndex) {
+                            val prevMonth = run {
                                 if (weekIndex > 0) {
                                     val prevWeekDays = weeks[weekIndex - 1]
                                     val firstRealDayIndex = prevWeekDays.indexOfFirst { it >= -1 }
@@ -484,7 +484,7 @@ private fun YearlyStatsView(
                     skills = stats.skillGrowth,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(280.dp)
                         .padding(16.dp)
                 )
             }
@@ -606,8 +606,6 @@ private fun heatmapColor(level: Int): Color = when (level) {
     3 -> CommitLogTheme.colors.primary.copy(alpha = 0.7f)
     else -> CommitLogTheme.colors.primary
 }
-
-// MonthLabels 제거됨 (동적으로 YearlyStatsView 내부에 통합)
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable

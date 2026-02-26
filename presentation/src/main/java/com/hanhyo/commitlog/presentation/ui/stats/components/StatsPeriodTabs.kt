@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -59,9 +58,7 @@ fun StatsPeriodTabs(
         // 슬라이딩 인디케이터 배경
         Box(
             modifier = Modifier
-                .graphicsLayer {
-                    translationX = indicatorOffset.toPx()
-                }
+                .offset(x = indicatorOffset)
                 .width(tabWidth)
                 .fillMaxHeight()
                 .background(color = CommitLogTheme.colors.primary, shape = CircleShape)

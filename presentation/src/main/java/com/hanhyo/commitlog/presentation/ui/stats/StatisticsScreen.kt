@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.presentation.ui.stats
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -64,7 +65,10 @@ fun StatisticsScreen(
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
-                onPeriodSelected(StatsPeriod.entries[page])
+                val periodAtPage = StatsPeriod.entries[page]
+                if (periodAtPage != uiState.selectedPeriod) {
+                    onPeriodSelected(periodAtPage)
+                }
             }
     }
 
@@ -133,9 +137,9 @@ private fun StatisticsContent(
             ) { page ->
                 val periodForPage = StatsPeriod.entries[page]
                 val isCurrentPageLoading = periodForPage in uiState.loadingPeriods
-                val isAlreadyLoaded = periodForPage in uiState.loadedPeriods
+                val isNotLoadedYet = periodForPage !in uiState.loadedPeriods
 
-                if (!isAlreadyLoaded) {
+                if (isCurrentPageLoading || isNotLoadedYet) {
                     StatisticsSkeleton(
                         modifier = Modifier
                             .fillMaxSize()
