@@ -14,7 +14,12 @@ import com.hanhyo.commitlog.domain.usecase.commit.GetCommitByIdUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.SaveCommitUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.UpdateCommitUseCase
 import com.hanhyo.commitlog.presentation.navigation.WriteRoute
+import androidx.glance.appwidget.updateAll
+import com.hanhyo.commitlog.presentation.widget.CommitLogWidget
+import com.hanhyo.commitlog.presentation.widget.StreakWidget
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,6 +34,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WriteViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context,
     private val getCommitByIdUseCase: GetCommitByIdUseCase,
     private val saveCommitUseCase: SaveCommitUseCase,
     private val updateCommitUseCase: UpdateCommitUseCase,
@@ -133,6 +139,7 @@ class WriteViewModel @Inject constructor(
                 updateCommitUseCase(commitToUpdate)
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
+                        updateWidgets()
                         _effect.emit(WriteEffect.ShowSuccess("커밋이 수정되었습니다"))
                         _effect.emit(WriteEffect.NavigateBack)
                     }
@@ -149,6 +156,7 @@ class WriteViewModel @Inject constructor(
                 analyzeAndSaveCommitUseCase(commit)
                     .onSuccess { savedId ->
                         _uiState.update { it.copy(isLoading = false) }
+                        updateWidgets()
                         _effect.emit(
                             WriteEffect.ShowSuccess(
                                 "커밋이 저장되었습니다. AI가 분석을 시작합니다"
@@ -207,6 +215,13 @@ class WriteViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                     _effect.emit(WriteEffect.ShowError("이전 초안 삭제에 실패했습니다"))
                 }
+        }
+    }
+
+    private fun updateWidgets() {
+        viewModelScope.launch {
+            CommitLogWidget().updateAll(context)
+            StreakWidget().updateAll(context)
         }
     }
 

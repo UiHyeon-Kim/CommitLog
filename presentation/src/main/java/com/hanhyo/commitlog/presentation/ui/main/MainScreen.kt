@@ -30,7 +30,8 @@ import com.hanhyo.commitlog.presentation.ui.stats.StatisticsScreen
 
 @Composable
 fun MainScreen(
-    rootNavController: NavHostController
+    rootNavController: NavHostController,
+    initialBottomRoute: Any? = null
 ) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
@@ -44,7 +45,8 @@ fun MainScreen(
         rootNavController = rootNavController,
         bottomNavController = bottomNavController,
         currentDestination = currentDestination,
-        showBottomBar = showBottomBar
+        showBottomBar = showBottomBar,
+        initialBottomRoute = initialBottomRoute
     )
 }
 
@@ -54,6 +56,7 @@ private fun MainContent(
     bottomNavController: NavHostController,
     currentDestination: NavDestination?,
     showBottomBar: Boolean,
+    initialBottomRoute: Any?,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -70,7 +73,7 @@ private fun MainContent(
     ) { outerPadding ->
         NavHost(
             navController = bottomNavController,
-            startDestination = HomeRoute,
+            startDestination = initialBottomRoute ?: HomeRoute,
             modifier = Modifier
                 .padding(outerPadding)
                 .consumeWindowInsets(outerPadding)
@@ -95,13 +98,7 @@ private fun MainContent(
                     }
                 )
             }
-            composable<ReviewRoute>(
-                deepLinks = listOf(
-                    // This deep link is used by GenerateMonthlyReviewWorker to open the monthly review screen.
-                    // It is also registered in AndroidManifest.xml for external access.
-                    navDeepLink { uriPattern = "app://commitlog/review" }
-                )
-            ) { ReviewScreen() }
+            composable<ReviewRoute> { ReviewScreen() }
         }
     }
 }
