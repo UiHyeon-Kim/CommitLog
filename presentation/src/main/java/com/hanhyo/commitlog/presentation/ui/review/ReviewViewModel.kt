@@ -187,7 +187,7 @@ class ReviewViewModel @Inject constructor(
 }
 
 data class ReviewUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val selectedYear: Int = LocalDate.now().year,
     val selectedMonth: Int = LocalDate.now().monthValue,
     val availableMonths: List<YearMonth> = emptyList(),

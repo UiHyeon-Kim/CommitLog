@@ -38,7 +38,7 @@ fun SearchCommitItem(
             .clickable(onClick = onClick)
     ) {
         Column(
-            modifier = Modifier.padding(Dimensions.SpacingMedium),
+            modifier = Modifier.padding(Dimensions.SpacingLarge),
             verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingSmall)
         ) {
             Row(
@@ -48,7 +48,7 @@ fun SearchCommitItem(
             ) {
                 Text(
                     text = commit.date.toKoreanFormat(),
-                    style = CommitLogTheme.typography.labelSmall,
+                    style = CommitLogTheme.typography.bodySmall,
                     color = CommitLogTheme.colors.textTertiary
                 )
                 
@@ -58,7 +58,7 @@ fun SearchCommitItem(
                         commit.tags.take(2).forEach { tag ->
                             Text(
                                 text = "#${tag.value}",
-                                style = CommitLogTheme.typography.labelSmall,
+                                style = CommitLogTheme.typography.bodySmall,
                                 color = CommitLogTheme.colors.primary
                             )
                         }
@@ -68,7 +68,7 @@ fun SearchCommitItem(
 
             Text(
                 text = commit.title.value,
-                style = CommitLogTheme.typography.titleMedium,
+                style = CommitLogTheme.typography.titleLarge,
                 color = CommitLogTheme.colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -110,7 +110,7 @@ private fun SearchCommitItemWithTagsPreview() {
     }
 }
 
-@Preview(showBackground = true, name = "SearchCommitItem - Without Tags")
+@Preview(name = "SearchCommitItem - Without Tags")
 @Composable
 private fun SearchCommitItemWithoutTagsPreview() {
     val sampleCommitWithoutTags = Commit(

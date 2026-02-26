@@ -98,7 +98,22 @@ private fun MainContent(
                     }
                 )
             }
-            composable<ReviewRoute> { ReviewScreen() }
+            composable<ReviewRoute>(
+                deepLinks = listOf(
+                    navDeepLink<ReviewRoute>(basePath = "app://commitlog/review")
+                )
+            ) {
+                ReviewScreen(
+                    onNavigateToHome = {
+                        bottomNavController.navigate(HomeRoute) {
+                            popUpTo(HomeRoute) { inclusive = true }
+                        }
+                    },
+                    onNavigateToWrite = {
+                        rootNavController.navigate(WriteRoute())
+                    }
+                )
+            }
         }
     }
 }

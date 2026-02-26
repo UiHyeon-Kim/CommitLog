@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -53,6 +52,7 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.home.components.CommitLogFloatingActionButton
 import com.hanhyo.commitlog.presentation.ui.home.components.DateHeader
 import com.hanhyo.commitlog.presentation.ui.home.components.EmptyState
+import com.hanhyo.commitlog.presentation.ui.home.components.HomeSkeleton
 import com.hanhyo.commitlog.presentation.ui.home.components.SwipeToDeleteCard
 import java.time.LocalDate
 
@@ -181,16 +181,7 @@ private fun HomeContent(
     ) { paddingValues ->
         when {
             isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = CommitLogTheme.colors.primary
-                    )
-                }
+                HomeSkeleton(modifier = Modifier.padding(paddingValues))
             }
 
             commits.isEmpty() -> {

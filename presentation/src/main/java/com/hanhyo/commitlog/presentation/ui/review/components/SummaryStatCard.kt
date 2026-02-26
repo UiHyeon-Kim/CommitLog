@@ -43,13 +43,13 @@ fun SummaryStatCard(
                 Text(text = emoji, fontSize = 14.sp)
                 Text(
                     text = label,
-                    style = CommitLogTheme.typography.bodyMedium,
+                    style = CommitLogTheme.typography.bodyLarge,
                     color = CommitLogTheme.colors.textSecondary,
                 )
             }
             Text(
                 text = value,
-                style = CommitLogTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                style = CommitLogTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = CommitLogTheme.colors.textPrimary,
             )
         }

@@ -18,20 +18,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hanhyo.commitlog.domain.model.AIMood
+import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.domain.model.MonthlyReview
+import java.time.YearMonth
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.button.CommitLogButton
-import com.hanhyo.commitlog.presentation.designsystem.components.indicator.FullScreenLoading
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.home.components.EmptyState
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewAiReportCard
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewMonthTabs
+import com.hanhyo.commitlog.presentation.ui.review.components.ReviewSkeleton
 import com.hanhyo.commitlog.presentation.ui.review.components.SummaryStatCard
-import java.time.YearMonth
 
 @Composable
 fun ReviewScreen(
+    onNavigateToHome: () -> Unit,
+    onNavigateToWrite: () -> Unit,
     viewModel: ReviewViewModel = hiltViewModel(),
     modifier: Modifier = Modifier,
 ) {
@@ -42,6 +46,8 @@ fun ReviewScreen(
         availableMonths = uiState.availableMonths,
         onMonthSelected = viewModel::updateMonth,
         onGenerateReview = viewModel::generateReview,
+        onNavigateToHome = onNavigateToHome,
+        onNavigateToWrite = onNavigateToWrite,
         modifier = modifier
     )
 }
@@ -52,6 +58,8 @@ private fun ReviewContent(
     availableMonths: List<YearMonth>,
     onMonthSelected: (Int, Int) -> Unit,
     onGenerateReview: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToWrite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -99,52 +107,93 @@ private fun ReviewContent(
 
                 val review = uiState.review
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
-                ) {
-                    SummaryStatCard(
-                        emoji = "📝",
-                        label = "총 기록 수",
-                        value = review?.let { "${it.totalCommitCount}" } ?: "${uiState.monthCommitCount}",
-                        modifier = Modifier.weight(1f)
-                    )
-                    SummaryStatCard(
-                        emoji = review?.getMostFrequentMood()?.emoji ?: "🙂",
-                        label = "평균 감정",
-                        value = review?.getMostFrequentMood()?.displayNameKo ?: "-",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                when {
+                    uiState.isLoading -> {
+                        ReviewSkeleton()
+                    }
+                    review == null -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
+                        ) {
+                            SummaryStatCard(
+                                emoji = "📝",
+                                label = "총 기록 수",
+                                value = "${uiState.monthCommitCount}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            SummaryStatCard(
+                                emoji = "🙂",
+                                label = "평균 감정",
+                                value = "-",
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
-                if (review == null) {
-                    if (uiState.isLoading) {
-                        FullScreenLoading(message = "AI가 회고를 생성하고 있어요...", modifier = Modifier.height(200.dp))
-                    } else if (uiState.errorMessage != null) {
-                        EmptyState(
-                            emoji = "⚠️",
-                            title = "회고 생성 실패",
-                            message = uiState.errorMessage!!,
-                            action = {
-                                CommitLogButton(
-                                    text = "다시 시도",
-                                    onClick = onGenerateReview,
-                                )
-                            },
+                        if (uiState.errorMessage != null) {
+                            EmptyState(
+                                emoji = "⚠️",
+                                title = "회고 생성 실패",
+                                message = uiState.errorMessage,
+                                action = {
+                                    CommitLogButton(
+                                        text = "다시 시도",
+                                        onClick = onGenerateReview,
+                                    )
+                                },
+                            )
+                        } else if (uiState.monthCommitCount == 0) {
+                            EmptyState(
+                                emoji = "🏜️",
+                                title = "기록이 아직 없어요",
+                                message = "${uiState.selectedMonth}월에는 아직 기록된 커밋이 없습니다. 기록을 시작해볼까요?",
+                                action = {
+                                    CommitLogButton(
+                                        text = "첫 기록 남기러 가기",
+                                        onClick = onNavigateToWrite,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                },
+                            )
+                        } else {
+                            CommitLogButton(
+                                text = "✨ AI 회고 생성하기",
+                                onClick = onGenerateReview,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                    else -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
+                        ) {
+                            SummaryStatCard(
+                                emoji = "📝",
+                                label = "총 기록 수",
+                                value = "${review.totalCommitCount}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            SummaryStatCard(
+                                emoji = review.getMostFrequentMood()?.emoji ?: "🙂",
+                                label = "평균 감정",
+                                value = review.getMostFrequentMood()?.displayNameKo ?: "-",
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        ReviewAiReportCard(
+                            title = "AI 분석 리포트",
+                            emoji = "🤖",
+                            content = review.aiSummary
                         )
-                    } else {
+
                         CommitLogButton(
-                            text = "✨ AI 회고 생성하기",
+                            text = "🔄 리뷰 다시 생성하기",
                             onClick = onGenerateReview,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                } else {
-                    ReviewAiReportCard(
-                        title = "AI 분석 리포트",
-                        emoji = "🤖",
-                        content = review.aiSummary
-                    )
                 }
             }
         }
@@ -159,7 +208,9 @@ private fun ReviewContentBeforeGenerationPreview() {
             uiState = ReviewUiState(selectedYear = 2024, selectedMonth = 5, monthCommitCount = 15),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {},
+            onNavigateToWrite = {}
         )
     }
 }
@@ -172,7 +223,9 @@ private fun ReviewContentLoadingPreview() {
             uiState = ReviewUiState(selectedYear = 2024, selectedMonth = 5, isLoading = true),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {},
+            onNavigateToWrite = {}
         )
     }
 }
@@ -191,19 +244,21 @@ private fun ReviewContentCompletedPreview() {
                     totalCommitCount = 20,
                     weeklyCommitCount = mapOf(1 to 5, 2 to 4, 3 to 6, 4 to 5),
                     moodDistribution = mapOf(
-                        com.hanhyo.commitlog.domain.model.AIMood.PRODUCTIVE to 10,
-                        com.hanhyo.commitlog.domain.model.AIMood.FOCUSED to 5
+                        AIMood.PRODUCTIVE to 10,
+                        AIMood.FOCUSED to 5
                     ),
                     tagDistribution = mapOf(
-                        com.hanhyo.commitlog.domain.model.LearningTag("android") to 8,
-                        com.hanhyo.commitlog.domain.model.LearningTag("kotlin") to 12
+                        LearningTag("android") to 8,
+                        LearningTag("kotlin") to 12
                     ),
                     aiSummary = "이번 달에는 특히 Jetpack Compose 학습에 많은 시간을 쏟으셨네요. 꾸준한 노력이 돋보입니다!"
                 )
             ),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {},
+            onNavigateToWrite = {}
         )
     }
 }
@@ -220,7 +275,9 @@ private fun ReviewContentFailedPreview() {
             ),
             availableMonths = listOf(YearMonth.of(2024, 5)),
             onMonthSelected = { _, _ -> },
-            onGenerateReview = {}
+            onGenerateReview = {},
+            onNavigateToHome = {},
+            onNavigateToWrite = {}
         )
     }
 }

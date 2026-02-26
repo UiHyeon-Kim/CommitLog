@@ -2,27 +2,25 @@ package com.hanhyo.commitlog.presentation.ui.stats.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,7 +45,6 @@ import com.hanhyo.commitlog.presentation.ui.stats.model.WeeklyStats
 import com.hanhyo.commitlog.presentation.ui.stats.model.YearlyStats
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesianMarker
@@ -56,7 +53,6 @@ import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
@@ -176,10 +172,11 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
                             )
                         )
                     ),
-                    startAxis = VerticalAxis.rememberStart(
-                        itemPlacer = VerticalAxis.ItemPlacer.step(step = { 1.0 })
+                    startAxis = null,
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = bottomAxisValueFormatter,
+                        guideline = null
                     ),
-                    bottomAxis = HorizontalAxis.rememberBottom(valueFormatter = bottomAxisValueFormatter),
                     marker = rememberCartesianMarker(),
                 ),
                 modelProducer = chartProducer,
@@ -198,10 +195,6 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
                 }
             }
         }
-
-        AiInsightCard(
-            insight = "꾸준한 기록이 성장의 밑거름이 됩니다. 오늘도 화이팅하세요!"
-        )
     }
 }
 
@@ -255,12 +248,16 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
                                 fill = LineCartesianLayer.LineFill.single(Fill(CommitLogTheme.colors.primary.toArgb())),
                                 areaFill = LineCartesianLayer.AreaFill.single(
                                     Fill(CommitLogTheme.colors.primary.copy(alpha = 0.3f).toArgb())
-                                )
+                                ),
+                                pointConnector = LineCartesianLayer.PointConnector.cubic()
                             )
                         )
                     ),
-                    startAxis = VerticalAxis.rememberStart(),
-                    bottomAxis = HorizontalAxis.rememberBottom(),
+                    startAxis = null,
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = { _, x, _ -> "${(x.toInt() * 3) + 1}일" },
+                        guideline = null
+                    ),
                     marker = rememberCartesianMarker(),
                 ),
                 modelProducer = chartProducer,
@@ -318,9 +315,14 @@ private fun rememberCartesianMarker(): CartesianMarker {
         color = CommitLogTheme.colors.textPrimary,
         background = labelBackground
     )
+    val indicatorComponent = rememberShapeComponent(
+        fill = Fill(CommitLogTheme.colors.primary.toArgb()),
+        shape = CorneredShape.Pill
+    )
     return rememberDefaultCartesianMarker(
         label = label,
         labelPosition = DefaultCartesianMarker.LabelPosition.Top,
+        indicator = { indicatorComponent }
     )
 }
 
@@ -368,47 +370,110 @@ private fun YearlyStatsView(
         }
 
         StatsCard(title = "연간 기여도") {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
-                Text(
-                    text = "Total ${stats.totalRecords} Commits",
-                    style = CommitLogTheme.typography.bodySmall,
-                    color = CommitLogTheme.colors.textSecondary,
-                    modifier = Modifier.weight(1f)
-                )
-                Text("Less", style = CommitLogTheme.typography.labelSmall, color = CommitLogTheme.colors.textSecondary)
-                Spacer(Modifier.width(4.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    (0..4).forEach { level ->
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(heatmapColor(level))
-                        )
-                    }
-                }
-                Spacer(Modifier.width(4.dp))
-                Text("More", style = CommitLogTheme.typography.labelSmall, color = CommitLogTheme.colors.textSecondary)
-            }
-
-            LazyHorizontalGrid(
-                rows = GridCells.Fixed(7),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-            ) {
-                items(heatmap) { level ->
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(heatmapColor(level))
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
+                    Text(
+                        text = "Total ${stats.totalRecords} Commits",
+                        style = CommitLogTheme.typography.bodySmall,
+                        color = CommitLogTheme.colors.textSecondary,
+                        modifier = Modifier.weight(1f)
                     )
+                    Text(
+                        "Less",
+                        style = CommitLogTheme.typography.labelSmall,
+                        color = CommitLogTheme.colors.textSecondary
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        (0..4).forEach { level ->
+                            Box(
+                                modifier = Modifier
+                                    .size(11.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(heatmapColor(level))
+                            )
+                        }
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "More",
+                        style = CommitLogTheme.typography.labelSmall,
+                        color = CommitLogTheme.colors.textSecondary
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        val weeks = heatmap.chunked(7)
+                        val currentYear = java.time.LocalDate.now().year
+                        val startDate = java.time.LocalDate.of(currentYear, 1, 1)
+                        val firstDayOffset = startDate.dayOfWeek.value % 7
+
+                        weeks.forEachIndexed { weekIndex, days ->
+                            val currentMonth = run {
+                                val firstRealDayIndex = days.indexOfFirst { it >= -1 }
+                                if (firstRealDayIndex != -1) {
+                                    val dayOfYear = (weekIndex * 7 + firstRealDayIndex - firstDayOffset) + 1
+                                    if (dayOfYear >= 1 && dayOfYear <= startDate.lengthOfYear()) {
+                                        startDate.withDayOfYear(dayOfYear).monthValue
+                                    } else -1
+                                } else -1
+                            }
+
+                            val prevMonth = run {
+                                if (weekIndex > 0) {
+                                    val prevWeekDays = weeks[weekIndex - 1]
+                                    val firstRealDayIndex = prevWeekDays.indexOfFirst { it >= -1 }
+                                    if (firstRealDayIndex != -1) {
+                                        val dayOfYear = ((weekIndex - 1) * 7 + firstRealDayIndex - firstDayOffset) + 1
+                                        if (dayOfYear >= 1 && dayOfYear <= startDate.lengthOfYear()) {
+                                            startDate.withDayOfYear(dayOfYear).monthValue
+                                        } else -1
+                                    } else -1
+                                } else -1
+                            }
+
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Month Label (월이 바뀔 때만 표시)
+                                val labelText =
+                                    if (currentMonth != -1 && currentMonth != prevMonth) "${currentMonth}월" else ""
+
+                                Box(modifier = Modifier.height(16.dp)) {
+                                    if (labelText.isNotEmpty()) {
+                                        Text(
+                                            text = labelText,
+                                            style = CommitLogTheme.typography.labelSmall,
+                                            color = CommitLogTheme.colors.textSecondary,
+                                            maxLines = 1,
+                                            modifier = Modifier.align(Alignment.CenterStart)
+                                        )
+                                    }
+                                }
+
+                                days.forEach { level ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .clip(RoundedCornerShape(3.dp))
+                                            .background(heatmapColor(level))
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -419,7 +484,7 @@ private fun YearlyStatsView(
                     skills = stats.skillGrowth,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(280.dp)
                         .padding(16.dp)
                 )
             }
@@ -533,6 +598,8 @@ fun RadarChart(
 
 @Composable
 private fun heatmapColor(level: Int): Color = when (level) {
+    -2 -> Color.Transparent // 오프셋
+    -1 -> CommitLogTheme.colors.surfaceVariant // 데이터 없음 (기존 0)
     0 -> CommitLogTheme.colors.surfaceVariant
     1 -> CommitLogTheme.colors.primary.copy(alpha = 0.3f)
     2 -> CommitLogTheme.colors.primary.copy(alpha = 0.5f)

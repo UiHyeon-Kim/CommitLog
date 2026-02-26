@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -19,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchCommitsUseCase: SearchCommitsUseCase
+    private val searchCommitsUseCase: SearchCommitsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -37,12 +38,9 @@ class SearchViewModel @Inject constructor(
         _query
             .debounce(300L)
             .distinctUntilChanged()
+            .filter { it.isNotBlank() }
             .onEach { keyword ->
-                if (keyword.isBlank()) {
-                    _uiState.value = _uiState.value.copy(searchResults = emptyList(), isLoading = false)
-                } else {
-                    searchCommits(keyword)
-                }
+                searchCommits(keyword)
             }
             .launchIn(viewModelScope)
     }

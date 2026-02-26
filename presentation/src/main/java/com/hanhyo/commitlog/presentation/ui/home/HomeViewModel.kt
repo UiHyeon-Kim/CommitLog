@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +44,7 @@ class HomeViewModel @Inject constructor(
     private var recentlyDeletedCommit: Commit? = null
 
     val commits: StateFlow<List<Commit>> = observeAllCommitsUseCase()
+        .onEach { _uiState.update { state -> state.copy(isLoading = false) } }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -142,7 +144,7 @@ class HomeViewModel @Inject constructor(
 }
 
 data class HomeUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val streak: Streak? = null,
     val totalCommitCount: Int = 0,
     val draftCommitId: Long? = null,

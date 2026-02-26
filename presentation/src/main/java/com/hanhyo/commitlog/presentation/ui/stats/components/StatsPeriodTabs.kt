@@ -80,11 +80,7 @@ fun StatsPeriodTabs(
                 ) {
                     Text(
                         text = period.title,
-                        style = if (selected) {
-                            CommitLogTheme.typography.titleSmall
-                        } else {
-                            CommitLogTheme.typography.bodyMedium
-                        },
+                        style = CommitLogTheme.typography.titleMedium,
                         color = if (selected) {
                             Color.White
                         } else {
