@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="오늘의 커밋"
-        android:textColor="#666666"
+        android:textColor="@color/widget_sub_text_color"
         android:textSize="12sp" />
 
 </LinearLayout>

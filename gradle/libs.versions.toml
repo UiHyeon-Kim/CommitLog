@@ -163,6 +163,14 @@ test-android = [
     "androidx-junit",
     "androidx-espresso-core"
 ]
+glance = [
+    "androidx-glance-appwidget",
+    "androidx-glance-material3"
+]
+glance-debug = [
+    "androidx-glance-preview",
+    "androidx-glance-appwidget-preview"
+]
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -13,7 +13,7 @@ class GetTodayCommitUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): Result<Commit?> {
         return runCatching {
-            val today = LocalDate.now()
+            val today = LocalDate.now(java.time.ZoneId.systemDefault())
             // 오늘 날짜의 커밋들을 가져와서 가장 최근 것(목록의 첫 번째)을 반환
             repository.getCommitsByDateRange(today, today).firstOrNull()
         }

@@ -11,7 +11,7 @@ fun NavGraphBuilder.homeDestination(navController: NavHostController) {
 
     composable<WriteRoute>(
         deepLinks = listOf(
-            navDeepLink<WriteRoute>(basePath = "app://commitlog/write")
+            navDeepLink { uriPattern = "app://commitlog/write" }
         )
     ) {
         WriteScreen(

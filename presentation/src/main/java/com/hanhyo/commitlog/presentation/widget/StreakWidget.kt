@@ -40,10 +40,19 @@ class StreakWidget : GlanceAppWidget() {
         val streakData = streakResult.getOrNull()
 
         val currentStreak = streakData?.currentStreak ?: 0
+        val writeAction = actionStartActivity(
+            Intent(Intent.ACTION_VIEW, "app://commitlog/write".toUri()).apply {
+                setPackage(context.packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+        )
 
         provideContent {
             GlanceTheme {
-                StreakWidgetContent(currentStreak = currentStreak)
+                StreakWidgetContent(
+                    currentStreak = currentStreak,
+                    onWriteClick = writeAction
+                )
             }
         }
     }
@@ -55,12 +64,15 @@ class StreakWidget : GlanceAppWidget() {
  * @param currentStreak 현재 사용자의 연속 스트릭 일수
  */
 @Composable
-fun StreakWidgetContent(currentStreak: Int) {
+fun StreakWidgetContent(
+    currentStreak: Int,
+    onWriteClick: androidx.glance.action.Action
+) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
-            .clickable(composeAction())
+            .clickable(onWriteClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -82,22 +94,13 @@ fun StreakWidgetContent(currentStreak: Int) {
     }
 }
 
-/**
- * "기록하기" 버튼 클릭 시 실행될 액션을 정의합니다.
- * MainActivity의 딥링크(app://commitlog/write)를 통해 특정 화면으로 이동합니다.
- */
-private fun composeAction(): androidx.glance.action.Action {
-    return actionStartActivity(
-        Intent(Intent.ACTION_VIEW, "app://commitlog/write".toUri()).apply {
-            setPackage("com.hanhyo.commitlog")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-    )
-}
 
 @OptIn(ExperimentalGlancePreviewApi::class)
 @Preview(widthDp = 90, heightDp = 90)
 @Composable
 fun StreakWidgetContentPreview() {
-    StreakWidgetContent(currentStreak = 1)
+    StreakWidgetContent(
+        currentStreak = 1,
+        onWriteClick = actionStartActivity(Intent())
+    )
 }

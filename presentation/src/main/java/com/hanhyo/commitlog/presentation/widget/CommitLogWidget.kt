@@ -43,21 +43,29 @@ class CommitLogWidget : GlanceAppWidget() {
         )
         val getTodayCommitUseCase = entryPoint.getTodayCommitUseCase()
         val commit = getTodayCommitUseCase().getOrNull()
+        val writeIntent = getWriteIntent(context.packageName)
 
         provideContent {
             GlanceTheme {
-                CommitLogWidgetContent(commit = commit)
+                CommitLogWidgetContent(
+                    commit = commit,
+                    onWriteClick = actionStartActivity(writeIntent)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CommitLogWidgetContent(commit: Commit?) {
+private fun CommitLogWidgetContent(
+    commit: Commit?,
+    onWriteClick: androidx.glance.action.Action
+) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
+            .clickable(onWriteClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -97,16 +105,15 @@ private fun CommitLogWidgetContent(commit: Commit?) {
                     color = GlanceTheme.colors.onSurface,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
-                ),
-                modifier = GlanceModifier.clickable(actionStartActivity(getWriteIntent()))
+                )
             )
         }
     }
 }
 
-private fun getWriteIntent(): Intent {
+private fun getWriteIntent(packageName: String): Intent {
     return Intent(Intent.ACTION_VIEW, "app://commitlog/write".toUri()).apply {
-        setPackage("com.hanhyo.commitlog")
+        setPackage(packageName)
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
     }
 }
@@ -129,5 +136,8 @@ private fun CommitLogWidgetContentPreview() {
         analysis = null,
         updatedAt = null,
     )
-    CommitLogWidgetContent(commit = commit)
+    CommitLogWidgetContent(
+        commit = commit,
+        onWriteClick = actionStartActivity(getWriteIntent("com.hanhyo.commitlog"))
+    )
 }

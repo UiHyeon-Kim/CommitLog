@@ -97,7 +97,9 @@ private fun MainContent(
             }
             composable<ReviewRoute>(
                 deepLinks = listOf(
-                    navDeepLink<ReviewRoute>(basePath = "app://commitlog/review")
+                    // This deep link is used by GenerateMonthlyReviewWorker to open the monthly review screen.
+                    // It is also registered in AndroidManifest.xml for external access.
+                    navDeepLink { uriPattern = "app://commitlog/review" }
                 )
             ) { ReviewScreen() }
         }
