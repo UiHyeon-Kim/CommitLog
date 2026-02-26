@@ -122,6 +122,9 @@ class AiAnalysisRepositoryImpl @Inject constructor(
     }
 
     override suspend fun scheduleMonthlyReview(year: Int, month: Int) {
+        // 기존 회고가 있다면 삭제하여 재생성 강제
+        deleteMonthlyReview(year, month)
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -143,6 +146,10 @@ class AiAnalysisRepositoryImpl @Inject constructor(
         return monthlyReviewDao.observeMonthlyReview(year, month).map { entity ->
             entity?.let { MonthlyReviewMapper.mapToDomain(it) }
         }
+    }
+
+    override suspend fun deleteMonthlyReview(year: Int, month: Int) {
+        monthlyReviewDao.deleteMonthlyReview(year, month)
     }
 
     /** AI 응답 JSON을 AiAnalysisResult로 파싱 */

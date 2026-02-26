@@ -137,6 +137,16 @@ fun WriteScreen(
         )
     }
 
+    // 더블 클릭 방지 로직
+    var lastClickTime by remember { mutableStateOf(0L) }
+    val onDebouncedSave = {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime > 1000L && !uiState.isLoading) {
+            lastClickTime = currentTime
+            viewModel.saveCommit()
+        }
+    }
+
     WriteContent(
         date = uiState.date,
         title = uiState.title,
@@ -151,7 +161,7 @@ fun WriteScreen(
         onLearnedTodayChange = viewModel::updateLearnedToday,
         onDifficultiesChange = viewModel::updateDifficulties,
         onTomorrowPlanChange = viewModel::updateTomorrowPlan,
-        onSave = viewModel::saveCommit,
+        onSave = onDebouncedSave,
         onBack = onSmartBack
     )
 }

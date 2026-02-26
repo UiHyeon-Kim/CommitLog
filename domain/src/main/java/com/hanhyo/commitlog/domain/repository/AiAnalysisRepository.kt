@@ -44,4 +44,9 @@ interface AiAnalysisRepository {
      * 특정 월의 회고 데이터를 관찰합니다.
      */
     fun observeMonthlyReview(year: Int, month: Int): Flow<MonthlyReview?>
+
+    /**
+     * 특정 월의 회고 데이터를 삭제합니다.
+     */
+    suspend fun deleteMonthlyReview(year: Int, month: Int)
 }

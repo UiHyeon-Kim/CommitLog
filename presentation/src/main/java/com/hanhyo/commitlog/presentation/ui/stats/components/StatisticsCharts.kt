@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.stats.model.MonthlyStats
@@ -478,13 +478,14 @@ private fun YearlyStatsView(
             }
         }
 
-        if (stats.skillGrowth.size >= 3) {
+        val skillSize = stats.skillGrowth.size
+        if (skillSize >= 3) {
             StatsCard(title = "스킬 성장 (Skill Radar)") {
                 RadarChart(
                     skills = stats.skillGrowth,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
+                        .then(if (skillSize == 3) Modifier.height(280.dp) else Modifier.height(300.dp))
                         .padding(16.dp)
                 )
             }
@@ -505,9 +506,12 @@ fun RadarChart(
     val textStyle = CommitLogTheme.typography.labelSmall.copy(color = textColor)
 
     Canvas(modifier = modifier) {
-        val radius = size.minDimension / 2 * 0.7f
+        val radius = size.minDimension / 2 * 0.8f // 크기 확장
         val center = Offset(size.width / 2, size.height / 2)
         val angleStep = (2 * Math.PI / numSides).toFloat()
+
+        // 스코어 정규화 (가장 높은 점수가 1.0이 되도록 하여 그래프가 펼쳐지게 함)
+        val maxScore = skills.maxOfOrNull { it.score }?.coerceAtLeast(0.1f) ?: 1f
 
         // 1. 방사형 웹 구조 그리기 (배경 다각형)
         for (step in 1..4) {
@@ -558,7 +562,7 @@ fun RadarChart(
                 drawText(
                     textMeasurer = textMeasurer,
                     text = skill.name,
-                    style = textStyle,
+                    style = textStyle.copy(fontSize = 10.sp),
                     topLeft = Offset(
                         x = x - measuredText.size.width / 2,
                         y = y - measuredText.size.height / 2
@@ -571,9 +575,10 @@ fun RadarChart(
         val dataPath = Path()
         for (i in 0 until numSides) {
             val skill = skills.getOrNull(i)
-            val scoreRatio = skill?.score?.coerceIn(0f, 1f) ?: 0f
-            // 점수가 매우 낮더라도 시각적으로 구분되도록 최소 비율 보장
-            val finalRatio = scoreRatio.coerceAtLeast(0.1f)
+            // 개별 점수를 전체 값 중 최대값으로 나누어 정규화 (최소 0.1f 보장)
+            val normalizedRatio = (skill?.score ?: 0f) / maxScore
+            val finalRatio = normalizedRatio.coerceAtLeast(0.1f)
+
             val angle = angleStep * i - (Math.PI / 2).toFloat()
             val dataRadius = radius * finalRatio
             val x = center.x + dataRadius * cos(angle)

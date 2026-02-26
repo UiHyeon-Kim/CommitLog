@@ -16,4 +16,7 @@ interface MonthlyReviewDao {
 
     @Query("SELECT * FROM monthly_reviews WHERE year = :year AND month = :month")
     fun observeMonthlyReview(year: Int, month: Int): kotlinx.coroutines.flow.Flow<MonthlyReviewEntity?>
+
+    @Query("DELETE FROM monthly_reviews WHERE year = :year AND month = :month")
+    suspend fun deleteMonthlyReview(year: Int, month: Int)
 }

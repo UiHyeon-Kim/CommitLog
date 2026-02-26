@@ -234,6 +234,8 @@ private fun HomeContent(
                                         .animateItem()
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(Dimensions.SpacingMedium))
                         }
 
                         item {

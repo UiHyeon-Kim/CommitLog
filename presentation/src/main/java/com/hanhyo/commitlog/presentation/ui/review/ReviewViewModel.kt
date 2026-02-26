@@ -153,7 +153,7 @@ class ReviewViewModel @Inject constructor(
         if (state.isLoading) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, review = null) }
             try {
                 scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
             } catch (e: CancellationException) {

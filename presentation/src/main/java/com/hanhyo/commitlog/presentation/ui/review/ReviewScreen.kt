@@ -28,6 +28,7 @@ import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.home.components.EmptyState
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewAiReportCard
+import com.hanhyo.commitlog.presentation.ui.review.components.ReviewAiReportSkeleton
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewMonthTabs
 import com.hanhyo.commitlog.presentation.ui.review.components.ReviewSkeleton
 import com.hanhyo.commitlog.presentation.ui.review.components.SummaryStatCard
@@ -106,94 +107,80 @@ private fun ReviewContent(
                 }
 
                 val review = uiState.review
+                val isLoading = uiState.isLoading
 
+                // 상단 통계 카드 영역 (로딩 중이거나 데이터가 없는 경우를 고려)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
+                ) {
+                    SummaryStatCard(
+                        emoji = "📝",
+                        label = "총 기록 수",
+                        value = when {
+                            review != null -> "${review.totalCommitCount}"
+                            else -> "${uiState.monthCommitCount}"
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    SummaryStatCard(
+                        emoji = review?.getMostFrequentMood()?.emoji ?: "🙂",
+                        label = "평균 감정",
+                        value = review?.getMostFrequentMood()?.displayNameKo ?: "-",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                // AI 리포트 카드 또는 스켈레톤 영역
                 when {
-                    uiState.isLoading -> {
-                        ReviewSkeleton()
+                    isLoading -> {
+                        ReviewAiReportSkeleton()
                     }
-                    review == null -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
-                        ) {
-                            SummaryStatCard(
-                                emoji = "📝",
-                                label = "총 기록 수",
-                                value = "${uiState.monthCommitCount}",
-                                modifier = Modifier.weight(1f)
-                            )
-                            SummaryStatCard(
-                                emoji = "🙂",
-                                label = "평균 감정",
-                                value = "-",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        if (uiState.errorMessage != null) {
-                            EmptyState(
-                                emoji = "⚠️",
-                                title = "회고 생성 실패",
-                                message = uiState.errorMessage,
-                                action = {
-                                    CommitLogButton(
-                                        text = "다시 시도",
-                                        onClick = onGenerateReview,
-                                    )
-                                },
-                            )
-                        } else if (uiState.monthCommitCount == 0) {
-                            EmptyState(
-                                emoji = "🏜️",
-                                title = "기록이 아직 없어요",
-                                message = "${uiState.selectedMonth}월에는 아직 기록된 커밋이 없습니다. 기록을 시작해볼까요?",
-                                action = {
-                                    CommitLogButton(
-                                        text = "첫 기록 남기러 가기",
-                                        onClick = onNavigateToWrite,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                },
-                            )
-                        } else {
-                            CommitLogButton(
-                                text = "✨ AI 회고 생성하기",
-                                onClick = onGenerateReview,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                    else -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
-                        ) {
-                            SummaryStatCard(
-                                emoji = "📝",
-                                label = "총 기록 수",
-                                value = "${review.totalCommitCount}",
-                                modifier = Modifier.weight(1f)
-                            )
-                            SummaryStatCard(
-                                emoji = review.getMostFrequentMood()?.emoji ?: "🙂",
-                                label = "평균 감정",
-                                value = review.getMostFrequentMood()?.displayNameKo ?: "-",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
+                    review != null -> {
                         ReviewAiReportCard(
                             title = "AI 분석 리포트",
                             emoji = "🤖",
                             content = review.aiSummary
                         )
-
-                        CommitLogButton(
-                            text = "🔄 리뷰 다시 생성하기",
-                            onClick = onGenerateReview,
-                            modifier = Modifier.fillMaxWidth()
+                    }
+                    uiState.errorMessage != null -> {
+                        EmptyState(
+                            emoji = "⚠️",
+                            title = "회고 생성 실패",
+                            message = uiState.errorMessage,
+                            action = {
+                                CommitLogButton(
+                                    text = "다시 시도",
+                                    onClick = onGenerateReview,
+                                )
+                            },
                         )
                     }
+                    uiState.monthCommitCount == 0 -> {
+                        EmptyState(
+                            emoji = "🏜️",
+                            title = "기록이 아직 없어요",
+                            message = "${uiState.selectedMonth}월에는 아직 기록된 커밋이 없습니다. 기록을 시작해볼까요?",
+                            action = {
+                                CommitLogButton(
+                                    text = "첫 기록 남기러 가기",
+                                    onClick = onNavigateToWrite,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                        )
+                    }
+                }
+
+                // 하단 버튼 영역 (로딩 중에도 표시)
+                if (uiState.monthCommitCount > 0 && uiState.errorMessage == null) {
+                    val buttonText = if (review == null) "✨ AI 회고 생성하기" else "🔄 리뷰 다시 생성하기"
+                    CommitLogButton(
+                        text = buttonText,
+                        onClick = onGenerateReview,
+                        enabled = true, // 로딩 중에도 클릭 가능하도록 유지 (ViewModel에서 중복 처리 방지 필요)
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
