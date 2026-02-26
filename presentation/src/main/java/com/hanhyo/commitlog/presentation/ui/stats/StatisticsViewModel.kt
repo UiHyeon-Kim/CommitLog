@@ -129,9 +129,19 @@ class StatisticsViewModel @Inject constructor(
                 val dailyCommits = commits.filter { it.date == date }
                 if (dailyCommits.isNotEmpty()) {
                     val moodTotal = dailyCommits.mapNotNull { it.analysis?.mood?.name?.length }.sum()
-                    (moodTotal + dailyCommits.size * 2).coerceIn(1..10)
+                    (moodTotal + dailyCommits.size * 2).toDouble().coerceIn(1.0..10.0)
                 } else {
-                    0
+                    -1.0 // No data for this day
+                }
+            }
+
+            // Group by 3 days and calculate average
+            val groupedScores = dailyMoodScores.chunked(3).map { chunk ->
+                val validScores = chunk.filter { it >= 0 }
+                if (validScores.isNotEmpty()) {
+                    validScores.average()
+                } else {
+                    0.0
                 }
             }
 
@@ -158,7 +168,7 @@ class StatisticsViewModel @Inject constructor(
             if (_uiState.value.monthlyStats != newMonthlyStats) {
                 monthlyChartModelProducer.runTransaction {
                     lineSeries {
-                        series(dailyMoodScores)
+                        series(groupedScores)
                     }
                 }
                 _uiState.update { state ->
@@ -175,12 +185,24 @@ class StatisticsViewModel @Inject constructor(
         val endDate = now.withDayOfYear(now.lengthOfYear())
 
         getCommitsByDateRangeUseCase(startDate, endDate).onSuccess { commits ->
-            // 연간 히트맵 (365일)
-            val heatmap = (1..now.lengthOfYear()).map { day ->
+            // 연간 히트맵 (365일 + 시작 요일 오프셋)
+            // Sunday=0, Monday=1, ..., Saturday=6
+            // startDate is Jan 1st
+            val firstDayOfYearOffset = startDate.dayOfWeek.value % 7 
+            
+            val heatmap = mutableListOf<Int>()
+            // 요일에 맞춘 오프셋 추가 (-2는 빈 칸 표시용)
+            repeat(firstDayOfYearOffset) { heatmap.add(-2) }
+            
+            (1..now.lengthOfYear()).forEach { day ->
                 val date = now.withDayOfYear(day)
                 val count = commits.count { it.date == date }
-                count.coerceAtMost(4)
+                heatmap.add(count.coerceAtMost(4))
             }
+            
+            // 마지막 주 채우기
+            val totalCells = ((heatmap.size + 6) / 7) * 7
+            repeat(totalCells - heatmap.size) { heatmap.add(-2) }
 
             // 차트 데이터 (월별 커밋 수)
             val monthlyCounts = (1..12).map { month ->
