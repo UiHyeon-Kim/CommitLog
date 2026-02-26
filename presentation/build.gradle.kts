@@ -65,7 +65,6 @@ dependencies {
     // UI Tools
     implementation(libs.bundles.vico)
     implementation(libs.shimmer.compose)
-    implementation(libs.timber)
 
     // Async
     implementation(libs.kotlinx.serialization.json)
