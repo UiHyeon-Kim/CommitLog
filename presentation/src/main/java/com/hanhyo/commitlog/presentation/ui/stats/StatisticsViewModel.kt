@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hanhyo.commitlog.domain.usecase.commit.GetCommitsByDateRangeUseCase
+import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
 import com.hanhyo.commitlog.presentation.ui.stats.model.MonthlyStats
 import com.hanhyo.commitlog.presentation.ui.stats.model.MoodDistribution
 import com.hanhyo.commitlog.presentation.ui.stats.model.ProductiveDay
@@ -31,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     private val getCommitsByDateRangeUseCase: GetCommitsByDateRangeUseCase,
+    private val observeAllCommitsUseCase: ObserveAllCommitsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(StatisticsUiState())
@@ -44,7 +46,7 @@ class StatisticsViewModel @Inject constructor(
     val yearlyChartModelProducer = CartesianChartModelProducer()
 
     init {
-        loadStatistics(StatsPeriod.WEEKLY)
+        observeCommits()
     }
 
     fun updatePeriod(period: StatsPeriod) {
@@ -52,8 +54,17 @@ class StatisticsViewModel @Inject constructor(
         loadStatistics(period)
     }
 
+    private fun observeCommits() {
+        viewModelScope.launch {
+            observeAllCommitsUseCase().collect {
+                loadStatistics(_uiState.value.selectedPeriod)
+            }
+        }
+    }
+
     private fun loadStatistics(period: StatsPeriod) {
         viewModelScope.launch {
+            // 해당 기간의 데이터가 처음 로드되는 경우에만 로딩 상태 표시
             val isFirstLoad = period !in _uiState.value.loadedPeriods
             if (isFirstLoad) {
                 _uiState.update { it.copy(loadingPeriods = it.loadingPeriods + period) }
@@ -76,17 +87,17 @@ class StatisticsViewModel @Inject constructor(
     }
 
     private suspend fun loadWeeklyStats(now: LocalDate): Boolean {
-        // 오늘을 포함한 최근 7일
-        val startDate = now.minusDays(6)
-        return getCommitsByDateRangeUseCase(startDate, now).fold(
+        // 현재 주의 월요일부터 일요일까지
+        val firstDayOfWeek = now.minusDays((now.dayOfWeek.value - 1).toLong())
+        return getCommitsByDateRangeUseCase(firstDayOfWeek, now).fold(
             onSuccess = { commits ->
                 val dailyCounts = (0..6).map { offset ->
-                    val date = startDate.plusDays(offset.toLong())
+                    val date = firstDayOfWeek.plusDays(offset.toLong())
                     commits.count { it.date == date }
                 }
 
                 val productiveDays = (0..6).mapNotNull { offset ->
-                    val date = startDate.plusDays(offset.toLong())
+                    val date = firstDayOfWeek.plusDays(offset.toLong())
                     val count = commits.count { it.date == date }
                     if (count > 0) {
                         ProductiveDay(
