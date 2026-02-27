@@ -83,5 +83,5 @@ dependencies {
     debugImplementation(libs.leakcanary)
 
     // Glance Widget Preview
-    debugImplementation(libs.bundles.glance.debug)
+    implementation(libs.bundles.glance.debug)
 }

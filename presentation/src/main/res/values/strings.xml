@@ -53,7 +53,7 @@
     <string name="review_button_go_to_write">첫 기록 남기러 가기</string>
     <string name="review_button_generate_ai">✨ AI 회고 생성하기</string>
     <string name="review_button_regenerate_ai">🔄 리뷰 다시 생성하기</string>
-    <string name="review_mood_threshold_message">더 많은 기록이 필요해요\n(평균 계산까지 %1$d개)</string>
+    <string name="review_mood_threshold_message">평균 계산까지 %1$d개</string>
     <string name="stats_card_productive_day">가장 생산적이었던 날</string>
 
     <!-- Statistics -->
