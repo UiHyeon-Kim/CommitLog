@@ -16,6 +16,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.hanhyo.commitlog.presentation.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +55,7 @@ fun SearchTopBar(
                 onValueChange = onQueryChange,
                 placeholder = {
                     Text(
-                        "커밋 제목, 내용, 태그 검색...",
+                        stringResource(R.string.search_placeholder),
                         style = CommitLogTheme.typography.bodyLarge,
                         color = CommitLogTheme.colors.textTertiary
                     )
@@ -81,7 +83,7 @@ fun SearchTopBar(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "뒤로가기",
+                    contentDescription = stringResource(R.string.search_back_content_desc),
                     tint = CommitLogTheme.colors.textPrimary
                 )
             }
@@ -91,7 +93,7 @@ fun SearchTopBar(
                 IconButton(onClick = onClear) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "지우기",
+                        contentDescription = stringResource(R.string.search_clear_content_desc),
                         tint = CommitLogTheme.colors.textSecondary
                     )
                 }

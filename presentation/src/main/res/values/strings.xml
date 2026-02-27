@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="bottom_nav_home">Home</string>
-    <string name="bottom_nav_stats">Stats</string>
-    <string name="bottom_nav_review">Review</string>
+    <string name="bottom_nav_home">홈</string>
+    <string name="bottom_nav_stats">통계</string>
+    <string name="bottom_nav_review">리뷰</string>
 
     <!-- Common -->
     <string name="common_retry">다시 시도</string>
@@ -15,6 +15,22 @@
     <string name="common_delete">삭제</string>
     <string name="common_cancel">취소</string>
     <string name="common_search">검색</string>
+    <string name="common_day_monday">월요일</string>
+    <string name="common_day_tuesday">화요일</string>
+    <string name="common_day_wednesday">수요일</string>
+    <string name="common_day_thursday">목요일</string>
+    <string name="common_day_friday">금요일</string>
+    <string name="common_day_saturday">토요일</string>
+    <string name="common_day_sunday">일요일</string>
+    <string name="common_day_short_monday">월</string>
+    <string name="common_day_short_tuesday">화</string>
+    <string name="common_day_short_wednesday">수</string>
+    <string name="common_day_short_thursday">목</string>
+    <string name="common_day_short_friday">금</string>
+    <string name="common_day_short_saturday">토</string>
+    <string name="common_day_short_sunday">일</string>
+    <string name="common_date_year_month_format">%1$d년 %2$d월</string>
+    <string name="common_date_day_format">%1$d일</string>
 
     <!-- Home -->
     <string name="home_draft_dialog_title">작성 중인 기록이 있습니다</string>
@@ -60,6 +76,21 @@
     <string name="stats_chart_keywords">이달의 키워드 ✨</string>
     <string name="stats_chart_contribution">연간 기여도</string>
     <string name="stats_chart_radar">스킬 성장 (Radar)</string>
+    <string name="stats_empty_content_desc">빈 통계</string>
+    <string name="stats_empty_message">아직 기록된 학습이 없어요!\n기록을 시작하면 통계가 나타납니다.</string>
+    <string name="stats_empty_button">기록하러 가기</string>
+    <string name="stats_productive_day_desc">가장 많은 커밋을 기록했어요!</string>
+    <string name="stats_productive_day_keep">꾸준히 기록하고 있어요.</string>
+    <string name="stats_high_score">High Score</string>
+    <string name="stats_total_commits_format">Total %1$d Commits</string>
+    <string name="stats_unit_commits">commits</string>
+    <string name="stats_unit_commit_count_format">커밋 %1$d개 작성</string>
+    <string name="stats_period_weekly">주간</string>
+    <string name="stats_period_monthly">월간</string>
+    <string name="stats_period_yearly">연간</string>
+    <string name="common_less">Less</string>
+    <string name="common_more">More</string>
+    <string name="common_date_month_format">%1$d월</string>
 
     <!-- Write -->
     <string name="write_title_new">기록하기</string>
@@ -90,6 +121,9 @@
     <string name="write_error_ai_failed">AI 분석을 시작할 수 없습니다. 잠시 후 다시 시도해주세요</string>
     <string name="write_error_draft_failed">임시저장 실패</string>
     <string name="write_loading_ai_analysis">AI가 당신의 기록에서 감정을 분석합니다</string>
+    <string name="search_placeholder">커밋 제목, 내용, 태그 검색...</string>
+    <string name="search_back_content_desc">뒤로가기</string>
+    <string name="search_clear_content_desc">지우기</string>
 
     <!-- Detail -->
     <string name="detail_delete_title">커밋 삭제</string>
@@ -100,5 +134,9 @@
     <string name="detail_label_confidence">학습 확신도</string>
     <string name="detail_label_difficulty">난이도</string>
     <string name="detail_label_mood">감정</string>
+    <string name="detail_analysis_pending">AI가 열심히 분석 중입니다... ⏳</string>
+    <string name="detail_analysis_failed">분석에 실패했습니다 😢</string>
+    <string name="detail_analysis_none">아직 AI 분석 결과가 없습니다</string>
+    <string name="detail_button_regenerate">분석 다시 생성하기</string>
 
 </resources>

@@ -13,9 +13,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.domain.model.AnalysisStatus
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
@@ -36,9 +38,9 @@ fun EmptyAnalysisCard(
         ) {
             Text(
                 text = when (status) {
-                    AnalysisStatus.PENDING -> "AI가 열심히 분석 중입니다... ⏳"
-                    AnalysisStatus.FAILED -> "분석에 실패했습니다 😢"
-                    else -> "아직 AI 분석 결과가 없습니다"
+                    AnalysisStatus.PENDING -> stringResource(R.string.detail_analysis_pending)
+                    AnalysisStatus.FAILED -> stringResource(R.string.detail_analysis_failed)
+                    else -> stringResource(R.string.detail_analysis_none)
                 },
                 style = CommitLogTheme.typography.bodyMedium,
                 color = CommitLogTheme.colors.textSecondary
@@ -47,7 +49,7 @@ fun EmptyAnalysisCard(
             if (status != AnalysisStatus.PENDING) {
                 TextButton(onClick = onRegenerate) {
                     Text(
-                        text = "분석 다시 생성하기",
+                        text = stringResource(R.string.detail_button_regenerate),
                         color = CommitLogTheme.colors.primary
                     )
                 }

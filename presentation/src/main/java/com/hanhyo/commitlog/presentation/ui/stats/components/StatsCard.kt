@@ -10,7 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
@@ -45,7 +47,7 @@ fun StatsCard(
 @Composable
 private fun StatsCardPreview() {
     CommitLogTheme {
-        StatsCard(title = "주간 커밋 활동") {
+        StatsCard(title = stringResource(R.string.stats_chart_daily_activity)) {
             Text("Content goes here")
         }
     }

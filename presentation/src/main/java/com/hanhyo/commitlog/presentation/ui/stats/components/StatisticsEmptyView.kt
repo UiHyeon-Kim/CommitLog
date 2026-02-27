@@ -18,9 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
@@ -36,13 +38,13 @@ fun StatisticsEmptyView(
     ) {
         Icon(
             imageVector = Icons.Outlined.InsertChartOutlined,
-            contentDescription = "빈 통계",
+            contentDescription = stringResource(R.string.stats_empty_content_desc),
             modifier = Modifier.size(80.dp),
             tint = CommitLogTheme.colors.textSecondary.copy(alpha = 0.5f)
         )
         Spacer(modifier = Modifier.height(Dimensions.SpacingMedium))
         Text(
-            text = "아직 기록된 학습이 없어요!\n기록을 시작하면 통계가 나타납니다.",
+            text = stringResource(R.string.stats_empty_message),
             style = CommitLogTheme.typography.bodyLarge,
             color = CommitLogTheme.colors.textSecondary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
@@ -59,7 +61,7 @@ fun StatisticsEmptyView(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(Dimensions.SpacingSmall))
-            Text(text = "기록하러 가기")
+            Text(text = stringResource(R.string.stats_empty_button))
         }
     }
 }

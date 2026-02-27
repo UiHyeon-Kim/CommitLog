@@ -25,9 +25,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.ui.stats.model.StatsPeriod
 
@@ -79,7 +81,13 @@ fun StatsPeriodTabs(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = period.title,
+                        text = stringResource(
+                            when (period) {
+                                StatsPeriod.WEEKLY -> R.string.stats_period_weekly
+                                StatsPeriod.MONTHLY -> R.string.stats_period_monthly
+                                StatsPeriod.YEARLY -> R.string.stats_period_yearly
+                            }
+                        ),
                         style = CommitLogTheme.typography.titleMedium,
                         color = if (selected) {
                             Color.White

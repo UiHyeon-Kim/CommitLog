@@ -20,8 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import java.time.YearMonth
@@ -62,7 +64,7 @@ fun ReviewMonthTabs(
                 border = if (selected) null else BorderStroke(1.dp, CommitLogTheme.colors.border),
             ) {
                 Text(
-                    text = "${month.year}년 ${month.monthValue}월",
+                    text = stringResource(R.string.common_date_year_month_format, month.year, month.monthValue),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = CommitLogTheme.typography.bodyMedium,
                 )

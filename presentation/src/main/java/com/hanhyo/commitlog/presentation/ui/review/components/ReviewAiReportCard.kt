@@ -12,9 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -65,7 +67,7 @@ fun ReviewAiReportCard(
 private fun ReviewAiReportCardPreview() {
     CommitLogTheme {
         ReviewAiReportCard(
-            title = "AI 분석 리포트",
+            title = stringResource(R.string.review_ai_report_title),
             emoji = "🤖",
             content = "이번 달에는 특히 Jetpack Compose 학습에 많은 시간을 쏟으셨네요. 꾸준한 노력이 돋보입니다!"
         )

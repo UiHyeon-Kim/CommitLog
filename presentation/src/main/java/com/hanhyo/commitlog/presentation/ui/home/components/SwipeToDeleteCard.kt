@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hanhyo.commitlog.domain.model.AnalysisStatus
@@ -29,6 +30,7 @@ import com.hanhyo.commitlog.domain.model.CommitId
 import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.card.CommitCard
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
@@ -84,7 +86,7 @@ private fun SwipeDeleteBackground(
         if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "삭제",
+                contentDescription = stringResource(R.string.common_delete),
                 tint = MaterialTheme.colorScheme.onErrorContainer
             )
         }

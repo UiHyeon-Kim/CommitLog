@@ -10,8 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 
@@ -57,14 +59,14 @@ private fun StatsSummaryCardPreview() {
     CommitLogTheme {
         Row(horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)) {
             StatsSummaryCard(
-                title = "총 집중 시간",
-                value = "12.5 시간",
+                title = stringResource(R.string.stats_summary_focus_time),
+                value = stringResource(R.string.common_unit_hours, 12),
                 icon = "⏱️",
                 modifier = Modifier.weight(1f)
             )
             StatsSummaryCard(
-                title = "주간 커밋",
-                value = "18 회",
+                title = stringResource(R.string.stats_summary_commit_count),
+                value = stringResource(R.string.common_unit_count, 18),
                 icon = "commit",
                 modifier = Modifier.weight(1f)
             )
