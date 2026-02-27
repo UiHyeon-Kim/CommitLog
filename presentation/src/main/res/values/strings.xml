@@ -4,4 +4,101 @@
     <string name="bottom_nav_stats">Stats</string>
     <string name="bottom_nav_review">Review</string>
 
+    <!-- Common -->
+    <string name="common_retry">다시 시도</string>
+    <string name="common_error_load_failed">데이터를 불러오지 못했습니다.</string>
+    <string name="common_error_unknown">알 수 없는 오류가 발생했습니다.</string>
+    <string name="common_unit_hours">%1$d 시간</string>
+    <string name="common_unit_count">%1$d 회</string>
+    <string name="common_unit_days">%1$d 일</string>
+    <string name="common_edit">수정</string>
+    <string name="common_delete">삭제</string>
+    <string name="common_cancel">취소</string>
+    <string name="common_search">검색</string>
+
+    <!-- Home -->
+    <string name="home_draft_dialog_title">작성 중인 기록이 있습니다</string>
+    <string name="home_draft_dialog_message">이어서 작성하시겠습니까?</string>
+    <string name="home_draft_dialog_confirm">이어서 쓰기</string>
+    <string name="home_draft_dialog_dismiss">새로 작성</string>
+    <string name="home_empty_title">첫 커밋을 작성해보세요!</string>
+    <string name="home_empty_message">오늘 배운 내용을 기록하고\nAI의 분석을 받아보세요</string>
+
+    <!-- Review -->
+    <string name="review_title">월간 회고</string>
+    <string name="review_description">이번 달의 감정과 성장 기록을 확인하세요.</string>
+    <string name="review_report_title">%1$d월 회고 리포트</string>
+    <string name="review_stat_total_commits">총 기록 수</string>
+    <string name="review_stat_average_mood">평균 감정</string>
+    <string name="review_ai_report_title">AI 분석 리포트</string>
+    <string name="review_error_failed_to_generate">회고 생성 실패</string>
+    <string name="review_empty_title">기록이 아직 없어요</string>
+    <string name="review_empty_message">%1$d월에는 아직 기록된 커밋이 없습니다. 기록을 시작해볼까요?</string>
+    <string name="review_button_go_to_write">첫 기록 남기러 가기</string>
+    <string name="review_button_generate_ai">✨ AI 회고 생성하기</string>
+    <string name="review_button_regenerate_ai">🔄 리뷰 다시 생성하기</string>
+    <string name="review_mood_threshold_message">더 많은 기록이 필요해요\n(평균 계산까지 %1$d개)</string>
+    <string name="stats_card_productive_day">가장 생산적이었던 날</string>
+
+    <!-- Statistics -->
+    <string name="stats_title">학습 통계</string>
+    <string name="stats_report_weekly">이번 주 리포트</string>
+    <string name="stats_report_weekly_desc">최근 7일간의 기록입니다.</string>
+    <string name="stats_report_monthly">월간 리포트</string>
+    <string name="stats_report_monthly_desc">이번 달의 기록입니다.</string>
+    <string name="stats_report_yearly">연간 리포트</string>
+    <string name="stats_report_yearly_desc">올해의 기여도와 성장 기록입니다.</string>
+    <string name="stats_summary_focus_time">총 집중 시간</string>
+    <string name="stats_summary_commit_count">주간 커밋</string>
+    <string name="stats_summary_frequency">Commit 빈도</string>
+    <string name="stats_summary_streak">연속 기록</string>
+    <string name="stats_summary_total_records">총 커밋 기록</string>
+    <string name="stats_summary_busiest_month">가장 바빴던 달</string>
+    <string name="stats_chart_daily_activity">일별 커밋 활동</string>
+    <string name="stats_chart_mood_flow">기분 흐름 (Mood Flow)</string>
+    <string name="stats_chart_mood_dist">AI Mood 분포</string>
+    <string name="stats_chart_keywords">이달의 키워드 ✨</string>
+    <string name="stats_chart_contribution">연간 기여도</string>
+    <string name="stats_chart_radar">스킬 성장 (Radar)</string>
+
+    <!-- Write -->
+    <string name="write_title_new">기록하기</string>
+    <string name="write_title_edit">커밋 수정</string>
+    <string name="write_ai_analysis_title">AI 감정 분석</string>
+    <string name="write_ai_analysis_desc">AI가 당신의 기록에서 감정을 분석합니다</string>
+    <string name="write_section_title">제목</string>
+    <string name="write_placeholder_title">제목을 입력하세요</string>
+    <string name="write_section_learned">오늘 배운 점</string>
+    <string name="write_placeholder_learned">오늘 새롭게 알게 된 사실은 무엇인가요?</string>
+    <string name="write_section_difficulties">어려운 점</string>
+    <string name="write_placeholder_difficulties">진행 중 마주친 장애물이나 고민이 있나요?</string>
+    <string name="write_section_tomorrow">내일 할 일</string>
+    <string name="write_placeholder_tomorrow">내일은 어떤 작은 목표를 이룰까요?</string>
+    <string name="write_button_save">저장하기</string>
+    <string name="write_button_edit">수정하기</string>
+    <string name="write_dialog_exit_title">작성 중인 내용이 있습니다</string>
+    <string name="write_dialog_exit_message">임시 저장하고 나가시겠습니까?</string>
+    <string name="write_dialog_confirm_save">임시 저장</string>
+    <string name="write_dialog_dismiss">나가기</string>
+    <string name="write_success_saved">커밋이 저장되었습니다. AI가 분석을 시작합니다</string>
+    <string name="write_success_edited">커밋이 수정되었습니다</string>
+    <string name="write_success_draft">임시저장 되었습니다</string>
+    <string name="write_error_load_failed">커밋을 불러오지 못했습니다.</string>
+    <string name="write_error_edit_failed">커밋을 수정할 수 없습니다</string>
+    <string name="write_error_save_failed">저장 중 오류가 발생했습니다</string>
+    <string name="write_error_invalid_input">입력값이 올바르지 않습니다</string>
+    <string name="write_error_ai_failed">AI 분석을 시작할 수 없습니다. 잠시 후 다시 시도해주세요</string>
+    <string name="write_error_draft_failed">임시저장 실패</string>
+    <string name="write_loading_ai_analysis">AI가 당신의 기록에서 감정을 분석합니다</string>
+
+    <!-- Detail -->
+    <string name="detail_delete_title">커밋 삭제</string>
+    <string name="detail_delete_message">이 커밋을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.</string>
+    <string name="detail_delete_confirm">삭제</string>
+    <string name="detail_info_format">%1$s • %2$s 기록</string>
+    <string name="detail_ai_insight_title">AI 인사이트</string>
+    <string name="detail_label_confidence">학습 확신도</string>
+    <string name="detail_label_difficulty">난이도</string>
+    <string name="detail_label_mood">감정</string>
+
 </resources>

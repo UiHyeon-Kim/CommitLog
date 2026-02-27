@@ -118,7 +118,7 @@ class StatisticsViewModel @Inject constructor(
                 true
             },
             onFailure = {
-                _effect.emit(StatisticsEffect.ShowSnackbar("데이터를 불러오지 못했습니다."))
+                _effect.emit(StatisticsEffect.ShowSnackbar("Failed to load statistics"))
                 false
             }
         )
@@ -182,7 +182,7 @@ class StatisticsViewModel @Inject constructor(
                 true
             },
             onFailure = {
-                _effect.emit(StatisticsEffect.ShowSnackbar("데이터를 불러오지 못했습니다."))
+                _effect.emit(StatisticsEffect.ShowSnackbar("Failed to load statistics"))
                 false
             }
         )
@@ -256,7 +256,7 @@ class StatisticsViewModel @Inject constructor(
                 true
             },
             onFailure = {
-                _effect.emit(StatisticsEffect.ShowSnackbar("데이터를 불러오지 못했습니다."))
+                _effect.emit(StatisticsEffect.ShowSnackbar("Failed to load statistics"))
                 false
             }
         )

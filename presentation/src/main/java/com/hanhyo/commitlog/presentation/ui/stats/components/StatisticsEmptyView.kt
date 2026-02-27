@@ -42,7 +42,7 @@ fun StatisticsEmptyView(
         )
         Spacer(modifier = Modifier.height(Dimensions.SpacingMedium))
         Text(
-            text = "아직 기록된 핢습이 없어요!\n기록을 시작하면 통계가 나타납니다.",
+            text = "아직 기록된 학습이 없어요!\n기록을 시작하면 통계가 나타납니다.",
             style = CommitLogTheme.typography.bodyLarge,
             color = CommitLogTheme.colors.textSecondary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center

@@ -154,7 +154,7 @@ class WriteViewModel @Inject constructor(
             } else {
                 // 새 커밋 저장 + AI 분석 예약
                 analyzeAndSaveCommitUseCase(commit)
-                    .onSuccess { savedId ->
+                    .onSuccess {
                         _uiState.update { it.copy(isLoading = false) }
                         updateWidgets()
                         _effect.emit(

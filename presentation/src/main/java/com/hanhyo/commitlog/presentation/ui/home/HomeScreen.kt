@@ -1,7 +1,6 @@
 package com.hanhyo.commitlog.presentation.ui.home
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,8 +27,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -45,6 +44,7 @@ import com.hanhyo.commitlog.domain.model.CommitTitle
 import com.hanhyo.commitlog.domain.model.DifficultyLevel
 import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogHomeAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.card.CommitCard
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
@@ -126,16 +126,16 @@ private fun HomeContent(
     if (showDraftDialog) {
         AlertDialog(
             onDismissRequest = onDraftDialogDismiss,
-            title = { Text("작성 중인 기록이 있습니다") },
-            text = { Text("이어서 작성하시겠습니까?") },
+            title = { Text(stringResource(R.string.home_draft_dialog_title)) },
+            text = { Text(stringResource(R.string.home_draft_dialog_message)) },
             confirmButton = {
                 TextButton(onClick = { onDraftDialogConfirm(true) }) {
-                    Text("이어서 쓰기")
+                    Text(stringResource(R.string.home_draft_dialog_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onDraftDialogConfirm(false) }) {
-                    Text("새로 작성")
+                    Text(stringResource(R.string.home_draft_dialog_dismiss))
                 }
             },
             containerColor = CommitLogTheme.colors.surface,
@@ -151,7 +151,7 @@ private fun HomeContent(
                     IconButton(onClick = onNavigateToSearch) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "검색",
+                            contentDescription = stringResource(R.string.common_search),
                             tint = CommitLogTheme.colors.textTertiary
                         )
                     }
@@ -187,8 +187,8 @@ private fun HomeContent(
             commits.isEmpty() -> {
                 EmptyState(
                     emoji = "📝",
-                    title = "첫 커밋을 작성해보세요!",
-                    message = "오늘 배운 내용을 기록하고\nAI의 분석을 받아보세요",
+                    title = stringResource(R.string.home_empty_title),
+                    message = stringResource(R.string.home_empty_message),
                     modifier = Modifier
                         .padding(paddingValues)
                         .fillMaxSize()

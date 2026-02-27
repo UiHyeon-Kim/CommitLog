@@ -10,9 +10,11 @@ import com.hanhyo.commitlog.domain.usecase.aianalysis.ObserveMonthlyReviewUseCas
 import com.hanhyo.commitlog.domain.usecase.aianalysis.ScheduleMonthlyReviewUseCase
 import com.hanhyo.commitlog.domain.usecase.commit.ObserveAllCommitsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,6 +38,9 @@ class ReviewViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(ReviewUiState())
     val uiState: StateFlow<ReviewUiState> = _uiState.asStateFlow()
+
+    private val _effect = MutableSharedFlow<ReviewEffect>(replay = 0)
+    val effect: SharedFlow<ReviewEffect> = _effect.asSharedFlow()
 
     private var allCommits: List<Commit> = emptyList()
 
@@ -154,14 +159,12 @@ class ReviewViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null, review = null) }
-            try {
-                scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
-            } catch (e: CancellationException) {
-                _uiState.update { it.copy(isLoading = false) }
-                throw e
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "요청 중 오류가 발생했습니다.") }
-            }
+            scheduleMonthlyReviewUseCase(state.selectedYear, state.selectedMonth)
+                .onFailure { e ->
+                    val message = e.message ?: "리뷰를 생성하지 못했습니다."
+                    _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+                    _effect.emit(ReviewEffect.ShowSnackbar(message))
+                }
         }
     }
 
@@ -182,7 +185,12 @@ class ReviewViewModel @Inject constructor(
         val count = allCommits.count {
             it.date.year == state.selectedYear && it.date.monthValue == state.selectedMonth
         }
-        _uiState.update { it.copy(monthCommitCount = count) }
+        _uiState.update {
+            it.copy(
+                monthCommitCount = count,
+                commitsNeededForAverage = (5 - count).coerceAtLeast(0)
+            )
+        }
     }
 }
 
@@ -192,6 +200,11 @@ data class ReviewUiState(
     val selectedMonth: Int = LocalDate.now().monthValue,
     val availableMonths: List<YearMonth> = emptyList(),
     val monthCommitCount: Int = 0,
+    val commitsNeededForAverage: Int = 0,
     val review: MonthlyReview? = null,
     val errorMessage: String? = null,
 )
+
+sealed interface ReviewEffect {
+    data class ShowSnackbar(val message: String) : ReviewEffect
+}

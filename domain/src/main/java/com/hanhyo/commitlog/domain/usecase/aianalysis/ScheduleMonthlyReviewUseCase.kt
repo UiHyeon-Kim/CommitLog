@@ -1,5 +1,6 @@
 package com.hanhyo.commitlog.domain.usecase.aianalysis
 
+import com.hanhyo.commitlog.domain.common.runSuspendCatching
 import com.hanhyo.commitlog.domain.repository.AiAnalysisRepository
 import javax.inject.Inject
 
@@ -9,7 +10,7 @@ import javax.inject.Inject
 class ScheduleMonthlyReviewUseCase @Inject constructor(
     private val aiRepository: AiAnalysisRepository
 ) {
-    suspend operator fun invoke(year: Int, month: Int) {
+    suspend operator fun invoke(year: Int, month: Int) = runSuspendCatching {
         aiRepository.scheduleMonthlyReview(year, month)
     }
 }

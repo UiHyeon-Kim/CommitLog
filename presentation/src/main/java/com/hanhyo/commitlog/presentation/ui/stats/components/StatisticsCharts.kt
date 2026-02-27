@@ -29,11 +29,13 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
 import com.hanhyo.commitlog.presentation.ui.stats.model.MonthlyStats
@@ -60,6 +62,7 @@ import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Fill
+import com.patrykandpatrick.vico.core.common.Insets
 import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlin.math.cos
 import kotlin.math.sin
@@ -123,12 +126,12 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "이번 주 리포트",
+                text = stringResource(R.string.stats_report_weekly),
                 style = CommitLogTheme.typography.headlineMedium,
                 color = CommitLogTheme.colors.textPrimary
             )
             Text(
-                text = "최근 7일간의 기록입니다.",
+                text = stringResource(R.string.stats_report_weekly_desc),
                 style = CommitLogTheme.typography.bodyMedium,
                 color = CommitLogTheme.colors.textSecondary
             )
@@ -139,20 +142,20 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
             horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
         ) {
             StatsSummaryCard(
-                title = "총 집중 시간",
-                value = "${stats.focusTime} 시간",
+                title = stringResource(R.string.stats_summary_focus_time),
+                value = stringResource(R.string.common_unit_hours, stats.focusTime),
                 icon = "⏱️",
                 modifier = Modifier.weight(1f)
             )
             StatsSummaryCard(
-                title = "주간 커밋",
-                value = "${stats.commitCount} 회",
+                title = stringResource(R.string.stats_summary_commit_count),
+                value = stringResource(R.string.common_unit_count, stats.commitCount),
                 icon = "commit",
                 modifier = Modifier.weight(1f)
             )
         }
 
-        StatsCard(title = "일별 커밋 활동") {
+        StatsCard(title = stringResource(R.string.stats_chart_daily_activity)) {
             val daysOfWeek = listOf("월", "화", "수", "목", "금", "토", "일")
             val bottomAxisValueFormatter = CartesianValueFormatter { _, x, _ ->
                 daysOfWeek.getOrNull(x.toInt()) ?: ""
@@ -187,7 +190,7 @@ private fun WeeklyStatsView(stats: WeeklyStats, chartProducer: CartesianChartMod
         }
 
         if (stats.productiveDays.isNotEmpty()) {
-            StatsCard(title = "가장 생산적이었던 날") {
+            StatsCard(title = stringResource(R.string.stats_card_productive_day)) {
                 Column(verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)) {
                     stats.productiveDays.forEachIndexed { index, day ->
                         ProductiveDayItem(day = day, rank = index + 1)
@@ -210,12 +213,12 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "월간 리포트",
+                text = stringResource(R.string.stats_report_monthly),
                 style = CommitLogTheme.typography.headlineMedium,
                 color = CommitLogTheme.colors.textPrimary
             )
             Text(
-                text = "이번 달의 기록입니다.",
+                text = stringResource(R.string.stats_report_monthly_desc),
                 style = CommitLogTheme.typography.bodyMedium,
                 color = CommitLogTheme.colors.textSecondary
             )
@@ -226,20 +229,20 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
             horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
         ) {
             StatsSummaryCard(
-                title = "Commit 빈도",
-                value = "${stats.commitFrequency} 회",
+                title = stringResource(R.string.stats_summary_frequency),
+                value = stringResource(R.string.common_unit_count, stats.commitFrequency),
                 icon = "commit",
                 modifier = Modifier.weight(1f)
             )
             StatsSummaryCard(
-                title = "연속 기록",
-                value = "${stats.streak} 일",
+                title = stringResource(R.string.stats_summary_streak),
+                value = stringResource(R.string.common_unit_days, stats.streak),
                 icon = "🔥",
                 modifier = Modifier.weight(1f)
             )
         }
 
-        StatsCard(title = "기분 흐름 (Mood Flow)") {
+        StatsCard(title = stringResource(R.string.stats_chart_mood_flow)) {
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberLineCartesianLayer(
@@ -268,7 +271,7 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
         }
 
         if (stats.moods.isNotEmpty()) {
-            StatsCard(title = "AI Mood 분포") {
+            StatsCard(title = stringResource(R.string.stats_chart_mood_dist)) {
                 Column(verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)) {
                     stats.moods.forEach { mood ->
                         MoodProgressBar(label = mood.label, percentage = mood.percentage, color = mood.color)
@@ -278,7 +281,7 @@ private fun MonthlyStatsView(stats: MonthlyStats, chartProducer: CartesianChartM
         }
 
         if (stats.keywords.isNotEmpty()) {
-            StatsCard(title = "이달의 키워드 ✨") {
+            StatsCard(title = stringResource(R.string.stats_chart_keywords)) {
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -310,6 +313,7 @@ private fun rememberCartesianMarker(): CartesianMarker {
     val labelBackground = rememberShapeComponent(
         fill = Fill(CommitLogTheme.colors.surfaceVariant.toArgb()),
         shape = labelBackgroundShape,
+        margins = Insets(4f)
     )
     val label = rememberTextComponent(
         color = CommitLogTheme.colors.textPrimary,
@@ -339,12 +343,12 @@ private fun YearlyStatsView(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "연간 리포트",
+                    text = stringResource(R.string.stats_report_yearly),
                     style = CommitLogTheme.typography.headlineMedium,
                     color = CommitLogTheme.colors.textPrimary
                 )
                 Text(
-                    text = "올해의 기여도와 성장 기록입니다.",
+                    text = stringResource(R.string.stats_report_yearly_desc),
                     style = CommitLogTheme.typography.bodyMedium,
                     color = CommitLogTheme.colors.textSecondary
                 )
@@ -356,20 +360,20 @@ private fun YearlyStatsView(
             horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
         ) {
             StatsSummaryCard(
-                title = "총 커밋 기록",
+                title = stringResource(R.string.stats_summary_total_records),
                 value = "${stats.totalRecords}",
                 icon = "📊",
                 modifier = Modifier.weight(1f)
             )
             StatsSummaryCard(
-                title = "가장 바빴던 달",
+                title = stringResource(R.string.stats_summary_busiest_month),
                 value = "${stats.busiestMonth} 🔥",
                 icon = "📅",
                 modifier = Modifier.weight(1f)
             )
         }
 
-        StatsCard(title = "연간 기여도") {
+        StatsCard(title = stringResource(R.string.stats_chart_contribution)) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
                     Text(
@@ -480,7 +484,7 @@ private fun YearlyStatsView(
 
         val skillSize = stats.skillGrowth.size
         if (skillSize >= 3) {
-            StatsCard(title = "스킬 성장 (Skill Radar)") {
+            StatsCard(title = stringResource(R.string.stats_chart_radar)) {
                 RadarChart(
                     skills = stats.skillGrowth,
                     modifier = Modifier

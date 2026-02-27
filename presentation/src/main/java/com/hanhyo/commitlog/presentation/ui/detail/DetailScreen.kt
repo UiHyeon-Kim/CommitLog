@@ -39,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -54,6 +53,10 @@ import com.hanhyo.commitlog.domain.model.LearnedContent
 import com.hanhyo.commitlog.domain.model.LearningTag
 import com.hanhyo.commitlog.presentation.common.extension.toKoreanFormat
 import com.hanhyo.commitlog.presentation.common.extension.toKoreanTimeFormat
+import androidx.compose.material3.Snackbar
+import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
 import com.hanhyo.commitlog.presentation.designsystem.components.indicator.FullScreenLoading
@@ -95,14 +98,14 @@ fun DetailScreen(
             onDismissRequest = { showDeleteDialog = false },
             title = {
                 Text(
-                    text = "커밋 삭제",
+                    text = stringResource(R.string.detail_delete_title),
                     style = CommitLogTheme.typography.titleMedium,
                     color = CommitLogTheme.colors.textPrimary
                 )
             },
             text = {
                 Text(
-                    text = "이 커밋을 삭제하시겠습니까? 삭제된 기록은 복구할 수 없습니다.",
+                    text = stringResource(R.string.detail_delete_message),
                     style = CommitLogTheme.typography.bodyMedium,
                     color = CommitLogTheme.colors.textSecondary
                 )
@@ -114,12 +117,12 @@ fun DetailScreen(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("삭제", color = CommitLogTheme.colors.error)
+                    Text(stringResource(R.string.detail_delete_confirm), color = CommitLogTheme.colors.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소", color = CommitLogTheme.colors.textPrimary)
+                    Text(stringResource(R.string.common_cancel), color = CommitLogTheme.colors.textPrimary)
                 }
             },
             containerColor = CommitLogTheme.colors.surface,
@@ -147,7 +150,7 @@ fun DetailScreen(
         uiState.error != null -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = uiState.error!!,
@@ -178,7 +181,7 @@ private fun DetailContent(
                     IconButton(onClick = onEdit) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "수정",
+                            contentDescription = stringResource(R.string.common_edit),
                             tint = CommitLogTheme.colors.textPrimary
                         )
                     }
@@ -186,14 +189,23 @@ private fun DetailContent(
                     IconButton(onClick = onDelete) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "삭제",
+                            contentDescription = stringResource(R.string.common_delete),
                             tint = CommitLogTheme.colors.error
                         )
                     }
                 }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = CommitLogTheme.colors.surface,
+                    contentColor = CommitLogTheme.colors.textPrimary,
+                    actionColor = CommitLogTheme.colors.primary
+                )
+            }
+        },
         containerColor = CommitLogTheme.colors.background,
         modifier = modifier
     ) { padding ->
@@ -242,7 +254,7 @@ private fun DetailContent(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "${commit.date.toKoreanFormat()} • ${commit.createdAt.toKoreanTimeFormat()} 기록",
+                    text = stringResource(R.string.detail_info_format, commit.date.toKoreanFormat(), commit.createdAt.toKoreanTimeFormat()),
                     style = CommitLogTheme.typography.bodySmall,
                     color = CommitLogTheme.colors.textTertiary
                 )
@@ -254,14 +266,14 @@ private fun DetailContent(
             )
 
             ContentSectionWithColorBar(
-                title = "오늘 배운 점",
+                title = stringResource(R.string.write_section_learned),
                 content = commit.learnedToday.value,
                 barColor = CommitLogTheme.colors.primary
             )
 
             commit.difficulties?.let {
                 ContentSectionWithColorBar(
-                    title = "어려운 점",
+                    title = stringResource(R.string.write_section_difficulties),
                     content = it,
                     barColor = CommitLogTheme.colors.accentOrange
                 )
@@ -269,7 +281,7 @@ private fun DetailContent(
 
             commit.tomorrowPlan?.let {
                 ContentSectionWithColorBar(
-                    title = "내일 할 일",
+                    title = stringResource(R.string.write_section_tomorrow),
                     content = it,
                     barColor = CommitLogTheme.colors.accentPurple
                 )
@@ -287,7 +299,7 @@ private fun DetailContent(
                     tint = CommitLogTheme.colors.primary
                 )
                 Text(
-                    text = "AI 인사이트",
+                    text = stringResource(R.string.detail_ai_insight_title),
                     style = CommitLogTheme.typography.titleLarge,
                     color = CommitLogTheme.colors.textPrimary
                 )
@@ -310,19 +322,19 @@ private fun DetailContent(
                         ) {
                             CircularIndicatorItem(
                                 score = analysis.moodScore.coerceIn(0, 100),
-                                label = "학습 확신도",
+                                label = stringResource(R.string.detail_label_confidence),
                                 color = CommitLogTheme.colors.primary
                             )
                             CircularIndicatorItem(
                                 score = 0,
                                 text = analysis.difficultyLevel.emoji,
-                                label = "난이도",
+                                label = stringResource(R.string.detail_label_difficulty),
                                 color = CommitLogTheme.colors.accentPurple
                             )
                             CircularIndicatorItem(
                                 score = 0,
                                 text = analysis.mood.emoji,
-                                label = "감정",
+                                label = stringResource(R.string.detail_label_mood),
                                 color = CommitLogTheme.colors.accentPink
                             )
                         }

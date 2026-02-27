@@ -31,13 +31,13 @@ fun StatisticsSkeleton(
             .padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingLarge)
     ) {
-        // 1. Header Skeleton
+        // Header Skeleton
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SkeletonItem(width = 120.dp, height = 28.dp)
             SkeletonItem(width = 200.dp, height = 16.dp)
         }
 
-        // 2. Summary Cards Skeleton
+        // Summary Cards Skeleton
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
@@ -50,12 +50,12 @@ fun StatisticsSkeleton(
                 .height(100.dp))
         }
 
-        // 3. Main Chart Skeleton
+        // Main Chart Skeleton
         SkeletonItem(modifier = Modifier
             .fillMaxWidth()
             .height(240.dp))
 
-        // 4. Additional Content Skeleton
+        // Additional Content Skeleton
         Column(verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)) {
             SkeletonItem(width = 140.dp, height = 20.dp)
             SkeletonItem(modifier = Modifier

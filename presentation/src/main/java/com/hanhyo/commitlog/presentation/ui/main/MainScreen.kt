@@ -104,11 +104,6 @@ private fun MainContent(
                 )
             ) {
                 ReviewScreen(
-                    onNavigateToHome = {
-                        bottomNavController.navigate(HomeRoute) {
-                            popUpTo(HomeRoute) { inclusive = true }
-                        }
-                    },
                     onNavigateToWrite = {
                         rootNavController.navigate(WriteRoute())
                     }

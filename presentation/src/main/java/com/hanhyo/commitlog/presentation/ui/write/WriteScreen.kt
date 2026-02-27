@@ -21,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -37,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.common.extension.toKoreanFormat
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.model.AppBarNavItem
@@ -91,10 +94,10 @@ fun WriteScreen(
         if (
             !uiState.isEditMode && (
                     uiState.title.isNotBlank() ||
-                    uiState.learnedToday.isNotBlank() ||
-                    uiState.difficulties.isNotBlank() ||
-                    uiState.tomorrowPlan.isNotBlank()
-            )
+                            uiState.learnedToday.isNotBlank() ||
+                            uiState.difficulties.isNotBlank() ||
+                            uiState.tomorrowPlan.isNotBlank()
+                    )
         ) {
             showExitDialog = true
         } else {
@@ -109,8 +112,18 @@ fun WriteScreen(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            title = { Text(text = "작성 중인 내용이 있습니다", style = CommitLogTheme.typography.titleMedium) },
-            text = { Text(text = "임시 저장하고 나가시겠습니까?", style = CommitLogTheme.typography.bodyMedium) },
+            title = {
+                Text(
+                    text = stringResource(R.string.write_dialog_exit_title),
+                    style = CommitLogTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.write_dialog_exit_message),
+                    style = CommitLogTheme.typography.bodyMedium
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -118,7 +131,7 @@ fun WriteScreen(
                         viewModel.saveDraft()
                     }
                 ) {
-                    Text("임시 저장", color = CommitLogTheme.colors.primary)
+                    Text(stringResource(R.string.write_dialog_confirm_save), color = CommitLogTheme.colors.primary)
                 }
             },
             dismissButton = {
@@ -128,7 +141,7 @@ fun WriteScreen(
                         onBack()
                     }
                 ) {
-                    Text("나가기", color = CommitLogTheme.colors.textSecondary)
+                    Text(stringResource(R.string.write_dialog_dismiss), color = CommitLogTheme.colors.textSecondary)
                 }
             },
             containerColor = CommitLogTheme.colors.surface,
@@ -189,11 +202,20 @@ private fun WriteContent(
     Scaffold(
         topBar = {
             CommitLogTopAppBar(
-                title = if (isEditMode) "커밋 수정" else "기록하기",
+                title = if (isEditMode) stringResource(R.string.write_title_edit) else stringResource(R.string.write_title_new),
                 navItem = AppBarNavItem.Back(onClick = onBack)
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = CommitLogTheme.colors.surface,
+                    contentColor = CommitLogTheme.colors.textPrimary,
+                    actionColor = CommitLogTheme.colors.primary
+                )
+            }
+        },
         containerColor = CommitLogTheme.colors.background,
     ) { padding ->
         Column(
@@ -233,13 +255,13 @@ private fun WriteContent(
 
                     Column {
                         Text(
-                            text = "AI 감정 분석",
+                            text = stringResource(R.string.write_ai_analysis_title),
                             style = CommitLogTheme.typography.titleMedium,
                             color = CommitLogTheme.colors.textPrimary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "AI가 당신의 기록에서 감정을 분석합니다",
+                            text = stringResource(R.string.write_ai_analysis_desc),
                             style = CommitLogTheme.typography.bodySmall,
                             color = CommitLogTheme.colors.textSecondary
                         )
@@ -253,11 +275,11 @@ private fun WriteContent(
                 color = CommitLogTheme.colors.textSecondary
             )
 
-            InputSection(title = "제목") {
+            InputSection(title = stringResource(R.string.write_section_title)) {
                 CommitLogTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    placeholder = "제목을 입력하세요",
+                    placeholder = stringResource(R.string.write_placeholder_title),
                     enabled = !isLoading,
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
@@ -266,11 +288,11 @@ private fun WriteContent(
                 )
             }
 
-            InputSection(title = "오늘 배운 점") {
+            InputSection(title = stringResource(R.string.write_section_learned)) {
                 CommitLogMultiLineTextField(
                     value = learnedToday,
                     onValueChange = onLearnedTodayChange,
-                    placeholder = "오늘 새롭게 알게 된 사실은 무엇인가요?",
+                    placeholder = stringResource(R.string.write_placeholder_learned),
                     enabled = !isLoading,
                     minLines = 6,
                     modifier = Modifier
@@ -281,11 +303,11 @@ private fun WriteContent(
                 )
             }
 
-            InputSection(title = "어려운 점") {
+            InputSection(title = stringResource(R.string.write_section_difficulties)) {
                 CommitLogMultiLineTextField(
                     value = difficulties,
                     onValueChange = onDifficultiesChange,
-                    placeholder = "진행 중 마주친 장애물이나 고민이 있나요?",
+                    placeholder = stringResource(R.string.write_placeholder_difficulties),
                     enabled = !isLoading,
                     minLines = 4,
                     modifier = Modifier
@@ -296,11 +318,11 @@ private fun WriteContent(
                 )
             }
 
-            InputSection(title = "내일 할 일") {
+            InputSection(title = stringResource(R.string.write_section_tomorrow)) {
                 CommitLogMultiLineTextField(
                     value = tomorrowPlan,
                     onValueChange = onTomorrowPlanChange,
-                    placeholder = "내일은 어떤 작은 목표를 이룰까요?",
+                    placeholder = stringResource(R.string.write_placeholder_tomorrow),
                     enabled = !isLoading,
                     minLines = 4,
                     modifier = Modifier
@@ -318,12 +340,12 @@ private fun WriteContent(
 
             if (isLoading) {
                 InlineLoading(
-                    message = "AI가 당신의 기록에서 감정을 분석합니다",
+                    message = stringResource(R.string.write_loading_ai_analysis),
                     modifier = Modifier.fillMaxWidth()
                 )
             } else {
                 CommitLogButton(
-                    text = if (isEditMode) "수정하기" else "저장하기",
+                    text = if (isEditMode) stringResource(R.string.write_button_edit) else stringResource(R.string.write_button_save),
                     onClick = onSave,
                     enabled = canSave,
                     modifier = Modifier.fillMaxWidth()

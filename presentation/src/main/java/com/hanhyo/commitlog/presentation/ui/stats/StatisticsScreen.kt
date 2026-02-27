@@ -7,6 +7,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -17,11 +18,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.hanhyo.commitlog.presentation.R
 import com.hanhyo.commitlog.presentation.designsystem.components.bar.CommitLogTopAppBar
 import com.hanhyo.commitlog.presentation.designsystem.theme.CommitLogTheme
 import com.hanhyo.commitlog.presentation.designsystem.theme.dimension.Dimensions
@@ -117,11 +120,20 @@ private fun StatisticsContent(
     Scaffold(
         topBar = {
             CommitLogTopAppBar(
-                title = "학습 통계",
+                title = stringResource(R.string.stats_title),
             )
         },
         containerColor = CommitLogTheme.colors.background,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = CommitLogTheme.colors.surface,
+                    contentColor = CommitLogTheme.colors.textPrimary,
+                    actionColor = CommitLogTheme.colors.primary
+                )
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier

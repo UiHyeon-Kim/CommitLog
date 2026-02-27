@@ -32,7 +32,7 @@ fun HomeSkeleton(
             .padding(horizontal = Dimensions.SpacingLarge, vertical = Dimensions.SpacingMedium),
         verticalArrangement = Arrangement.spacedBy(Dimensions.SpacingMedium)
     ) {
-        // 1. Date Header Skeleton
+        // Date Header Skeleton
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -44,14 +44,14 @@ fun HomeSkeleton(
             SkeletonItem(width = 40.dp, height = 16.dp)
         }
 
-        // 2. Commit Card Skeletons
+        // Commit Card Skeletons
         repeat(3) {
             HomeCardSkeleton()
         }
 
         Spacer(modifier = Modifier.height(Dimensions.SpacingMedium))
 
-        // 3. Another Date Header Skeleton
+        // Another Date Header Skeleton
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,7 +62,7 @@ fun HomeSkeleton(
             SkeletonItem(width = 80.dp, height = 24.dp)
         }
 
-        // 4. More Card Skeletons
+        // More Card Skeletons
         repeat(2) {
             HomeCardSkeleton()
         }
