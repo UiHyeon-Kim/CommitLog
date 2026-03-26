@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,15 +64,14 @@ fun StatisticsScreen(
         onNavigateToWrite
     }
 
-    // Pager 동기화 최적화 (snapshotFlow 사용)
-    LaunchedEffect(pagerState, onPeriodSelected) {
+    val currentOnPeriodSelected by rememberUpdatedState(onPeriodSelected)
+
+    LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
             .distinctUntilChanged()
             .collect { page ->
-                val periodAtPage = StatsPeriod.entries[page]
-                if (periodAtPage != uiState.selectedPeriod) {
-                    onPeriodSelected(periodAtPage)
-                }
+                val selectedPeriod = StatsPeriod.entries[page]
+                currentOnPeriodSelected(selectedPeriod)
             }
     }
 
