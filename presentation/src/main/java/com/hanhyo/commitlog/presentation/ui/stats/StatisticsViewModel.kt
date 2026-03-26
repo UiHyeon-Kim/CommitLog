@@ -63,6 +63,8 @@ class StatisticsViewModel @Inject constructor(
     }
 
     private fun loadStatistics(period: StatsPeriod) {
+        if (period in _uiState.value.loadingPeriods) return
+
         viewModelScope.launch {
             // 해당 기간의 데이터가 처음 로드되는 경우에만 로딩 상태 표시
             val isFirstLoad = period !in _uiState.value.loadedPeriods
